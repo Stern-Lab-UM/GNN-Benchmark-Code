@@ -1,0 +1,62 @@
+# OS/editor
+.DS_Store
+Thumbs.db
+*.asv
+*.swp
+*.tmp
+*.bak
+__pycache__/
+*.pyc
+
+# MATLAB/Python generated caches
+*.mat
+*.fig
+*.mex*
+.ipynb_checkpoints/
+
+# Data, predictions, embeddings, checkpoints
+data/
+datasets/
+raw/
+predictions/
+embeddings/
+checkpoints/
+models/**/*.pth
+models/**/*.pt
+models/**/*.tar
+models/**/*.ckpt
+*.pred.txt
+*.model.pth
+*.model.tar
+
+# Generated figures and reports
+figures/
+outputs/
+results/
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.pdf
+*.svg
+
+# Large archives/logs
+*.zip
+*.tar
+*.tgz
+*.gz
+*.7z
+*.log
+*.out
+*.err
+
+# Credentials / machine-specific local state
+*.key
+*.pem
+*.pid
+authorized_keys*
+.env
+*.reg
+
+*.bak_*

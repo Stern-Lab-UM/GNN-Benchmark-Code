@@ -1,0 +1,23 @@
+status,category,source_path,dest_path,notes
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_analyze_results_2026_codex.m,analysis/matlab/DCG_analyze_results_2026_codex.m,Canonical parser/analysis pipeline for result summaries.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_plot_results_2026_codex.m,analysis/matlab/DCG_plot_results_2026_codex.m,Canonical plotting pipeline with revision analyses and embedding visualization.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_run_revision_analyses_2026_codex.m,analysis/matlab/DCG_run_revision_analyses_2026_codex.m,Canonical dataset orchestration for revision analyses.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_plot_everything_2026_codex.m,analysis/matlab/DCG_plot_everything_2026_codex.m,Top-level plotting entry point.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_plot_Flip_two_interaction_2026_codex.m,analysis/matlab/DCG_plot_Flip_two_interaction_2026_codex.m,Canonical two-T1 interaction plotting/analysis.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_consolidated_paths_2026_codex.m,analysis/matlab/DCG_consolidated_paths_2026_codex.m,Path resolver for consolidated benchmark snapshot.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\line_graph_from_vertex_model.m,analysis/matlab/line_graph_from_vertex_model.m,Line graph helper retained for compatibility.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\load_dataset.m,analysis/matlab/load_dataset.m,Dataset loading helper.
+include,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\shadedErrorBar.m,analysis/matlab/shadedErrorBar.m,Third-party/helper plotting function; verify license header before publication.
+review,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_rebuild_all_summaries_2026_codex.m,analysis/matlab/DCG_rebuild_all_summaries_2026_codex.m,Likely useful rebuild entry point; confirm still canonical.
+review,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_make_revision_transverse_dist_composites_2026_codex.m,analysis/matlab/DCG_make_revision_transverse_dist_composites_2026_codex.m,May be figure-specific; review.
+review,analysis_matlab,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_calibrate_saved_fig_y_ranges_2026_codex.m,analysis/matlab/DCG_calibrate_saved_fig_y_ranges_2026_codex.m,Figure calibration helper; likely not core reproducibility.
+include,docs,Z:\Tomer\DCG 2024\analysis_pipeline_2026\DCG_PIPELINE_HANDOFF_2026-06-01.md,docs/DCG_PIPELINE_HANDOFF_2026-06-01.md,Pipeline handoff and provenance.
+include,models_mpnn,C:\Users\tomers\Documents\DCG revision\feature_head_ablation_20260616\mpnn_no_head_edgeattr_src,models/mpnn,Current MPNN source snapshot; review for publication cleanup.
+include,models_ppgn,C:\Users\tomers\Documents\DCG revision\feature_head_ablation_20260616\ppgn_skip_ablation_pkg,models/ppgn,Current PPGN source snapshot; review for publication cleanup.
+review,manuscript_analyses,C:\Users\tomers\Documents\DCG revision\embedding_mae_reproduction,manuscript_analyses/embedding_mae_reproduction,Embedding-error scripts; include code only, not generated outputs.
+review,manuscript_analyses,C:\Users\tomers\Documents\DCG revision\prepare_no_shortcut_fallback_clean20260625.py,manuscript_analyses/no_shortcut/prepare_no_shortcut_fallback_clean20260625.py,Clean no-shortcut/fallback analysis script.
+review,manuscript_analyses,C:\Users\tomers\Documents\DCG revision\plot_no_shortcut_fallback_nmae_clean20260625.m,manuscript_analyses/no_shortcut/plot_no_shortcut_fallback_nmae_clean20260625.m,Clean no-shortcut/fallback plotting script.
+review,remote_examples,C:\Users\tomers\Documents\DCG revision\remote_run_clean_no_shortcut_mpnn_fixed16hps_20260625.sh,remote_examples/remote_run_clean_no_shortcut_mpnn_fixed16hps_20260625.sh,Cluster launch example; scrub absolute paths before final publication.
+exclude,scratch,C:\Users\tomers\Documents\DCG revision\*.png,,Screenshots/debug captures are excluded.
+exclude,outputs,C:\Users\tomers\Documents\DCG revision\*_outputs,,Generated analysis outputs are excluded unless converted to documentation.
+exclude,archives,C:\Users\tomers\Documents\DCG revision\*.tgz,,Large archive uploads are excluded.
