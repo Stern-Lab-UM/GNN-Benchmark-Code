@@ -7,7 +7,7 @@ import numpy as np
 
 class BaseModel(nn.Module):
     def __init__(self, in_features, out_features,
-                 block_features, depth_of_mlp, skip_mode='all'):
+                 block_features, depth_of_mlp):
         """
         Build the model computation graph, until scores/values
         are returned at the end
@@ -15,11 +15,6 @@ class BaseModel(nn.Module):
         super().__init__()
 
         self.num_targets = out_features
-        self.skip_mode = skip_mode
-        valid_skip_modes = {'all', 'none', 'no_final', 'no_input'}
-        if self.skip_mode not in valid_skip_modes:
-            raise ValueError(f'Unknown skip_mode "{self.skip_mode}". '
-                             f'Expected one of {sorted(valid_skip_modes)}')
 
         # default no scaling
         self.in_means = np.zeros(in_features)
@@ -38,25 +33,14 @@ class BaseModel(nn.Module):
         # sequential ppgn blocks
         last_layer_features = in_features
         self.reg_blocks = nn.ModuleList()
-        for block_idx, next_layer_features in enumerate(block_features):
+        for next_layer_features in block_features:
             self.reg_blocks.append(RegularBlock(
-                last_layer_features, next_layer_features, depth_of_mlp,
-                use_skip=self._uses_skip(block_idx, is_final=False)))
+                last_layer_features, next_layer_features, depth_of_mlp))
             last_layer_features = next_layer_features
 
         # last layer to out_features
         self.reg_blocks.append(RegularBlock(
-            last_layer_features, self.num_targets, depth_of_mlp,
-            use_skip=self._uses_skip(len(block_features), is_final=True)))
-
-    def _uses_skip(self, block_idx, is_final):
-        if self.skip_mode == 'none':
-            return False
-        if self.skip_mode == 'no_final' and is_final:
-            return False
-        if self.skip_mode == 'no_input' and block_idx == 0:
-            return False
-        return True
+            last_layer_features, self.num_targets, depth_of_mlp))
 
     def forward(self, x):
         # x of shape (B,X,N,N)

@@ -9,17 +9,20 @@ from dcg.trainer import Trainer
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+# Modified by Riya Samanta. Added bce_fp/fn_weight
 DEFAULT_OPTIONS = {
     'hyperparameters': {
         'epochs': 500,
         'block_features': [400, 400, 400],
         'depth_of_mlp': 2,
         'learning_rate': 0.0001,
-        'loss': 'L1',
+        'loss': 'BCE',
         'factor': 0.1,
         'patience': 20,
         'threshold': 1e-4,
-        'skip_mode': 'all',
+        'bce_fp_weight': None,  
+        'bce_fn_weight': None,
+        'bc_ratio': None, 
     },
     'training_info': {
         'target_features': None,
@@ -33,9 +36,7 @@ DEFAULT_OPTIONS = {
         'early_stop': 30,
         'normalize': 'all',
         'gradient_clipping': None,
-        'instance_normalization': False,
-        'candidate_mask': True,
-        'pos_weight': True,
+        'directed': True,
     },
     'execution': {
         'gpu': 0,
@@ -53,13 +54,11 @@ HELP_OPTIONS = {
                  'BCE -> BCEWithLogitsLoss, ' 'MSLE -> Mean Squared Log Error'),
         'factor': '# DOUBLE factor parameter to ReduceLROnPlateau scheduler',
         'patience': '# INT patience parameter to ReduceLROnPlateau scheduler',
+        'bce_fp_weight': '# DOUBLE cost for false positive',
+        'bce_fn_weight': '# DOUBLE cost for false negative',
+        'bce_ratio': '# DOUBLE  fn_weight / fp_weight ; overrides the two weights',
         'threshold': ('# DOUBLE threshold parameter to '
-                      'ReduceLROnPlateau scheduler'),
-        'skip_mode': ('# STR PPGN RegularBlock skip setting for ablations.\n'
-                      '# all: original skips in every block.\n'
-                      '# no_final: disable only the final output-block skip.\n'
-                      '# no_input: disable only the first raw-input block skip.\n'
-                      '# none: disable skips in all RegularBlocks.'),
+                      'ReduceLROnPlateau scheduler')
     },
     'training_info': {
         'target_features': ('# LIST[STR] which features of'
@@ -94,25 +93,7 @@ HELP_OPTIONS = {
         'gradient_clipping': ('# DOUBLE gradient clipping threshold.\n'
                               '# null means no clipping'
                               ),
-        'instance_normalization': ('# BOOL if True, z-score each input feature\n'
-                                   '# per-graph (using that graph\'s own mean/std)\n'
-                                   '# instead of using global training-set stats.\n'
-                                   '# Only affects input features listed in "normalize";\n'
-                                   '# target features remain globally normalized.\n'
-                                   '# Default: False (legacy dataset-level behavior)'),
-        'candidate_mask': ('# BOOL if True, mask BCE loss to is_candidate=1 only.\n'
-                           '# Concentrates gradient on the candidate edges, which\n'
-                           '# are typically <2% of all edges; otherwise loss is\n'
-                           '# dominated by trivial 0-targets on non-candidate\n'
-                           '# edges and the prediction signal is drowned out.\n'
-                           '# Requires "is_candidate" (or legacy "is_candidate_edge")\n'
-                           '# in input_features; falls back to full mask + warning.\n'
-                           '# Default: True. Set False to recover original behavior.'),
-        'pos_weight': ('# BOOL if True, balance positive/negative class\n'
-                       '# frequencies in BCE loss using pos_weight = N_neg/N_pos\n'
-                       '# computed once per target from the training data\n'
-                       '# (over candidate edges if available). No effect for\n'
-                       '# non-BCE losses. Default: True.'),
+        'directed':('# true(yes/1/y)/ false'),
     },
     'execution': {
         'gpu': '# INT index of GPU to use; ignored if gpu not available',
@@ -146,15 +127,6 @@ def check_none(string):
     if string == 'none' or string == 'null':
         return None
     raise ValueError
-
-
-def parse_bool(string):
-    s = string.strip().lower()
-    if s in ('true', '1', 'yes'):
-        return True
-    if s in ('false', '0', 'no'):
-        return False
-    raise ValueError(f'Unable to parse "{string}" as bool')
 
 
 def is_all(string: str) -> str:
@@ -195,7 +167,9 @@ TYPE_PARSERS = {
         'factor': float,
         'patience': int,
         'threshold': float,
-        'skip_mode': str,
+        'bce_fp_weight': parse_args(check_none, float),
+        'bce_fn_weight': parse_args(check_none, float),
+        'bce_ratio': parse_args(check_none, float),
     },
     'training_info': {
         'target_features': parse_args(check_none, is_all, list_or(str)),
@@ -209,9 +183,7 @@ TYPE_PARSERS = {
         'early_stop': parse_args(check_none, int),
         'normalize': parse_args(check_none, is_all, list_or(str)),
         'gradient_clipping': parse_args(check_none, float),
-        'instance_normalization': parse_bool,
-        'candidate_mask': parse_bool,
-        'pos_weight': parse_bool,
+        'directed':  lambda s: s.strip().lower() in ('1','true','t','yes','y')
     },
     'execution': {
         'gpu': int,
@@ -261,12 +233,18 @@ class Configuration():
             return
 
         config = yaml.safe_load(yaml_file)
-        for base_key, values in self.config.items():
-            for key, value in values.items():
-                if base_key in config and key in config[base_key]:
-                    self.config[base_key][key] = config[base_key][key]
-                elif key in config:
-                    self.config[base_key][key] = config[key]
+        # Deep-merge: keep any extra keys from YAML (like input_node/target_node)
+        for section, values in config.items():
+            if isinstance(values, dict):
+                if section not in self.config or not isinstance(self.config[section], dict):
+                    # whole new section or different type — just replace
+                    self.config[section] = values
+                else:
+                    # update known section and keep unknown keys
+                    self.config[section].update(values)
+            else:
+                # top-level scalar; just set it
+                self.config[section] = values
 
     def update_with_args(self, arguments: str):
         if arguments is None:
@@ -293,11 +271,12 @@ class Configuration():
             len(self.config['training_info']['input_features']) + 1,
             len(self.config['training_info']['target_features']),
             self.config['hyperparameters']['block_features'],
-            self.config['hyperparameters']['depth_of_mlp'],
-            self.config['hyperparameters'].get('skip_mode', 'all'))
+            self.config['hyperparameters']['depth_of_mlp'])
         model.to(DEVICE)
         model.set_indices(self)
         model.set_non_negative(self)
+        model.set_edge_only(self)
+        model.set_directed(self) #<< ADDED BY RIYA
         return model
 
     def build_trainer(self, model, loader):

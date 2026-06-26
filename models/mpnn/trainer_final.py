@@ -307,15 +307,9 @@ def main():
     test_loader = DataLoader(dataset[dataset.idx_split['test']], batch_size=batch_size, shuffle=False)
 
     Model, deg = get_model(model_name, train_loader)
-    model_kwargs = dict(dropout=dropout, norm='instance_norm',
-                        jk='cat', edge_dim=edge_dim)
-    if deg is not None:
-        model_kwargs['deg'] = deg
-    gnn = Model(in_channels, hidden_channels, num_layers,
-                hidden_channels, **model_kwargs).to(device)
+    gnn = Model(in_channels, hidden_channels, num_layers, hidden_channels, dropout=dropout, norm='instance_norm', jk='cat', edge_dim=edge_dim, deg=deg).to(device)
     head = build_head(head_type, hidden_channels, out_channels, dropout, edge_dim).to(device)
     print(f'[INFO] Prediction head: {head_type} ({type(head).__name__})')
-    print('[INFO] Ablation: final regression head ignores raw edge_attr')
     # I3 fix: make every InstanceNorm normalize per-graph (see top of file).
     n_node_norms = _install_pergraph_norm_hooks(gnn, 'node')
     n_edge_norms = _install_pergraph_norm_hooks(head, 'edge')
@@ -449,8 +443,6 @@ def main():
                         'use_node_feats': use_node_feats,
                         'cuda': cuda_id,
                         'edge_dim': edge_dim,
-                        'head_edge_attr': False,
-                        'ablation': 'mpnn_no_final_head_edgeattr',
                         'y_min': float(dataset.y_min),
                         'y_max': float(dataset.y_max),
                         'deg_max': float(dataset.deg_max),

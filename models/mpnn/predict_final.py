@@ -113,8 +113,6 @@ def predict(
     if head_type not in ("regressor", "sigmoid"):
         raise ValueError(f"Unknown head '{head_type}', expected 'regressor' or 'sigmoid'.")
     print(f"[INFO] Prediction head: {head_type}")
-    if cfg.get("head_edge_attr") is False:
-        print("[INFO] Ablation checkpoint: final regression head ignores raw edge_attr")
 
     # Which InstanceNorm scope did this checkpoint train with?
     norm_mode_resolved = norm_mode or cfg.get("norm_mode")
@@ -164,16 +162,16 @@ def predict(
     edge_dim = dataset[0].edge_attr.size(1) if dataset[0].edge_attr.numel() else None
     Model, deg = get_model(model_name, dataset)
 
-    model_kwargs = dict(dropout=0.0, norm="instance_norm",
-                        jk="cat", edge_dim=edge_dim)
-    if deg is not None:
-        model_kwargs["deg"] = deg
     gnn = Model(
         in_channels,
         cfg["hidden_channels"],
         cfg["num_layers"],
         cfg["hidden_channels"],
-        **model_kwargs,
+        dropout=0.0,
+        norm="instance_norm",
+        jk="cat",
+        edge_dim=edge_dim,
+        deg=deg,
     ).to(device)
 
     # Build the head that matches the checkpoint.

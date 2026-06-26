@@ -2,6 +2,7 @@ import click
 import torch
 import numpy as np
 import os
+import hdf5storage
 
 from dcg.recorder import Recorder, SavedModel
 from dcg.configuration import Configuration, DEVICE
@@ -20,8 +21,10 @@ class NaturalOrderGroup(click.Group):
 @click.group(cls=NaturalOrderGroup, invoke_without_command=True)
 @click.option('--print-config', is_flag=True,
               help='Print default config yaml to standard out and exit')
+@click.option('--seed', default=0, type=int,
+              help='Random-number seed (default 0)')
 @click.pass_context
-def cli(ctx, print_config):
+def cli(ctx, print_config, seed):
     '''
     Deep Cell Graphs
 
@@ -35,13 +38,13 @@ def cli(ctx, print_config):
         click.echo(Configuration.print_defaults())
         ctx.exit()
 
-    np.random.seed(int(os.environ.get('DCG_SEED','100')))
-    torch.manual_seed(int(os.environ.get('DCG_SEED','100')))
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
     if torch.cuda.is_available():
         click.echo('GPU found')
-        torch.cuda.manual_seed(int(os.environ.get('DCG_SEED','100')))
-        torch.cuda.manual_seed_all(int(os.environ.get('DCG_SEED','100')))
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
 
 
 @cli.command(short_help='Train a new PPGN')
@@ -72,6 +75,7 @@ def train(config_file, args, out_dir, training_data,
     properties.  By default, the performance is evaluated and reported in the
     output directory along with the model parameters.
     '''
+    #click.echo('THIS IS RIYA VERSION')
     click.echo('Training')
     recorder = Recorder(out_dir)
 
@@ -79,7 +83,6 @@ def train(config_file, args, out_dir, training_data,
 
     config.update_with_yaml(config_file)
     config.update_with_args(args)
-    click.echo(f"Skip mode: {config.config['hyperparameters'].get('skip_mode', 'all')}")
 
     if torch.cuda.is_available():
         torch.cuda.set_device(int(config.gpu))
@@ -119,7 +122,6 @@ def train(config_file, args, out_dir, training_data,
     click.echo(f'The model has {num_params} trainable parameters')
 
     trainer = config.build_trainer(model, loader)
-    trainer.recorder = recorder  # PATCH: enable periodic model saves
     metrics = trainer.train(config.epochs)
 
     if trainer.best_epoch == -1:  # not trained
@@ -133,6 +135,42 @@ def train(config_file, args, out_dir, training_data,
     test_dists, test_loss = trainer.test()
     recorder.write_model(trainer, loader.norm_factors)
 
+    """
+    # ---------- SAVE TEST-SET PREDICTIONS AS PLAIN TEXT ----------
+    # Columns: graph  target  row  col  pred  truth
+    txt_path = os.path.join(recorder.out_dir, 'test_predictions.txt')
+    with open(txt_path, 'w') as fout:
+        fout.write('# graph  target  row  col  pred  truth\n')
+
+        graph_id = 0
+        for graphs, targets in trainer.data.test:
+            graphs = graphs.to(DEVICE)            # DEVICE already imported
+            with torch.no_grad():
+                preds = trainer.model(graphs).cpu().numpy()
+
+            truths = targets.cpu().numpy()
+            B, X, N, _ = preds.shape              # batch, targets, N×N
+
+            for b in range(B):
+                for x, name in enumerate(loader.target_features):
+                    for i in range(N):
+                        for j in range(N):
+                            p = preds[b, x, i, j]
+                            t = truths[b, x, i, j]
+
+                            # >>> SKIP rows with no edge  <<<
+                            # Treat values whose absolute magnitude is <1e-9 as zero
+                            if abs(p) < 1e-9 and abs(t) < 1e-9:
+                                continue
+
+                            fout.write(
+                                f'{graph_id+b:04d} {name} {i} {j} '
+                                f'{p:.6f} {t:.6f}\n')
+            graph_id += B
+    # ----------------------------------------------------------------
+
+    """
+    
     if evaluation:
         click.echo('Performing detailed evaluation')
         out_dir = recorder.out_dir
@@ -192,6 +230,9 @@ def predict(ctx, model, input: str, output):
         loader.batch_size = 1
 
     loaded = loader.load_cells(input, apply_norm=False, only_test=True)
+    # Ensure the model has the correct node-channel split, even if YAML was missing it
+    # saved.model.in_nodes = loader.node_inds[0] if loader.node_inds[0] is not None else saved.model.in_nodes
+    # saved.model.out_nodes = loader.node_inds[1] if loader.node_inds[1] is not None else saved.model.out_nodes
     if inputs != loader.input_features:
         click.echo(f'Expected input features of {inputs}')
         click.echo(f'Found: {loader.input_features}')
@@ -204,7 +245,6 @@ def predict(ctx, model, input: str, output):
 
     # txt, mat, or np input to mat output
     if output.endswith('.mat'):
-        import hdf5storage
         predictions = np.concatenate(
             [saved.model.predict(graph.to(DEVICE)).cpu().numpy()
              for graph, _ in loader.test])
@@ -285,8 +325,8 @@ def predict(ctx, model, input: str, output):
               'unitless between 0 and 120. Default = 60')
 @click.option('--steps', default=100,
               help='Number of transitions to simulate. Default = 100')
-@click.option('--seed', default=100,
-              help='Random number seed. Default = 100')
+@click.option('--seed', default=0,
+              help='Random number seed. Default = 0')
 def simulate(model, polygonality, topology, output, kbt, steps, seed):
     '''
     Simulate the dynamics of a cell network using a trained model.

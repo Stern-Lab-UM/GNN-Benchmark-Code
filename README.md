@@ -9,8 +9,10 @@ large caches, local screenshots, and cluster-specific scratch logs.
 ## Repository Layout
 
 - `analysis/matlab/` - canonical MATLAB analysis and plotting pipeline.
-- `models/mpnn/` - MPNN training/prediction source code and minimal configs.
-- `models/ppgn/` - PPGN training/prediction source code and minimal configs.
+- `models/mpnn/` - source snapshot used for the standard MPNN/PNA
+  training and prediction runs.
+- `models/ppgn/` - source snapshots used for PPGN, kept split into
+  training, prediction, and GL tail packages to preserve provenance.
 - `manuscript_analyses/` - focused scripts used to compute manuscript-specific
   numerical checks, fallback diagnostics, embedding summaries, and tables.
 - `remote_examples/` - small example launch scripts for reproducibility. These
@@ -33,3 +35,13 @@ This repo is not yet publication-ready. Files should be added through
 Do not commit raw datasets, prediction dumps, embeddings, model checkpoints,
 large `.mat` caches, generated figures, or private cluster credentials. The
 publication repository should contain code plus lightweight documentation only.
+
+## Model Code Status
+
+The model source snapshots were copied from the provenance-pinned run trees on
+2026-06-25. See `models/README.md` and
+`docs/model_source_hashes_20260625.csv` for the exact source paths and SHA256
+hash checks. The code is not yet packaged for user installation; an install
+helper and cleaned environment files can be added after we finish selecting the
+publication scripts.
+

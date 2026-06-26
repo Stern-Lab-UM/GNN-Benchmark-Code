@@ -15,10 +15,8 @@ from torch_geometric.nn.models import MLP
 class EdgeRegressor(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers, dropout, edge_dim=2):
         super().__init__()
-        # Ablation: keep the trainer/predictor constructor signature unchanged,
-        # but do not expose raw edge attributes to the final regression head.
-        self.edge_dim = 0
-        mlp_in = 2 * in_channels
+        self.edge_dim = int(edge_dim) if edge_dim is not None else 0
+        mlp_in = 2 * in_channels + self.edge_dim
         self.mlp = MLP(in_channels=mlp_in, hidden_channels=hidden_channels,
                        out_channels=out_channels, num_layers=num_layers,
                        dropout=dropout, norm='instance_norm', act='relu',
@@ -26,5 +24,8 @@ class EdgeRegressor(nn.Module):
 
     def forward(self, x, edge_index, edge_attr=None):
         x_i, x_j = x[edge_index[0]], x[edge_index[1]]
-        h = torch.cat([x_i, x_j], dim=-1)
+        if edge_attr is not None and self.edge_dim > 0:
+            h = torch.cat([x_i, x_j, edge_attr], dim=-1)
+        else:
+            h = torch.cat([x_i, x_j], dim=-1)
         return self.mlp(h)  # linear output, no sigmoid

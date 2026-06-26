@@ -14,35 +14,29 @@ class RegularBlock(nn.Module):
     :param x: Tensor of shape N x in_features x m x m
     :return: Tensor of shape N x out_features x m x m
     """
-    def __init__(self, in_features, out_features, depth, use_skip=True):
+    def __init__(self, in_features, out_features, depth):
         super().__init__()
 
         self.in_features = in_features
         self.out_features = out_features
         self.depth = depth
-        self.use_skip = bool(use_skip)
 
         self.mlp1 = MlpBlock(in_features, out_features, depth)
         self.mlp2 = MlpBlock(in_features, out_features, depth)
 
-        self.skip = (SkipConnection(in_features+out_features, out_features)
-                     if self.use_skip else None)
+        self.skip = SkipConnection(in_features+out_features, out_features)
 
     def forward(self, inputs):
         mult = torch.matmul(self.mlp1(inputs),
                             self.mlp2(inputs))
 
-        if self.use_skip:
-            out = self.skip(in1=inputs, in2=mult)
-        else:
-            out = mult
+        out = self.skip(in1=inputs, in2=mult)
         return out
 
     def compatible_size(self, other):
         return (self.in_features == other.in_features and
                 self.out_features == other.out_features and
-                self.depth == other.depth and
-                self.use_skip == other.use_skip)
+                self.depth == other.depth)
 
 
 class MlpBlock(nn.Module):

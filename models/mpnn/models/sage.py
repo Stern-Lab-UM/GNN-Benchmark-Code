@@ -111,10 +111,7 @@ class GraphSAGE(BaseGraphSAGE):
                 x = self.norms[i](x)
             if self.act is not None and not self.act_first:
                 x = self.act(x)
-            if isinstance(self.dropout, nn.Module):
-                x = self.dropout(x)
-            else:
-                x = F.dropout(x, p=self.dropout, training=self.training)
+            x = F.dropout(x, p=self.dropout, training=self.training)
             if hasattr(self, 'jk'):
                 xs.append(x)
 
@@ -146,7 +143,7 @@ class SAGEConv(BaseSAGEConv):
         if self.project and hasattr(self, 'lin'):
             x = (self.lin(x[0]).relu(), x[1])
 
-        # propagate_type: (x: OptPairTensor, edge_attr: OptTensor)
+        # propagate_type: (x: OptPairTensor)
         out = self.propagate(edge_index, x=x, size=size, edge_attr=edge_attr)
         out = self.lin_l(out)
 
@@ -159,7 +156,7 @@ class SAGEConv(BaseSAGEConv):
 
         return out
 
-    def message(self, x_j: Tensor, edge_attr: OptTensor) -> Tensor:
+    def message(self, x_j: Tensor, edge_attr) -> Tensor:
         if edge_attr is not None:
             return (x_j + edge_attr).relu()
         return x_j
