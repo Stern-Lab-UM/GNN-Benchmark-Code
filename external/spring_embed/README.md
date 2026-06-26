@@ -62,7 +62,7 @@ The publication engine is configured in `src/main.c` with:
 
 - `kA = 0`: length-only embedding; the area term is disabled.
 - `kS = 1`: edge spring coefficient.
-- `tMAX = 1000`, `h0 = 0.001`: relaxation runs until `Time < tMAX`.
+- `nSteps = 2000`, `h0 = 0.001`: relaxation uses 2000 integration updates.
 
 These settings are the ones used to reproduce the saved manuscript embedding
 outputs during the publication-code validation run.

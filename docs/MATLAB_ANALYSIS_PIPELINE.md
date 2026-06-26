@@ -164,7 +164,7 @@ setenv('DCG_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/spring_embed/bu
 ```
 
 Compiled binaries and generated engine outputs are intentionally not tracked by
-git.
+git. The committed engine uses `kA = 0` and 2000 integration updates.
 
 ## Statistical Conventions
 

@@ -7,7 +7,7 @@ double P0=3.8;
 double kM=1.;
 double Sig=0;
 double Time=0;
-double tMAX=1000;
+int nSteps=2000;
 double h0=0.001;
 double lth=0.01;
 double h;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
 
 
     //DYNAMICS
-    Time=0; while(Time<tMAX) eqOfMotion();
+    Time=0; for(int iter=0; iter<nSteps; iter++) eqOfMotion();
     out_tissue(3);
     //*************************
 

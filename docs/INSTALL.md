@@ -138,7 +138,8 @@ Exact GPU reproduction may require installing the specific PyTorch/CUDA build ap
 
 The MATLAB embedding example figures use a small external spring-relaxation
 executable. The source is included under `external/spring_embed/`; compiled
-binaries are not committed.
+binaries are not committed. The committed engine uses `kA = 0` and 2000
+integration updates.
 
 On Linux or a shared cluster with `g++`:
 
