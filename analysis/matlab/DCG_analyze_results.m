@@ -494,7 +494,7 @@ end
 % drop_flag1), so we used to "move" that UW row into the W slot. After
 % drop_flag1 (2026-05-14) W and UW (u,v) sets should match exactly -- meaning
 % setxor returns empty `b` and `c` and this block is mostly a no-op. The
-% `keyboard` on the count check fires if more than one row differs (which
+% The explicit error below fires if more than one row differs (which
 % would indicate a deeper alignment problem).
 if ismember('none_to_lengths', tasks)
     for m = 1 : length(all_models)
@@ -535,8 +535,12 @@ if ismember('none_to_lengths', tasks)
                         % Sanity check: after the move, at most one row should
                         % still differ (the eliminated edge row in pre-drop_flag1
                         % data; zero rows post-drop_flag1).
-                        if nnz(any(I.(all_models{m}).none_to_lengths.vals{i,j}{k}(:,1:2) ~= I.(all_models{m}).lengths_to_lengths.vals{i,j}{k}(:,1:2),2)) ~= 1
-                            keyboard;
+                        n_mismatched_rows = nnz(any(I.(all_models{m}).none_to_lengths.vals{i,j}{k}(:,1:2) ~= I.(all_models{m}).lengths_to_lengths.vals{i,j}{k}(:,1:2),2));
+                        if n_mismatched_rows ~= 1
+                            error('DCG:uwAlignmentMismatch', ...
+                                ['Unexpected W/UW edge-order mismatch after row realignment ', ...
+                                 '(model=%s, subset=%d, seed=%d, graph=%d, mismatched_rows=%d).'], ...
+                                all_models{m}, i, j, k, n_mismatched_rows);
                         end
                     end
 
@@ -663,7 +667,7 @@ for t = 1 : length(tasks)
                             disp([t,i,j,m]);
                         end
                     catch
-                        keyboard;
+                        error('DCG:disabledOrderingCheckFailed', 'Historical ordering check failed.');
                     end
                 else
                     try
@@ -671,7 +675,7 @@ for t = 1 : length(tasks)
                             disp([t,i,j,m]);
                         end
                     catch
-                        keyboard;
+                        error('DCG:disabledOrderingCheckFailed', 'Historical ordering check failed.');
                     end
                 end
             end
@@ -771,8 +775,10 @@ for i = 1 : length(I.(all_models{end}).(tasks{1}).subset_siz)
                 if isnan(I.(all_models{end}).lengths_to_lengths.vals{i,s}{j}(1))
                     continue;
                 end
-            catch
-                keyboard;
+            catch ME
+                error('DCG:graphPlaceholderAccess', ...
+                    'Could not read graph placeholder state (model=%s, subset=%d, seed=%d, graph=%d): %s', ...
+                    all_models{end}, i, s, j, ME.message);
             end
 
             % Per-graph W matrix and its row-preserving vertex-line hop graph.
@@ -817,7 +823,7 @@ for i = 1 : length(I.(all_models{end}).(tasks{1}).subset_siz)
             % S1.distances{curr_idx, curr_col, s}.(data_sets{1}){ss} = distances(line_G1, root_edge_in_line_G1)';
             %
             % if ~isequal(S.distances{curr_idx, curr_col, s}.(data_sets{1}){ss}, S1.distances{curr_idx, curr_col, s}.(data_sets{1}){ss})
-            %     % keyboard;
+            %     % debug stop removed
             % end
             %%
 
@@ -852,10 +858,14 @@ for i = 1 : length(I.(all_models{end}).(tasks{1}).subset_siz)
                     to_compare1 = ~isnan(curr_ground_truth_none_to_lengths(:,1));
                     to_compare2 = ~isnan(curr_ground_truth_lengths_to_lengths(:,1));
                     if ~isequal(S.ground_truth.none_to_lengths{curr_idx, curr_col, s}.(data_sets{1}){j}(to_compare1), curr_ground_truth_none_to_lengths(to_compare1,1)) || ~isequal(S.ground_truth.lengths_to_lengths{curr_idx, curr_col, s}.(data_sets{1}){j}(to_compare2), curr_ground_truth_lengths_to_lengths(to_compare2,1))
-                        keyboard;
+                        error('DCG:groundTruthMismatch', ...
+                            'Ground-truth columns disagree across tasks/models (subset=%d, seed=%d, graph=%d).', ...
+                            i, s, j);
                     end
-                catch
-                    keyboard;
+                catch ME
+                    error('DCG:groundTruthCheckFailed', ...
+                        'Ground-truth consistency check failed (subset=%d, seed=%d, graph=%d): %s', ...
+                        i, s, j, ME.message);
                 end
             end
 
@@ -1183,8 +1193,11 @@ for t = 1 : length(tasks)
     n_graphs = [n_graphs{:}]';
     n_graphs = [n_graphs{:}]';
     n_graphs = cellfun(@str2num, n_graphs);
-    if ~isequal(n_graphs, cellfun(@length, MP.(tasks{t}).vals(:)))
-        keyboard; % mismatch in # of graphs
+    loaded_graphs = cellfun(@length, MP.(tasks{t}).vals(:));
+    if ~isequal(n_graphs, loaded_graphs)
+        error('DCG:graphCountMismatch', ...
+            'Prediction header graph counts do not match loaded graph counts for model=%s task=%s. expected=%s loaded=%s', ...
+            model, tasks{t}, mat2str(n_graphs(:)'), mat2str(loaded_graphs(:)'));
     end
 
 

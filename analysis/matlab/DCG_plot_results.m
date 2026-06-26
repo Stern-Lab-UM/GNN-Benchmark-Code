@@ -5357,7 +5357,11 @@ function emb_run_engine(exe, vt2d, predtmp, sim_id, rundir)
 %   own cwd; system() errors are swallowed (missing outputs are detected later).
 %
 % Shell-side cd (parfor-safe; never touches MATLAB's cwd). Engine writes ./output.
-cmd = sprintf('cd /d "%s" && "%s" "%s" "%s" "%s" >nul 2>&1', rundir, exe, vt2d, predtmp, sim_id);
+if ispc
+    cmd = sprintf('cd /d "%s" && "%s" "%s" "%s" "%s" >nul 2>&1', rundir, exe, vt2d, predtmp, sim_id);
+else
+    cmd = sprintf('cd "%s" && "%s" "%s" "%s" "%s" >/dev/null 2>&1', rundir, exe, vt2d, predtmp, sim_id);
+end
 try system(cmd); catch, end
 end
 
