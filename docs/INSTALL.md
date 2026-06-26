@@ -134,6 +134,45 @@ bash scripts/setup_lh_env.sh --component all --torch skip
 
 Exact GPU reproduction may require installing the specific PyTorch/CUDA build appropriate for the cluster before running the checker.
 
+## Spring Embedding Engine
+
+The MATLAB embedding example figures use a small external spring-relaxation
+executable. The source is included under `external/spring_embed/`; compiled
+binaries are not committed.
+
+On Linux or a shared cluster with `g++`:
+
+```bash
+cd external/spring_embed
+make
+```
+
+This creates:
+
+```text
+external/spring_embed/build/spring_embed
+```
+
+Then point MATLAB to it:
+
+```matlab
+setenv('DCG_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/spring_embed/build/spring_embed')
+```
+
+The same directory also contains a `CMakeLists.txt` for users who prefer CMake:
+
+```bash
+cmake -S external/spring_embed -B external/spring_embed/build
+cmake --build external/spring_embed/build
+```
+
+If the engine or `.vt2d` geometry folders are not available, disable embedding
+example panels with:
+
+```matlab
+DCG_CONFIG.embed_examples = false;
+```
+
 ## What The Checker Does
 
 `scripts/check_install.py` verifies:

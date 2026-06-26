@@ -1,0 +1,10 @@
+/build/
+/output/
+/spring_embed
+/spring_embed.exe
+*.o
+*.obj
+*.ilk
+*.pdb
+*.exp
+*.lib

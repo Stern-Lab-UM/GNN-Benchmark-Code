@@ -9,6 +9,7 @@ screenshots, and cluster-specific scratch logs.
 ## Repository Layout
 
 - `analysis/matlab/` - MATLAB analysis and plotting pipeline.
+- `external/spring_embed/` - source for the spring-relaxation executable used by MATLAB embedding example figures.
 - `models/mpnn/` - source snapshot used for the GraphSAGE, GAT, GIN, and PNA training and prediction runs.
 - `models/ppgn/` - source snapshots used for PPGN, kept split into training, prediction, and GL tail packages to preserve provenance.
 - `manuscript_analyses/` - focused scripts used to compute manuscript-specific numerical checks, fallback diagnostics, embedding summaries, and tables.
@@ -18,6 +19,10 @@ screenshots, and cluster-specific scratch logs.
 ## MATLAB Analysis
 
 The MATLAB scripts in `analysis/matlab/` perform the post-prediction analysis and plotting. They start from saved prediction files; Bayesian optimization, model training, and prediction generation are implemented in the Python/PyTorch code under `models/`. See `docs/MATLAB_ANALYSIS_PIPELINE.md` for the full MATLAB workflow.
+
+Embedding example figures additionally require compiling the spring engine under
+`external/spring_embed/` and pointing MATLAB to the resulting executable through
+`DCG_EMBED_ENGINE` or `DCG_local_config.m`.
 
 ## Data Policy
 

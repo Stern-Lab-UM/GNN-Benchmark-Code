@@ -150,6 +150,22 @@ The embedding plots color edges by the linear per-edge embedding error using a
 turbo colormap with percentile clipping controlled by
 `DCG_CONFIG.embed_color_percentiles`.
 
+The spring-relaxation engine source is included in
+`external/spring_embed/`. Build it locally, then set `embed_engine` to the
+compiled executable:
+
+```bash
+cd external/spring_embed
+make
+```
+
+```matlab
+setenv('DCG_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/spring_embed/build/spring_embed')
+```
+
+Compiled binaries and generated engine outputs are intentionally not tracked by
+git.
+
 ## Statistical Conventions
 
 The plotting code uses the test split for manuscript analyses. For per-hop and
