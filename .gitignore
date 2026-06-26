@@ -58,5 +58,6 @@ results/
 authorized_keys*
 .env
 *.reg
+analysis/matlab/DCG_local_config.m
 
 *.bak_*

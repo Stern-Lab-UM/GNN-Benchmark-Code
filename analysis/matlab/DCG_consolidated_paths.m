@@ -1,5 +1,5 @@
-function out = DCG_consolidated_paths_2026_codex(action, data_root, varargin)
-%DCG_CONSOLIDATED_PATHS_2026_CODEX  Path bridge for the consolidated snapshot.
+function out = DCG_consolidated_paths(action, data_root, varargin)
+%DCG_CONSOLIDATED_PATHS  Path bridge for the consolidated snapshot.
 %
 %   The 2026 revision predictions/models/splits were gathered into a single
 %   flat snapshot folder (e.g. gnn_benchmark_consolidated_20260530):

@@ -1,5 +1,5 @@
 %==========================================================================
-% DCG_plot_everything_2026_codex
+% DCG_plot_everything
 %
 % One-stop plotting wrapper for the current paper figure set.
 %
@@ -15,13 +15,13 @@
 %     Tissue datasets (484/784) have no PPGN data, so they show the other models.
 %   - Revision datasets are single-size, so dataset-size plots are skipped.
 %   - Flip_two still skips the generic single-root hop-distance panel inside
-%     DCG_plot_results_2026_codex, but the revision runner adds the dedicated
+%     DCG_plot_results, but the revision runner adds the dedicated
 %     two-source diagnostics: h_min nearest-T1 profiles, single-T1 vs two-T1
 %     comparison plots, inter-flip-distance curves, zone bars, and heatmaps.
 %
 % CANONICAL WORKFLOW (one source folder, no stale cache):
 %   1. Put the final dataset (pred + .pth + splits) in ONE folder and rebuild
-%      EVERY summary from it: run DCG_rebuild_all_summaries_2026_codex.m
+%      EVERY summary from it: run DCG_rebuild_all_summaries.m
 %      (rebuild_summaries=true) -> writes stamped summaries to that folder's cache.
 %   2. Then run THIS script to plot from those summaries.
 %   The plotter carries a STALE-CACHE GUARD (2026-06-01): each summary is stamped
@@ -34,18 +34,24 @@ close all;
 clc;
 
 code_dir = fileparts(mfilename('fullpath'));
-plotter_script = fullfile(code_dir, 'DCG_plot_results_2026_codex.m');
-revision_script = fullfile(code_dir, 'DCG_run_revision_analyses_2026_codex.m');
+plotter_script = fullfile(code_dir, 'DCG_plot_results.m');
+revision_script = fullfile(code_dir, 'DCG_run_revision_analyses.m');
 
 figure_panel_size = [340, 300];
 scatter_marker_size = 9;
 models_to_exclude = {};   % PPGN data validated/ready 2026-06-01 -> include all models
 
 % ---- DATA ROOT for the whole plotting run (single source of truth) ----------
-% 2026-06-02: interim preview RETIRED. Reads ONLY the consolidated snapshot
-% (the completed Z folder). The old Desktop "C cache" is retired and must never
-% be used, for any reason. Freshness guard re-enabled.
-data_root        = 'Z:\Tomer\gnn_benchmark_consolidated_20260530';
+% Set data_root in the workspace, set DCG_DATA_ROOT, or create an untracked
+% DCG_local_config.m from DCG_local_config_template.m.
+if ~exist('data_root', 'var') || isempty(data_root)
+    path_cfg = DCG_publication_config();
+    data_root = path_cfg.data_root;
+end
+if isempty(data_root)
+    error('DCG:missingDataRoot', ['Set the consolidated prediction snapshot path ', ...
+        'using the data_root variable, DCG_DATA_ROOT, or DCG_local_config.m.']);
+end
 skip_cache_guard = false;
 embed_examples   = true;    % 2D spring-embedding panels (v1 only); ON for finals (2026-06-02)
 % -----------------------------------------------------------------------------
@@ -59,7 +65,7 @@ for d = 1 : numel(original_datasets)
     DCG_CONFIG.figure_panel_size = figure_panel_size;
     DCG_CONFIG.scatter_marker_size = scatter_marker_size;
     DCG_CONFIG.models_to_exclude = models_to_exclude;
-    DCG_CONFIG.embed_examples = embed_examples;   % 2D embedding panels (v1_W / v1_UW) — top toggle
+    DCG_CONFIG.embed_examples = embed_examples;   % 2D embedding panels (v1_W / v1_UW) -- top toggle
     run(plotter_script);
     clear DCG_CONFIG;
     close all;
@@ -91,4 +97,4 @@ make_composite_figures = true;
 
 run(revision_script);
 
-fprintf('\nAll current Codex plotting complete.\n');
+fprintf('\nAll current plotting complete.\n');

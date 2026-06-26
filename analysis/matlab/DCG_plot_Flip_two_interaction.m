@@ -1,5 +1,5 @@
-function outputs = DCG_plot_Flip_two_interaction_2026_codex(analyses_filename, figures_output_dir, save_png, single_t1_analyses_filename)
-%DCG_PLOT_FLIP_TWO_INTERACTION_2026_CODEX
+function outputs = DCG_plot_Flip_two_interaction(analyses_filename, figures_output_dir, save_png, single_t1_analyses_filename)
+%DCG_PLOT_FLIP_TWO_INTERACTION
 % Two-source diagnostics for the Flip_two revision dataset.
 %
 % The standard plotter collapses multiple T1 roots to nearest-root distance.
@@ -95,7 +95,7 @@ function outputs = DCG_plot_Flip_two_interaction_2026_codex(analyses_filename, f
 %                        cache under the consolidated snapshot when missing/empty.
 %   figures_output_dir : (char, optional) directory for CSV/MAT/TXT/FIG/PNG
 %                        outputs. Created if it does not exist. Defaults to the
-%                        canonical Flip_two dataset folder under _figures, so
+%                        configured Flip_two dataset folder under _figures, so
 %                        these diagnostics sit beside the standard Flip_two
 %                        figures.
 %   save_png           : (logical, optional) if true, also export each figure
@@ -126,15 +126,27 @@ function outputs = DCG_plot_Flip_two_interaction_2026_codex(analyses_filename, f
 %   9. Render every figure, collecting their paths into OUTPUTS.
 %
 % DECISIONS / EDGE-CASES
-%   * Defaults are hard-coded Windows paths specific to this study machine.
+%   * Defaults are resolved from DCG_publication_config; pass explicit paths to override.
 %   * near_radius, task and split are the load-bearing analysis choices; see
 %     the FILE OVERVIEW for rationale. (PPGN is now included, 2026-06-01.)
 
 if nargin < 1 || isempty(analyses_filename)
-    analyses_filename = 'Z:\Tomer\gnn_benchmark_consolidated_20260530\_analyzer_cache\revision_codex_2026\Flip_two - analyses data.mat';
+    path_cfg = DCG_publication_config();
+    if isempty(path_cfg.data_root)
+        error('DCG:missingDataRoot', ['Pass analyses_filename explicitly or set ', ...
+            'DCG_DATA_ROOT / DCG_local_config.m.']);
+    end
+    analyses_filename = fullfile(path_cfg.data_root, '_analyzer_cache', ...
+        'revision_2026', 'Flip_two - analyses data.mat');
 end
 if nargin < 2 || isempty(figures_output_dir)
-    figures_output_dir = 'Z:\Tomer\gnn_benchmark_consolidated_20260530\_figures\revision_codex_2026\Flip_two';
+    path_cfg = DCG_publication_config();
+    if ~isempty(path_cfg.data_root)
+        figures_output_dir = fullfile(path_cfg.data_root, '_figures', ...
+            'revision_2026', 'Flip_two');
+    else
+        figures_output_dir = fullfile(fileparts(analyses_filename), '_figures', 'Flip_two');
+    end
 end
 if nargin < 3 || isempty(save_png)
     save_png = false;
@@ -154,13 +166,13 @@ trained_models = {'PPGN','GraphSAGE','GAT','GIN','PNA'};
 model_names = [trained_models, {'Baseline'}];
 colors = paper_model_colors(model_names);
 
-fprintf('[DCG_plot_Flip_two_interaction_2026_codex] loading %s\n', analyses_filename);
+fprintf('[DCG_plot_Flip_two_interaction] loading %s\n', analyses_filename);
 L = load(analyses_filename, 'I');
 I = L.I;
 
 [GraphT, NearestT, PairT, ZoneT, skipped] = extract_flip_two_records(I, task, split_name, trained_models, near_radius);
 
-fprintf('[DCG_plot_Flip_two_interaction_2026_codex] loading single-T1 reference %s\n', single_t1_analyses_filename);
+fprintf('[DCG_plot_Flip_two_interaction] loading single-T1 reference %s\n', single_t1_analyses_filename);
 LS = load(single_t1_analyses_filename, 'I');
 SingleI = LS.I;
 [SingleGraphT, SingleNearestT, SingleZoneT, skipped_single, single_subset] = extract_single_t1_records(SingleI, task, split_name, trained_models, near_radius);
@@ -210,7 +222,7 @@ outputs.heatmap_raw_vs_single = plot_pair_heatmaps(PairVsSingleSummary, trained_
 outputs.heatmap_nmae_vs_single = plot_pair_heatmaps(PairVsSingleSummary, trained_models, 'log2_nmae_delta_vs_single', ...
     'Flip_two log2(nMAE) minus single-T1 log2(nMAE) at same d_{near}', 'Flip_two MAE heatmap by two-T1 distances (log2 nMAE minus single-T1)', figures_output_dir, save_png, true);
 
-fprintf('[DCG_plot_Flip_two_interaction_2026_codex] complete. Output: %s\n', figures_output_dir);
+fprintf('[DCG_plot_Flip_two_interaction] complete. Output: %s\n', figures_output_dir);
 
 end
 
@@ -277,7 +289,7 @@ function [GraphT, NearestT, PairT, ZoneT, skipped] = extract_flip_two_records(I,
 %   * Root marker: col 3 == 0 encodes a freshly created T1 interface. Graphs
 %     not having exactly two such rows are out of scope and skipped.
 %   * Distances are LINE-GRAPH hop counts (edge-to-edge adjacency), matching
-%     DCG_analyze_results_2026_codex; +Inf means unreachable and is filtered.
+%     DCG_analyze_results; +Inf means unreachable and is filtered.
 %   * inter_flip_dist is symmetric, so reading row 1 at the column of root 2
 %     suffices.
 %   * Per-model alignment is guarded by size(vals_m,1)==size(curr_G,1); any
@@ -413,7 +425,7 @@ PairT = records_to_table(PairMeta(1:p_row,:), PairErr(1:p_row,:), ...
 ZoneT = records_to_table(ZoneMeta(1:z_row,:), ZoneErr(1:z_row,:), ...
     {'seed','graph_idx','inter_flip_dist','zone_id'}, model_names);
 
-fprintf('[DCG_plot_Flip_two_interaction_2026_codex] extracted %d graphs, %d nearest-hop records, %d distance-pair records, %d zone records.\n', ...
+fprintf('[DCG_plot_Flip_two_interaction] extracted %d graphs, %d nearest-hop records, %d distance-pair records, %d zone records.\n', ...
     height(GraphT), height(NearestT), height(PairT), height(ZoneT));
 
 end
@@ -580,7 +592,7 @@ NearestT = records_to_table(NearestMeta(1:n_row,:), NearestErr(1:n_row,:), ...
 ZoneT = records_to_table(ZoneMeta(1:z_row,:), ZoneErr(1:z_row,:), ...
     {'seed','graph_idx','zone_id'}, model_names);
 
-fprintf(['[DCG_plot_Flip_two_interaction_2026_codex] extracted single-T1 reference ', ...
+fprintf(['[DCG_plot_Flip_two_interaction] extracted single-T1 reference ', ...
     'subset_i=%d (subset_siz=%g, subset_idx=%g): %d graphs, %d nearest-hop records, %d zone records.\n'], ...
     subset_info.subset_i, subset_info.subset_siz, subset_info.subset_idx, height(GraphT), height(NearestT), height(ZoneT));
 
@@ -1048,7 +1060,7 @@ function Summary = summarize_wide_records(T, group_vars, model_names)
 %   * Baseline's nMAE is fixed to 0 (it is its own reference), so it plots as a
 %     flat zero line on every log2-nMAE axis.
 %   * LOG-PLACEMENT RULE (2026-06-01): MAE is ARITHMETIC, nMAE is GEOMETRIC, to
-%     match DCG_plot_results_2026_codex. So log_seed = log2(mean(error)) (log
+%     match DCG_plot_results. So log_seed = log2(mean(error)) (log
 %     AFTER the within-seed mean) and nmae_seed = mean(log2(model/Baseline))
 %     (log PER record, then averaged -- a geometric-mean ratio, as the paper
 %     defines nMAE). The Baseline column is pinned to 0. (An interim 2026-06-01
@@ -1305,14 +1317,11 @@ function single_t1_analyses_filename = default_single_t1_analyses_filename(analy
 %
 % DECISIONS / EDGE-CASES
 %   * The first candidate is '<same folder>\v1_W - analyses data.mat'.
-%   * A hard-coded study-machine fallback is kept for direct command-window use
-%     when analyses_filename itself is empty or from another folder.
+%   * Only the same cache folder is searched automatically. Pass an explicit
+%     single_t1_analyses_filename to compare against a different cache.
 
 cache_dir = fileparts(analyses_filename);
-candidates = {
-    fullfile(cache_dir, 'v1_W - analyses data.mat')
-    'Z:\Tomer\gnn_benchmark_consolidated_20260530\_analyzer_cache\revision_codex_2026\v1_W - analyses data.mat'
-    };
+candidates = {fullfile(cache_dir, 'v1_W - analyses data.mat')};
 
 single_t1_analyses_filename = candidates{1};
 for i = 1 : numel(candidates)
@@ -1450,7 +1459,7 @@ function write_assumptions(figures_output_dir, analyses_filename, single_t1_anal
 %   (none returned) Writes flip_two_analysis_assumptions.txt listing: source
 %   cache, split, model set including PPGN, the col-3==0 root definition, the
 %   vertex-line distance method
-%   (matching DCG_analyze_results_2026_codex), d1/d2/d_near/d_far and inter-flip
+%   (matching DCG_analyze_results), d1/d2/d_near/d_far and inter-flip
 %   distance definitions, the near-radius zone scheme, the tertile cut points,
 %   the aggregation ladder, the normalization definition, and the two skip
 %   counts.

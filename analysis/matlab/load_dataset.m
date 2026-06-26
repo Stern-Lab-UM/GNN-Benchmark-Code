@@ -17,10 +17,10 @@ function [graph_names, graphs_from_Matej_before_prediction, file_header, graph_i
 %   Outputs
 %   -------
 %     GRAPH_NAMES
-%       Cell array (n_graphs × 1) of basenames, e.g. 'graph_16_3_20_...'.
+%       Cell array (n_graphs x 1) of basenames, e.g. 'graph_16_3_20_...'.
 %
 %     GRAPHS_FROM_MATEJ_BEFORE_PREDICTION
-%       Cell array (n_graphs × 1) of the raw per-graph text blocks
+%       Cell array (n_graphs x 1) of the raw per-graph text blocks
 %       (edge rows, and node rows when present). The historical name
 %       is preserved because callers depend on it by position.
 %
@@ -36,8 +36,8 @@ function [graph_names, graphs_from_Matej_before_prediction, file_header, graph_i
 %       filled with NaN.
 %
 %     VALS
-%       Cell array (n_graphs × 1). Each entry is a numeric matrix
-%       (n_rows × n_cols) obtained by reading the corresponding graph
+%       Cell array (n_graphs x 1). Each entry is a numeric matrix
+%       (n_rows x n_cols) obtained by reading the corresponding graph
 %       block and reshaping based on the column count detected in the
 %       second edge row (the first row after the two header-style
 %       newlines).
@@ -60,7 +60,7 @@ if nargin < 2
     consider_nodes = 0;
 end
 
-% Slurp the whole file as a single character stream — simpler than
+% Slurp the whole file as a single character stream -- simpler than
 % line-by-line because the regexes work directly on the buffer.
 fid = fopen(filename, 'rt');
 t = fread(fid, inf, '*char')';
@@ -135,7 +135,7 @@ else
 end
 
 % The top-level header is everything before the first 'Simulation'
-% token — lazy regex on '.' (with 'Total graphs' as the anchor) gives
+% token -- lazy regex on '.' (with 'Total graphs' as the anchor) gives
 % exactly that block.
 file_header = regexp(t, '(Total graphs(?:(?!Simulation).)+?)Simulation', 'tokens');
 file_header = file_header{1}{1};
@@ -159,7 +159,7 @@ end
 
 % Parse each graph block into a numeric matrix. The column count is
 % detected from the second edge row (between the 2nd and 3rd newline
-% — the first newline ends the graph header, the second ends the
+% -- the first newline ends the graph header, the second ends the
 % first edge row). sscanf is used because it tolerates scientific
 % notation in the values.
 vals = cell(length(graphs_from_Matej_before_prediction),1);

@@ -1,117 +1,44 @@
 %==========================================================================
-%  DCG_analyze_results_2026_codex — LIVE PIPELINE ANALYZER
+% DCG_analyze_results
 %
-%  This is the LIVE analyzer executed by the driver
-%  (DCG_run_revision_analyses_2026_codex) — it is what builds every
-%  results_summary.mat. It has DIVERGED from the original
-%  /home/tomers/DCG_analyze_results_2024.m: the code is NOT identical anymore.
-%  Additions over the 2024 original include the consolidated-snapshot path
-%  layer (DCG_consolidated_paths_2026_codex), the flat-file extractors
-%  (extract_MP_results / extract_PPGN_results / read_dataset_inds), the
-%  drop_flag1 baseline fix, partial-coverage NaN-fill (section 6), and the
-%  ref_priority generalization (2026-05-31, section 10). EDIT THIS FILE
-%  directly. See DCG_PIPELINE_HANDOFF_2026-06-01.md for the full
-%  math/architecture reference.
+% Parse saved GNN prediction files, attach train/validation/test split indices,
+% compute per-graph and per-hop prediction-error summaries, and save the
+% result-summary structure used by the plotting scripts.
 %
-%--------------------------------------------------------------------------
-%  PURPOSE
-%--------------------------------------------------------------------------
-%  Read a directory tree of GNN prediction files (4 message-passing
-%  architectures plus PPGN) produced for the T1-transition benchmark, package
-%  them into a uniform in-memory struct `I`, then compute a per-graph
-%  per-distance summary `S` and persist it to `results_summary.mat`.
+% This script is the post-prediction analyzer. It does not run Bayesian
+% optimization, train neural networks, or generate prediction files. Those
+% steps are handled by the Python/PyTorch model code under models/.
 %
-%  Two analyses are supported (selected by `curr_analysis`):
-%    'Standard dataset experiments'    -- 6 training-set sizes, 5 seeds,
-%                                         two tasks ('lengths_to_lengths' = W,
-%                                         'none_to_lengths' = UW). 256 cells.
-%    'Uniform hexagonality experiments' -- single size, 5 seeds, W only.
-%                                         Cross-references the Standard run.
+% DATA LAYOUT
+%   The preferred input is a consolidated prediction snapshot:
 %
-%--------------------------------------------------------------------------
-%  DATA LAYOUT ON DISK
-%--------------------------------------------------------------------------
-%  root/Standard dataset experiments/
-%      PPGN/<task> <seed>/training_set_<idx>_<size>_cells/predictions.txt
-%      MP/training_set_1_32_cells/                 (the 1298-cohort)
-%      MP/tmp/training_set_2_*_cells/              (the smaller cohorts)
-%      All inds files/training_set_*_cells/{train,val,test}.inds
-%  root/Uniform hexagonality experiments/...       (same shape)
-%  root/Graphs split into training and test sets/  (raw graph .txt files)
+%     <data_root>/
+%       <task>_<model>_<W|UW>_<size>_s<seed>.pred.txt
+%       splits/<key>/train.inds
+%       splits/<key>/val.inds
+%       splits/<key>/test.inds
 %
-%--------------------------------------------------------------------------
-%  PREDICTION FILE FORMATS
-%--------------------------------------------------------------------------
-%  Each predictions file is a text blob with one block per graph. Each block
-%  begins with `Simulation id: graph_<n_cells>_<repeat>_<disorder>...` and
-%  contains numeric rows. Columns depend on model and task:
+%   Legacy flat prediction filenames are also supported through
+%   DCG_consolidated_paths and read_dataset_inds.
 %
-%   * W  (lengths_to_lengths) MP:    6 cols  [u v pre flag post pred]
-%   * UW (none_to_lengths)    MP:    4 cols  [u v post pred]
-%   * W  PPGN: 6 cols + interleaved 38-col node-feature rows (1 per cell)
-%   * UW PPGN: 5 cols + interleaved 38-col node-feature rows
+% PREDICTION-FILE COLUMNS
+%   W  (lengths_to_lengths), MPNN: [u v pre flag post pred]
+%   UW (none_to_lengths),    MPNN: [u v post pred]
+%   PPGN files may include interleaved node-feature rows, which are removed by
+%   load_dataset when consider_nodes is enabled.
 %
-%  Each W file lists every directed edge (so 2*n_unique_edges rows). The
-%  loader de-duplicates by keeping rows with u<v, leaving 769 rows per graph
-%  for a 256-cell tissue: 768 normal + 1 "eliminated" edge (flag=1, post=0).
+% MAIN OUTPUTS
+%   output_filename             (analyses data.mat): parsed raw model data I
+%   results_summary_filename    (results_summary.mat): summary S plus model,
+%                                task, and split metadata
 %
-%--------------------------------------------------------------------------
-%  KEY IN-MEMORY STRUCTURES
-%--------------------------------------------------------------------------
-%  I  -- per-model raw data, set by extract_PPGN_results / extract_MP_results.
-%        Field names match the model: I.PPGN, I.GraphSAGE, I.GAT, I.GIN, I.PNA.
-%        After post-processing, the pseudo-model I.no_learning is added.
-%        Each model substruct has fields per task:
-%          I.<model>.<task>.subsets      (cell of training_set_*_cells names)
-%          I.<model>.<task>.subset_idx   (numeric, 1..N)
-%          I.<model>.<task>.subset_siz   (numeric, cells per cohort)
-%          I.<model>.<task>.graph_names  (cell)
-%          I.<model>.<task>.file_header  (text preamble of each file)
-%          I.<model>.<task>.graph_id     (struct of per-graph metadata)
-%          I.<model>.<task>.vals         (cell array of per-graph numeric mats)
-%          I.<model>.<task>.inds         (struct of train/val/test indices)
-%        I.PPGN matches the MP layout directly (subsets x seeds cell) as of
-%        2026-05-23; section 6 NaN-fills any (i,s) where no PPGN file exists.
+% HOW TO RUN
+%   Set dataset directly, or pass a DCG_CONFIG struct from a driver script.
+%   Set data_root through DCG_CONFIG.data_root, the DCG_DATA_ROOT environment
+%   variable, or an untracked DCG_local_config.m file.
 %
-%  S  -- summary built for the plotter. After the main loop and the squeeze
-%        at the bottom of the script, each S.<field> is a (n_seeds x n_sizes)
-%        cell of (struct with .train/.val/.test fields). Fields include:
-%          distances, edges, ground_truth.lengths_to_lengths,
-%          ground_truth.none_to_lengths, predictions.lengths_to_lengths,
-%          predictions.none_to_lengths, prediction_errors.lengths_to_lengths,
-%          prediction_errors.none_to_lengths, cell_hexagonality,
-%          edge_hexagonality, edge_hexagonality_in_dist, hexagonality,
-%          disorder.
-%        Inside each .train/.val/.test field the value is a cell of per-graph
-%        results. Per-graph predictions/errors are themselves cells of
-%        per-hop (n_edges_at_that_hop x n_models) matrices.
-%
-%--------------------------------------------------------------------------
-%  RESULT FILES PRODUCED
-%--------------------------------------------------------------------------
-%   output_filename             (analyses data.mat)  -- raw `I`
-%   results_summary_filename    (results_summary.mat) -- summary `S` plus
-%                                                       all_models, tasks,
-%                                                       data_sets
-%
-%--------------------------------------------------------------------------
-%  HOW IT IS RUN
-%--------------------------------------------------------------------------
-%  As a script. Configure `curr_analysis` (line below) and execute.
-%  Optionally pre-populate a `DCG_CONFIG` struct in the base workspace to
-%  override any of the path / parameter fields — used by run_dcg_pipeline.m
-%  to switch between datasets without editing this file.
-%
-%  After this script finishes, run DCG_plot_results_2024.m to generate the
-%  figures (or DCG_plot_results_2024_for_hexagonality.m for the hex run).
-%==========================================================================
-
-%{
-
-For some reason with PPGN there's an extra edge for the future and with MP there isn't, I think I already dealt with it, it is not something we can change...
-
-%}
-
+%   After this script finishes, use DCG_plot_results or DCG_plot_everything to
+%   generate figures from the saved summaries.
 %==========================================================================
 % 1) DATASET SELECTION  --  set `dataset` below, then Run.
 %==========================================================================
@@ -127,8 +54,8 @@ For some reason with PPGN there's an extra edge for the future and with MP there
 %   'kA_1'       'kA_10'       -- revision: alternative K_A
 %   'Flip_two'                 -- revision: two concurrent T1 transitions
 %   'Tissue_484' 'Tissue_784'  -- revision: large tissues (no PPGN)
-% `dataset` may be pre-set by DCG_run_all_datasets.m; default it only if unset.
-% The struct calling convention (DCG_run_revision_analyses_2026_codex.m) passes
+% `dataset` may be pre-set by a driver script; default it only if unset.
+% The struct calling convention (DCG_run_revision_analyses.m) passes
 % the dataset via DCG_CONFIG.dataset; honor it BEFORE the default and the
 % dataset selection below, otherwise the analyzer silently runs as 'v1_W'.
 if exist('DCG_CONFIG', 'var') && isstruct(DCG_CONFIG) ...
@@ -222,9 +149,10 @@ end
 %==========================================================================
 % 2) DATASET-INDEPENDENT CONFIGURATION
 %==========================================================================
-% Flat data folder; per-dataset split indices under inds\<prefix>\ are read
+% Prediction snapshot folder; per-dataset split indices are read
 % by the read_dataset_inds() helper at the end of this file.
-data_root = 'Z:\Tomer\gnn_benchmark_consolidated_20260530';
+path_cfg = DCG_publication_config();
+data_root = path_cfg.data_root;
 inds_root = '';
 
 % The new prediction files are 0-indexed: pred_..._s0 .. pred_..._s4.
@@ -272,6 +200,11 @@ if exist('DCG_CONFIG', 'var') && isstruct(DCG_CONFIG)
     end
 end
 
+if isempty(data_root)
+    error('DCG:missingDataRoot', ['Set the consolidated prediction snapshot path ', ...
+        'using DCG_CONFIG.data_root, DCG_DATA_ROOT, or DCG_local_config.m.']);
+end
+
 if ~isequal(data_sets, {'test'})
     error('DCG:testOnlyRequired', ...
         'Manuscript analyses must be generated from the test split only. data_sets must be {''test''}.');
@@ -295,7 +228,7 @@ end
 % mapped by _applies_to.txt). Detect once; extract_*_results and
 % read_dataset_inds switch path resolution on this flag. Legacy flat layout
 % (pred_<prefix>__<model>_s<seed>.txt + inds\<prefix>\) is used otherwise.
-is_consolidated = DCG_consolidated_paths_2026_codex('is_consolidated', data_root);
+is_consolidated = DCG_consolidated_paths('is_consolidated', data_root);
 if is_consolidated
     inds_root = fullfile(data_root, 'splits');
 end
@@ -322,7 +255,7 @@ if has_ppgn
     ppgn_expected_prefixes = unique(ppgn_expected_prefixes, 'stable');
     for i = 1 : numel(ppgn_expected_prefixes)
         if is_consolidated
-            glob_path = DCG_consolidated_paths_2026_codex('pred_glob', ...
+            glob_path = DCG_consolidated_paths('pred_glob', ...
                 data_root, ppgn_expected_prefixes{i}, 'PPGN');
         else
             glob_path = fullfile(data_root, ...
@@ -340,10 +273,10 @@ has_ppgn = has_ppgn && ppgn_available;
 if ~isfolder(cache_dir), mkdir(cache_dir); end
 
 
-fprintf('[DCG_analyze_results_2026_codex] dataset=%s | tasks=%s | has_ppgn=%d | n_cells=%d\n', ...
+fprintf('[DCG_analyze_results] dataset=%s | tasks=%s | has_ppgn=%d | n_cells=%d\n', ...
     dataset, strjoin(tasks, ','), has_ppgn, n_cells);
 if ~isempty(ppgn_expected_prefixes)
-    fprintf('[DCG_analyze_results_2026_codex] PPGN prefixes matched: %d/%d\n', ...
+    fprintf('[DCG_analyze_results] PPGN prefixes matched: %d/%d\n', ...
         numel(ppgn_available_prefixes), numel(ppgn_expected_prefixes));
 end
 
@@ -400,7 +333,7 @@ all_models = fieldnames(I);
 % 5 seeds instead of 6 x 5) and has no order dependency on v1_W.
 
 % Keep an untouched snapshot. The subsequent post-processing modifies `I` in
-% place; reassigning `I = original_I` is mostly a marker — handy in interactive
+% place; reassigning `I = original_I` is mostly a marker -- handy in interactive
 % sessions if you want to rewind to this point.
 original_I = I;
 
@@ -479,7 +412,7 @@ clear model_names fill_grid fill_nsub fill_nseed xref_vals xref_inds Vm Nm sref 
 %==========================================================================
 % taking from each architecture only the test set values:
 % After this block, I.<model>.<task>.vals{i,s} is the subset of graphs that
-% belong to data_sets{1} — typically 'test' for paper figures. The .inds
+% belong to data_sets{1} -- typically 'test' for paper figures. The .inds
 % struct holds the index lists per split; we look up the right one and
 % pull those rows out of vals.
 for m = 1 : length(all_models)
@@ -559,7 +492,7 @@ end
 % index via sub2ind, then use setxor to find the rows that exist in one
 % but not the other. The eliminated edge sat in W but not in UW (before
 % drop_flag1), so we used to "move" that UW row into the W slot. After
-% drop_flag1 (2026-05-14) W and UW (u,v) sets should match exactly — meaning
+% drop_flag1 (2026-05-14) W and UW (u,v) sets should match exactly -- meaning
 % setxor returns empty `b` and `c` and this block is mostly a no-op. The
 % `keyboard` on the count check fires if more than one row differs (which
 % would indicate a deeper alignment problem).
@@ -681,7 +614,7 @@ end
 % Each model's `.subsets` is a list of training-set names (cohort folders).
 % We intersect them so downstream analyses only iterate over cohorts every
 % model trained on. With the v1 paper data this intersection is the full
-% set — but the variable is computed regardless.
+% set -- but the variable is computed regardless.
 all_models = fieldnames(I);
 is_initialized = 1;
 available_subsets = [];
@@ -890,7 +823,7 @@ for i = 1 : length(I.(all_models{end}).(tasks{1}).subset_siz)
 
             % Per-edge ground-truth post-T1 length, pulled from PNA's matrix
             % (any non-PPGN model would work since the GT column is identical
-            % across models — PNA is chosen by convention).
+            % across models -- PNA is chosen by convention).
             S.ground_truth.lengths_to_lengths{curr_idx, curr_col, s}.(data_sets{1}){ss} = I.(ref_model).lengths_to_lengths.vals{i,s}{j}(:,end-1);
 
             if ismember('none_to_lengths', tasks)
@@ -898,7 +831,7 @@ for i = 1 : length(I.(all_models{end}).(tasks{1}).subset_siz)
             end
 
             % Stack each model's last (prediction) and second-to-last (GT)
-            % column horizontally — one column per model — into per-edge
+            % column horizontally -- one column per model -- into per-edge
             % matrices. curr_vals_* is |pred - gt|.
             curr_predictions_lengths_to_lengths = cell2mat(cellfun(@(curr_model) I.(curr_model).lengths_to_lengths.vals{i,s}{j}(:,end), all_models, 'UniformOutput', false)');
             curr_ground_truth_lengths_to_lengths = cell2mat(cellfun(@(curr_model) I.(curr_model).lengths_to_lengths.vals{i,s}{j}(:,end-1), all_models, 'UniformOutput', false)');
@@ -951,7 +884,7 @@ for i = 1 : length(I.(all_models{end}).(tasks{1}).subset_siz)
 
             % Bucket the now-sorted predictions and errors by hop distance.
             % After this, each S.predictions.<task>{...}{ss} is a cell of
-            % length(unique hops) — each entry is (n_edges_at_that_hop x n_models).
+            % length(unique hops) -- each entry is (n_edges_at_that_hop x n_models).
             S.predictions.lengths_to_lengths{curr_idx, curr_col, s}.(data_sets{1}){ss} = mat2cell(curr_predictions_lengths_to_lengths, h', size(curr_predictions_lengths_to_lengths,2));
             S.prediction_errors.lengths_to_lengths{curr_idx, curr_col, s}.(data_sets{1}){ss} = mat2cell(curr_vals_lengths_to_lengths, h', size(curr_vals_lengths_to_lengths,2));
             if ismember('none_to_lengths', tasks)
@@ -1051,7 +984,7 @@ S.predictions.none_to_lengths = squeeze(S.predictions.none_to_lengths)';
 % fingerprint of the source prediction set and the analysis algorithm version.
 % The source fingerprint catches changed pred files; the algorithm version
 % catches logic changes such as the hop-distance definition.
-source_manifest = dcg_source_manifest_2026_codex(data_root); %#ok<NASGU>
+source_manifest = dcg_source_manifest(data_root); %#ok<NASGU>
 save(results_summary_filename, 'S', 'all_models', 'tasks', 'data_sets', ...
     'source_manifest', 'analysis_algorithm_version');
 
@@ -1080,7 +1013,7 @@ end
 
 % Resolve prediction filenames against the consolidated snapshot layout when
 % data_root is one; otherwise the legacy flat pred_<prefix>__<model>_s<seed>.
-consolidated = DCG_consolidated_paths_2026_codex('is_consolidated', data_root);
+consolidated = DCG_consolidated_paths('is_consolidated', data_root);
 
 for t = 1 : length(tasks)
 
@@ -1144,7 +1077,7 @@ for t = 1 : length(tasks)
         end
 
         if consolidated
-            curr_filename = DCG_consolidated_paths_2026_codex('pred_file', ...
+            curr_filename = DCG_consolidated_paths('pred_file', ...
                 data_root, prefix_for_file, model, seeds(s_par));
         else
             curr_filename = fullfile(data_root, ...
@@ -1180,7 +1113,7 @@ for t = 1 : length(tasks)
             % a re-evaluation being concatenated into the file by mistake (hit
             % on Tissue_484 GraphSAGE seed 2 graph 816: 71 affected edges, each
             % with two near-identical prediction rows). Keep the first
-            % occurrence per (u,v) — predictions are equivalent to within
+            % occurrence per (u,v) -- predictions are equivalent to within
             % float noise so the choice is immaterial.
             [~, unique_idx] = unique(vv_k{j}(:,1:2), 'rows', 'stable');
             if numel(unique_idx) < size(vv_k{j}, 1)
@@ -1284,7 +1217,7 @@ if isempty(gcp('nocreate'))
 end
 
 % Consolidated snapshot vs legacy flat pred filenames (see extract_MP_results).
-consolidated = DCG_consolidated_paths_2026_codex('is_consolidated', data_root);
+consolidated = DCG_consolidated_paths('is_consolidated', data_root);
 
 for t = 1 : length(tasks)
 
@@ -1342,7 +1275,7 @@ for t = 1 : length(tasks)
         end
 
         if consolidated
-            curr_filename = DCG_consolidated_paths_2026_codex('pred_file', ...
+            curr_filename = DCG_consolidated_paths('pred_file', ...
                 data_root, prefix_for_file, 'PPGN', seeds(s_par));
         else
             curr_filename = fullfile(data_root, ...
@@ -1447,9 +1380,9 @@ end
 % MATLAB indexing -- the same convention the legacy per-cohort loader used.
 function inds = read_dataset_inds(inds_root, prefix, data_root)
 if nargin < 3, data_root = ''; end
-if ~isempty(data_root) && DCG_consolidated_paths_2026_codex('is_consolidated', data_root)
+if ~isempty(data_root) && DCG_consolidated_paths('is_consolidated', data_root)
     % Consolidated snapshot: split is in splits\<key>\, chosen by _applies_to.
-    inds_dir = DCG_consolidated_paths_2026_codex('inds_dir', data_root, prefix);
+    inds_dir = DCG_consolidated_paths('inds_dir', data_root, prefix);
     if isempty(inds_dir)
         error('read_dataset_inds:noSplit', ...
               'no split folder applies to prefix "%s" under %s', ...

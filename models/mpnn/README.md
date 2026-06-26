@@ -1,10 +1,7 @@
 # MPNN/PNA Source Snapshot
 
-Source copied from:
-
-`Z:\Tomer\gnn_cluster_env_20260529\bundle\src`
-
-This is the provenance-pinned source tree used for the standard GraphSAGE, GAT, GIN, and PNA training/prediction workflow.
+This is the provenance-pinned source tree used for the standard GraphSAGE, GAT,
+GIN, and PNA training/prediction workflow.
 
 Important files:
 
@@ -14,6 +11,8 @@ Important files:
 - `models/edge_regressor.py` - regression head used for edge-length prediction.
 - `models/pna.py`, `models/gin.py`, `models/sage.py` - local backbones.
 
-GAT is instantiated through PyTorch Geometric in `trainer_final.py`; there is no separate local `gat.py` file in this snapshot.
+GAT is instantiated through PyTorch Geometric in `trainer_final.py`; there is no
+separate local `gat.py` file in this snapshot.
 
-The source was copied without Python bytecode caches or backup files. File hashes are recorded in `../../docs/model_source_hashes_20260625.csv`.
+The source was copied without Python bytecode caches or backup files. File
+hashes are recorded in `../../docs/model_source_hashes_20260625.csv`.

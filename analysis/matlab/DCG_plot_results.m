@@ -1,14 +1,13 @@
 %==========================================================================
-%  DCG_plot_results_2026_working
+%  DCG_plot_results
 %
-%  Working copy of DCG_plot_results_2026.m, reorganized to use the same
-%  per-dataset selector pattern as DCG_analyze_results_2026_working.m.
+%  Plotting entry point for the consolidated DCG benchmark analyses.
 %  Section 1 picks `dataset` (default v1_W; pre-set in the workspace to
 %  override). Section 2's if/elseif sets all per-dataset parameters and
 %  per-plot skip flags. Sections 3+ run the existing plotting logic with
 %  the right gates applied.
 %
-%  CODEx VERSION. The core MAE extraction follows the canonical script, with
+%  Publication version. The core MAE extraction follows the canonical script, with
 %  explicit test-split gating, graph-weighted hop summaries, and
 %  graph-weighted baseline normalization for normalized plots.
 %
@@ -258,7 +257,8 @@ end
 %==========================================================================
 % 2) DATASET-INDEPENDENT CONFIGURATION
 %==========================================================================
-data_root                = 'Z:\Tomer\gnn_benchmark_consolidated_20260530';
+path_cfg                 = DCG_publication_config();
+data_root                = path_cfg.data_root;
 cache_dir                = '';
 figures_root             = '';
 results_summary_filename = '';
@@ -372,18 +372,35 @@ end
 if ~isfield(DCG_CONFIG, 'embed_color_scale')
     DCG_CONFIG.embed_color_scale = embed_color_scale;
 end
+if ~isfield(DCG_CONFIG, 'embed_engine') || isempty(DCG_CONFIG.embed_engine)
+    DCG_CONFIG.embed_engine = path_cfg.embed_engine;
+end
+if ~isfield(DCG_CONFIG, 'embed_workdir') || isempty(DCG_CONFIG.embed_workdir)
+    DCG_CONFIG.embed_workdir = path_cfg.embed_workdir;
+end
+if ~isfield(DCG_CONFIG, 'embed_vt2d_std') || isempty(DCG_CONFIG.embed_vt2d_std)
+    DCG_CONFIG.embed_vt2d_std = path_cfg.embed_vt2d_std;
+end
+if ~isfield(DCG_CONFIG, 'embed_vt2d_rev') || isempty(DCG_CONFIG.embed_vt2d_rev)
+    DCG_CONFIG.embed_vt2d_rev = path_cfg.embed_vt2d_rev;
+end
+
+if isempty(data_root)
+    error('DCG:missingDataRoot', ['Set the consolidated prediction snapshot path ', ...
+        'using DCG_CONFIG.data_root, DCG_DATA_ROOT, or DCG_local_config.m.']);
+end
 
 if isempty(cache_dir)
     cache_dir = fullfile(data_root, '_analyzer_cache');
-    % Consolidated snapshot keeps the codex summaries/analyses in a
-    % 'revision_codex_2026' subfolder (matches DCG_run_revision_analyses_2026_codex
-    % and DCG_rebuild_all_summaries_2026_codex). Prefer it when present so a
+    % Consolidated snapshot keeps the revision summaries/analyses in a
+    % 'revision_2026' subfolder (matches DCG_run_revision_analyses
+    % and DCG_rebuild_all_summaries). Prefer it when present so a
     % DIRECT plotter call -- e.g. the v1_W / v1_UW / hex calls from
     % DCG_plot_everything that don't pass results_summary_filename -- finds the
     % summaries instead of looking one level too high in _analyzer_cache\.
-    codex_cache = fullfile(cache_dir, 'revision_codex_2026');
-    if isfolder(codex_cache)
-        cache_dir = codex_cache;
+    revision_cache = fullfile(cache_dir, 'revision_2026');
+    if isfolder(revision_cache)
+        cache_dir = revision_cache;
     end
 end
 if isempty(figures_root)
@@ -391,10 +408,10 @@ if isempty(figures_root)
     revision_fig_datasets = {'v1_2_16_W', 'Shear_1_2', 'Shear_1_5', ...
         'kA_1', 'kA_10', 'Flip_two', 'Tissue_484', 'Tissue_784'};
     if ismember(dataset, revision_fig_datasets) && ...
-            DCG_consolidated_paths_2026_codex('is_consolidated', data_root)
+            DCG_consolidated_paths('is_consolidated', data_root)
         % Direct runs should land in the same canonical revision figure tree
-        % used by DCG_run_revision_analyses_2026_codex.
-        figures_root = fullfile(figures_root, 'revision_codex_2026');
+        % used by DCG_run_revision_analyses.
+        figures_root = fullfile(figures_root, 'revision_2026');
     end
 end
 if isempty(results_summary_filename)
@@ -430,7 +447,7 @@ end
 if ~isfolder(figures_output_dir)
     mkdir(figures_output_dir);
 end
-fprintf('[DCG_plot_results_2026_codex] figures output: %s\n', figures_output_dir);
+fprintf('[DCG_plot_results] figures output: %s\n', figures_output_dir);
 setappdata(0, 'DCG_CURRENT_DATASET_LABEL', sprintf('%s (%s)', plot_title, dataset));
 
 % Opt-in compositor for the revision "extreme task family" figures. This is
@@ -438,7 +455,7 @@ setappdata(0, 'DCG_CURRENT_DATASET_LABEL', sprintf('%s (%s)', plot_title, datase
 % explicitly requests the new composites.
 if isfield(DCG_CONFIG, 'make_extreme_task_composites_only') && ...
         isequal(DCG_CONFIG.make_extreme_task_composites_only, true)
-    DCG_make_extreme_task_composites_tmp(data_root, cache_dir, figures_root, ...
+    DCG_make_extreme_task_composites_internal(data_root, cache_dir, figures_root, ...
         dataset_to_analyze, h_bins_for_quality_analysis, DCG_CONFIG);
     return;
 end
@@ -448,7 +465,7 @@ if strcmp(dataset, 'hex')
     remove_stale_non_hex_outputs_from_hex_folder(figures_output_dir);
 end
 
-fprintf('[DCG_plot_results_2026_codex] dataset=%s | tasks=%s | n_cells=%d | multi_cohort=%d | multi_T1=%d | hex_overlay=%d\n', ...
+fprintf('[DCG_plot_results] dataset=%s | tasks=%s | n_cells=%d | multi_cohort=%d | multi_T1=%d | hex_overlay=%d\n', ...
     dataset, strjoin(tasks_to_plot, ','), n_cells, multi_cohort, multi_T1, is_hex_overlay);
 
 %==========================================================================
@@ -462,7 +479,7 @@ data_sets = loaded_summary.data_sets;
 
 % --- CACHE-STALENESS GUARD (2026-06-01) --------------------------------------
 % Refuse to plot a summary that no longer matches its source folder. The analyzer
-% stamped 'source_manifest' (dcg_source_manifest_2026_codex); recompute it from
+% stamped 'source_manifest' (dcg_source_manifest); recompute it from
 % the CURRENT data_root and compare. ERROR on mismatch (folder changed since the
 % summary was built -> would plot stale data); WARN if the summary predates the
 % guard (no stamp). Override with DCG_CONFIG.skip_cache_guard = true.
@@ -472,7 +489,7 @@ if ~skip_cache_guard
         warning('DCG:noCacheStamp', ['Summary "%s" has NO provenance stamp (built by an ' ...
             'older analyzer). Cannot verify it is current -- rebuild it ' ...
             '(rebuild_summaries=true) to be safe.'], results_summary_filename);
-    elseif ~strcmp(stamp_loaded.source_manifest, dcg_source_manifest_2026_codex(data_root))
+    elseif ~strcmp(stamp_loaded.source_manifest, dcg_source_manifest(data_root))
         error('DCG:staleCache', ['STALE SUMMARY -- refusing to plot.\n  %s\nwas built from a ' ...
             'DIFFERENT set of prediction files than currently sit in\n  %s\nRebuild it ' ...
             '(rebuild_summaries=true) before plotting. (Override: ' ...
@@ -505,7 +522,7 @@ if ~all(isfield(S.prediction_errors, tasks))
         strjoin(tasks, ', '));
 end
 if ~isequal(tasks, loaded_tasks)
-    fprintf('[DCG_plot_results_2026_codex] Using selector tasks [%s]; loaded summary also contains [%s].\n', ...
+    fprintf('[DCG_plot_results] Using selector tasks [%s]; loaded summary also contains [%s].\n', ...
         strjoin(tasks, ', '), strjoin(loaded_tasks, ', '));
 end
 all_models{strcmp(all_models, 'no_learning')} = 'Baseline';
@@ -519,7 +536,7 @@ if isfield(S, 'disorder')
 end
 if ~isempty(size_bins_to_keep)
     S = keep_summary_size_bins(S, tasks, size_bins_to_keep);
-    fprintf('[DCG_plot_results_2026_codex] keeping size bin(s): %s (# cohorts: %s)\n', ...
+    fprintf('[DCG_plot_results] keeping size bin(s): %s (# cohorts: %s)\n', ...
         mat2str(size_bins_to_keep), mat2str(2.^(size_bins_to_keep-1)));
 end
 
@@ -535,7 +552,7 @@ for t_chk = 1 : length(tasks)
     end
 end
 if observed_max_hop > max_cell_dist
-    fprintf('[DCG_plot_results_2026_codex] max_cell_dist raised %d -> %d (data has deeper hops).\n', ...
+    fprintf('[DCG_plot_results] max_cell_dist raised %d -> %d (data has deeper hops).\n', ...
         max_cell_dist, observed_max_hop);
     max_cell_dist = observed_max_hop;
 end
@@ -551,10 +568,10 @@ if plot_only_hexagonality_manuscript
     end
     manuscript_hex_panels_already_done = true;
     if ~plot_hex_hop_diagnostics
-        fprintf('[DCG_plot_results_2026_codex] plot_only_hexagonality_manuscript=true -- generated manuscript hexagonality panels only.\n');
+        fprintf('[DCG_plot_results] plot_only_hexagonality_manuscript=true -- generated manuscript hexagonality panels only.\n');
         return;
     end
-    fprintf('[DCG_plot_results_2026_codex] plot_only_hexagonality_manuscript=true with plot_hex_hop_diagnostics=true -- continuing to hex-only hop diagnostics.\n');
+    fprintf('[DCG_plot_results] plot_only_hexagonality_manuscript=true with plot_hex_hop_diagnostics=true -- continuing to hex-only hop diagnostics.\n');
 end
 
 %==========================================================================
@@ -640,7 +657,7 @@ end
 
 dcg_savefig_visible(fullfile(figures_output_dir, 'hop demos.fig'));
 else
-    fprintf('[DCG_plot_results_2026_codex] skipping hop demos for this dataset/task selection.\n');
+    fprintf('[DCG_plot_results] skipping hop demos for this dataset/task selection.\n');
 end
 
 %==========================================================================
@@ -668,7 +685,7 @@ if do_scatter_examples
             'plot_scatter_plot_examples failed: %s', ME.message);
     end
 else
-    fprintf('[DCG_plot_results_2026_codex] skipping plot_scatter_plot_examples for this dataset/task selection.\n');
+    fprintf('[DCG_plot_results] skipping plot_scatter_plot_examples for this dataset/task selection.\n');
     remove_stale_scatter_example_files(figures_output_dir);
 end
 
@@ -803,16 +820,16 @@ if multi_cohort
              fullfile(figures_output_dir, 'MAE vs dataset size (log2 nMAE).fig'));
 
     if is_hex_overlay
-        fprintf('[DCG_plot_results_2026_codex] NOTE on the MAE-vs-size figures: this is the hex run, so x-axis position 4 (cohort size 8) is the HEX tissue, NOT v1 size-8. Standard v1 cohorts are at positions 1, 2, 3, 5, 6.\n');
+        fprintf('[DCG_plot_results] NOTE on the MAE-vs-size figures: this is the hex run, so x-axis position 4 (cohort size 8) is the HEX tissue, NOT v1 size-8. Standard v1 cohorts are at positions 1, 2, 3, 5, 6.\n');
     end
 else
-    fprintf('[DCG_plot_results_2026_codex] single-cohort dataset -- skipping MAE-vs-dataset-size plots.\n');
+    fprintf('[DCG_plot_results] single-cohort dataset -- skipping MAE-vs-dataset-size plots.\n');
 end
 
 % MAE vs distance in the GENERIC plotter assumes a single T1 root. That is
 % ambiguous for multi-T1 graphs (Flip_two), so this panel is skipped here.
 % Flip_two-specific distance structure is plotted later by
-% DCG_plot_Flip_two_interaction_2026_codex using h_min=min(d1,d2), inter-flip
+% DCG_plot_Flip_two_interaction using h_min=min(d1,d2), inter-flip
 % distance, zones, and two-distance heatmaps.
 % Same three passes (linear / log2(MAE) / log2(nMAE)) as the size plot.
 if ~multi_T1
@@ -831,12 +848,12 @@ if ~multi_T1
     movefile(fullfile(figures_output_dir, 'MAE vs traverse dist.fig'), ...
              fullfile(figures_output_dir, 'MAE vs traverse dist (log2 nMAE).fig'));
 else
-    fprintf('[DCG_plot_results_2026_codex] multi-T1 dataset -- skipping generic single-root MAE-vs-distance plot; Flip_two-specific nearest/inter-flip diagnostics are produced by DCG_plot_Flip_two_interaction_2026_codex.\n');
+    fprintf('[DCG_plot_results] multi-T1 dataset -- skipping generic single-root MAE-vs-distance plot; Flip_two-specific nearest/inter-flip diagnostics are produced by DCG_plot_Flip_two_interaction.\n');
 end
 
 % Manuscript hexagonality figures must come from the designated hex dataset,
 % not from post-hoc hexagonality bins in the standard/revision datasets.
-fprintf('[DCG_plot_results_2026_codex] skipping generic MAE-vs-hexagonality plots; manuscript hexagonality uses dataset=''hex'' only.\n');
+fprintf('[DCG_plot_results] skipping generic MAE-vs-hexagonality plots; manuscript hexagonality uses dataset=''hex'' only.\n');
 remove_stale_plot_file(figures_output_dir, 'MAE vs hexagonality.fig');
 
 if ~manuscript_hex_panels_already_done && strcmp(dataset, 'hex') && isfile(hex_analyses_filename)
@@ -878,7 +895,7 @@ if plot_fallback_analysis
             'plot_PPGN_fallback errored (%s focus): %s', fallback_focus_model, ME.message);
     end
 else
-    fprintf('[DCG_plot_results_2026_codex] skipping fallback analysis by configuration.\n');
+    fprintf('[DCG_plot_results] skipping fallback analysis by configuration.\n');
 end
 
 
@@ -1109,7 +1126,7 @@ function remove_stale_plot_file(figures_output_dir, filename)
 target = fullfile(figures_output_dir, filename);
 if isfile(target)
     delete(target);
-    fprintf('[DCG_plot_results_2026_codex] removed stale plot file: %s\n', target);
+    fprintf('[DCG_plot_results] removed stale plot file: %s\n', target);
 end
 
 end
@@ -1135,7 +1152,7 @@ stale_files = dir(fullfile(figures_output_dir, 'Scatter plot examples (*.fig'));
 for i = 1 : numel(stale_files)
     target = fullfile(stale_files(i).folder, stale_files(i).name);
     delete(target);
-    fprintf('[DCG_plot_results_2026_codex] removed stale scatter example file: %s\n', target);
+    fprintf('[DCG_plot_results] removed stale scatter example file: %s\n', target);
 end
 
 end
@@ -1171,7 +1188,7 @@ for p = 1 : numel(stale_patterns)
         target = fullfile(stale_files(i).folder, stale_files(i).name);
         if isfile(target)
             delete(target);
-            fprintf('[DCG_plot_results_2026_codex] removed stale fallback output: %s\n', target);
+            fprintf('[DCG_plot_results] removed stale fallback output: %s\n', target);
         end
     end
 end
@@ -1210,7 +1227,7 @@ for p = 1 : numel(stale_patterns)
         target = fullfile(stale_files(i).folder, stale_files(i).name);
         if isfile(target)
             delete(target);
-            fprintf('[DCG_plot_results_2026_codex] removed stale non-hex-manuscript output from hex folder: %s\n', target);
+            fprintf('[DCG_plot_results] removed stale non-hex-manuscript output from hex folder: %s\n', target);
         end
     end
 end
@@ -1423,13 +1440,13 @@ function [S, all_models, colors] = drop_models_from_summary(S, all_models, color
 models_to_exclude = cellstr(models_to_exclude);
 drop_mask = ismember(all_models, models_to_exclude);
 if ~any(drop_mask)
-    fprintf('[DCG_plot_results_2026_codex] models_to_exclude requested [%s], but none were present.\n', ...
+    fprintf('[DCG_plot_results] models_to_exclude requested [%s], but none were present.\n', ...
         strjoin(models_to_exclude, ', '));
     return;
 end
 
 keep_mask = ~drop_mask;
-fprintf('[DCG_plot_results_2026_codex] excluding model columns from plots: %s\n', ...
+fprintf('[DCG_plot_results] excluding model columns from plots: %s\n', ...
     strjoin(all_models(drop_mask), ', '));
 
 fields_to_trim = {'prediction_errors', 'predictions'};
@@ -4269,7 +4286,7 @@ end
 
 
 % ============================================================================
-% 2D-embedding example panels (ported into the _codex branch 2026-05-30).
+% 2D-embedding example panels (ported into the revision branch 2026-05-30).
 % Fig A: 2 x nS overlays (top = model-prediction embedding, bottom = pre-T1
 % baseline embedding); GT black, embedded blue, new-T1 interface red (pred)/
 % green (GT). Titles carry MAE(emb,pred|base) and MAE(emb,GT).
@@ -4347,10 +4364,10 @@ function plot_embedding_examples(scores_to_show, tasks, MAE_individuals, S, figu
 %   .vt2d, missing engine output, or geometry errors skip that panel with a
 %   warning rather than aborting the figure. nS<1 returns immediately.
 
-engine    = emb_getcfg(DCG_CONFIG, 'embed_engine',   'C:\Users\tomers\springs_embed_engine\spring_embed.exe');
-workdir   = emb_getcfg(DCG_CONFIG, 'embed_workdir',  'C:\Users\tomers\AppData\Local\Temp\springs_embed');
-stdRoot   = emb_getcfg(DCG_CONFIG, 'embed_vt2d_std', 'C:\Users\tomers\OneDrive\prev 4-9-2026\Desktop stuff\springs\initial\tomer_data\initial');
-revRoot   = emb_getcfg(DCG_CONFIG, 'embed_vt2d_rev', 'Z:\Tomer\DCG 2024\New code version\All vt2d');
+engine    = emb_getcfg(DCG_CONFIG, 'embed_engine',   '');
+workdir   = emb_getcfg(DCG_CONFIG, 'embed_workdir',  fullfile(tempdir, 'dcg_springs_embed'));
+stdRoot   = emb_getcfg(DCG_CONFIG, 'embed_vt2d_std', '');
+revRoot   = emb_getcfg(DCG_CONFIG, 'embed_vt2d_rev', '');
 recompute = emb_getcfg(DCG_CONFIG, 'embed_recompute', false);
 colorPct  = emb_getcfg(DCG_CONFIG, 'embed_color_percentiles', [0.5 99]);
 shearVt2d = emb_getcfg(DCG_CONFIG, 'embed_shear_affine_vt2d', true);
@@ -4371,10 +4388,10 @@ savePerEdge = emb_getcfg(DCG_CONFIG, 'embed_save_per_edge', true);
 % DCG_consolidated_paths resolver handles both (pred + inds) below.
 predRoot = emb_getcfg(DCG_CONFIG, 'embed_pred_root', data_root);
 indsRoot = emb_getcfg(DCG_CONFIG, 'embed_inds_root', fullfile(data_root, 'inds'));
-emb_consolidated = DCG_consolidated_paths_2026_codex('is_consolidated', predRoot);
+emb_consolidated = DCG_consolidated_paths('is_consolidated', predRoot);
 
 if exist(engine,'file') ~= 2
-    warning('embed: engine not found (%s) — skipping embedding examples.', engine);
+    warning('embed: engine not found (%s) -- skipping embedding examples.', engine);
     return;
 end
 nS = length(scores_to_show);
@@ -4391,7 +4408,7 @@ for t = 1 : length(tasks)
     tk = tasks{t};
     if strcmp(tk,'lengths_to_lengths'), wstr = 'W'; else, wstr = 'UW'; end
 
-    % ---- percentile selection (mirrors _codex plot_scatter_plot_examples) ----
+    % ---- percentile selection (mirrors plot_scatter_plot_examples) ----
     scoresArr = []; repsArr = []; sizesArr = []; graphsArr = []; modelsArr = [];
     for r = 1 : size(MAE_individuals.(tk), 1)
         for siz = 1 : size(MAE_individuals.(tk), 2)
@@ -4409,7 +4426,7 @@ for t = 1 : length(tasks)
         end
     end
     if isempty(scoresArr)
-        warning('embed: no finite MAE scores for task %s — skipping.', tk);
+        warning('embed: no finite MAE scores for task %s -- skipping.', tk);
         continue;
     end
     [scoresSorted, order] = sort(scoresArr, 'ascend');
@@ -4427,7 +4444,7 @@ for t = 1 : length(tasks)
             wprefix = emb_dataset_prefix(dataset, siz, 'W');   % W partner for the flip map
 
             if emb_consolidated
-                inds_dir = DCG_consolidated_paths_2026_codex('inds_dir', predRoot, prefix);
+                inds_dir = DCG_consolidated_paths('inds_dir', predRoot, prefix);
                 if isempty(inds_dir), error('no split folder for prefix %s', prefix); end
                 inds_filename = fullfile(inds_dir, [dataset_to_analyze, '.inds']);
             else
@@ -4443,8 +4460,8 @@ for t = 1 : length(tasks)
             % identical 6-col "Simulation id:" block format for every model
             % (PPGN included), so a single path + load_dataset covers all types.
             if emb_consolidated
-                predf  = DCG_consolidated_paths_2026_codex('pred_file', predRoot, prefix,  curr_model, r - 1);
-                wpredf = DCG_consolidated_paths_2026_codex('pred_file', predRoot, wprefix, curr_model, r - 1);
+                predf  = DCG_consolidated_paths('pred_file', predRoot, prefix,  curr_model, r - 1);
+                wpredf = DCG_consolidated_paths('pred_file', predRoot, wprefix, curr_model, r - 1);
             else
                 predf  = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', prefix,  curr_model, r - 1));
                 wpredf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', wprefix, curr_model, r - 1));
@@ -4469,7 +4486,7 @@ for t = 1 : length(tasks)
             end
             if isfinite(sMAE) && isfinite(fileMAE) && abs(fileMAE - sMAE) > max(5e-3, 0.1*abs(sMAE))
                 warning(['embed guard (%s %g%%): file MAE %.4f ~= S MAE %.4f for %s ', ...
-                    '(model %s, seed %d, n=%d, g %d) — skipping to avoid wrong-graph embedding.'], ...
+                    '(model %s, seed %d, n=%d, g %d) -- skipping to avoid wrong-graph embedding.'], ...
                     tk, scores_to_show(i), fileMAE, sMAE, egn, curr_model, r, 2^(siz-1), g);
                 s_i.ok = false;
             else
@@ -4503,7 +4520,7 @@ for t = 1 : length(tasks)
         if ~sel(i).ok, continue; end
         vt2d = emb_resolve_vt2d(sel(i).sim_id, stdRoot, revRoot, dataset);
         if isempty(vt2d)
-            warning('embed: no .vt2d for %s — skipping.', sel(i).sim_id);
+            warning('embed: no .vt2d for %s -- skipping.', sel(i).sim_id);
             sel(i).ok = false; continue;
         end
         if shearVt2d
@@ -4560,7 +4577,7 @@ for t = 1 : length(tasks)
             end
         end
         if ~ok3
-            warning('embed: missing engine output for %s — panel skipped.', sel(i).cfgkey);
+            warning('embed: missing engine output for %s -- panel skipped.', sel(i).cfgkey);
             continue;
         end
         try
@@ -5876,10 +5893,10 @@ for k = 1 : numel(segs)
 end
 end
 
-function output_paths = DCG_make_extreme_task_composites_tmp(data_root, cache_dir, figures_root, dataset_to_analyze, h_bins_for_quality_analysis, DCG_CONFIG)
-% DCG_make_extreme_task_composites_tmp  Temporary 5x3 revision composites.
+function output_paths = DCG_make_extreme_task_composites_internal(data_root, cache_dir, figures_root, dataset_to_analyze, h_bins_for_quality_analysis, DCG_CONFIG)
+% DCG_make_extreme_task_composites_internal  Temporary 5x3 revision composites.
 %
-% This temporary helper builds four requested figures without changing the
+% This helper builds four requested figures without changing the
 % normal single-dataset plotter path:
 %   1. 5x3 task-family hop-distance curves, raw MAE, with Baseline curves in black.
 %   2. 5x3 task-family hop-distance curves, log2 nMAE.
@@ -5897,8 +5914,14 @@ function output_paths = DCG_make_extreme_task_composites_tmp(data_root, cache_di
 if nargin < 6 || isempty(DCG_CONFIG), DCG_CONFIG = struct(); end
 if nargin < 5 || isempty(h_bins_for_quality_analysis), h_bins_for_quality_analysis = 0.4 : 0.1 : 1; end
 if nargin < 4 || isempty(dataset_to_analyze), dataset_to_analyze = 'test'; end
-if nargin < 3 || isempty(figures_root), figures_root = fullfile(data_root, '_figures', 'revision_codex_2026'); end
-if nargin < 2 || isempty(cache_dir), cache_dir = fullfile(data_root, '_analyzer_cache', 'revision_codex_2026'); end
+if nargin < 3 || isempty(figures_root), figures_root = fullfile(data_root, '_figures', 'revision_2026'); end
+if nargin < 2 || isempty(cache_dir), if isempty(data_root)
+    error('DCG:missingDataRoot', ['Set the consolidated prediction snapshot path ', ...
+        'using DCG_CONFIG.data_root, the DCG_DATA_ROOT environment variable, ', ...
+        'or an untracked DCG_local_config.m file.']);
+end
+
+cache_dir = fullfile(data_root, '_analyzer_cache', 'revision_2026'); end
 
 output_dir = extreme_cfg(DCG_CONFIG, 'extreme_output_dir', fullfile(figures_root, 'revision_extreme_task_composites'));
 save_png = extreme_cfg(DCG_CONFIG, 'extreme_save_png', false);
@@ -5939,14 +5962,14 @@ output_paths.condition_log2_mae = extreme_plot_family_condition_grid(families, m
 if isequal(extreme_cfg(DCG_CONFIG, 'extreme_skip_embedding', false), true)
     output_paths.embedding_overlay = '';
     output_paths.embedding_per_edge = '';
-    fprintf('[DCG_make_extreme_task_composites_tmp] extreme_skip_embedding=true, skipped embedding grids.\n');
+    fprintf('[DCG_make_extreme_task_composites_internal] extreme_skip_embedding=true, skipped embedding grids.\n');
 else
     [output_paths.embedding_overlay, output_paths.embedding_per_edge] = extreme_plot_embedding_grids( ...
         model_rows, bundles, data_root, dataset_to_analyze, output_dir, save_png, DCG_CONFIG);
 end
 
 extreme_write_assumptions(output_dir, families, model_rows, output_paths);
-fprintf('[DCG_make_extreme_task_composites_tmp] wrote composites under: %s\n', output_dir);
+fprintf('[DCG_make_extreme_task_composites_internal] wrote composites under: %s\n', output_dir);
 end
 
 
@@ -6519,15 +6542,15 @@ blank_geom = extreme_blank_geometry();
 sel_grid = repmat(blank_sel, numel(model_rows), numel(dataset_keys));
 geom_grid = repmat(blank_geom, numel(model_rows), numel(dataset_keys));
 
-engine = extreme_cfg(DCG_CONFIG, 'embed_engine', 'C:\Users\tomers\springs_embed_engine\spring_embed.exe');
-workdir = extreme_cfg(DCG_CONFIG, 'embed_workdir', 'C:\Users\tomers\AppData\Local\Temp\springs_embed');
-stdRoot = extreme_cfg(DCG_CONFIG, 'embed_vt2d_std', 'C:\Users\tomers\OneDrive\prev 4-9-2026\Desktop stuff\springs\initial\tomer_data\initial');
-revRoot = extreme_cfg(DCG_CONFIG, 'embed_vt2d_rev', 'Z:\Tomer\DCG 2024\New code version\All vt2d');
+engine = extreme_cfg(DCG_CONFIG, 'embed_engine', '');
+workdir = extreme_cfg(DCG_CONFIG, 'embed_workdir', fullfile(tempdir, 'dcg_springs_embed'));
+stdRoot = extreme_cfg(DCG_CONFIG, 'embed_vt2d_std', '');
+revRoot = extreme_cfg(DCG_CONFIG, 'embed_vt2d_rev', '');
 predRoot = extreme_cfg(DCG_CONFIG, 'embed_pred_root', data_root);
 indsRoot = extreme_cfg(DCG_CONFIG, 'embed_inds_root', fullfile(data_root, 'inds'));
 recompute = extreme_cfg(DCG_CONFIG, 'embed_recompute', false);
 shearVt2d = extreme_cfg(DCG_CONFIG, 'embed_shear_affine_vt2d', true);
-emb_consolidated = DCG_consolidated_paths_2026_codex('is_consolidated', predRoot);
+emb_consolidated = DCG_consolidated_paths('is_consolidated', predRoot);
 
 if exist(engine, 'file') ~= 2
     for i = 1 : numel(sel_grid)
@@ -6656,7 +6679,7 @@ wprefix = emb_dataset_prefix(bundle.dataset_key, siz, 'W');
 
 try
     if emb_consolidated
-        inds_dir = DCG_consolidated_paths_2026_codex('inds_dir', predRoot, prefix);
+        inds_dir = DCG_consolidated_paths('inds_dir', predRoot, prefix);
         if isempty(inds_dir), error('no split folder for prefix %s', prefix); end
         inds_filename = fullfile(inds_dir, [dataset_to_analyze, '.inds']);
     else
@@ -6670,8 +6693,8 @@ try
     curr_graph_ind = inds(g);
 
     if emb_consolidated
-        predf = DCG_consolidated_paths_2026_codex('pred_file', predRoot, prefix, model_name, r - 1);
-        wpredf = DCG_consolidated_paths_2026_codex('pred_file', predRoot, wprefix, model_name, r - 1);
+        predf = DCG_consolidated_paths('pred_file', predRoot, prefix, model_name, r - 1);
+        wpredf = DCG_consolidated_paths('pred_file', predRoot, wprefix, model_name, r - 1);
     else
         predf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', prefix, model_name, r - 1));
         wpredf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', wprefix, model_name, r - 1));

@@ -21,7 +21,7 @@ function LineG = line_graph_from_vertex_model(C, vertexCells)
 %
 % NOTE
 %   This is the historical "22-ish" hop-distance definition used by the
-%   manuscript/revision summaries before the temporary 2026-06-06 cell-share
+%   manuscript/revision summaries before the 2026-06-06 cell-share
 %   experiment. It intentionally uses unique(sort(C,2),'rows'), matching the
 %   old helper exactly. The official prediction matrices are already sorted
 %   and unique, so this does not move T1 root rows in the audited data.
