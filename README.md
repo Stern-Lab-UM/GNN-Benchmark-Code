@@ -41,7 +41,19 @@ publication repository should contain code plus lightweight documentation only.
 The model source snapshots were copied from the provenance-pinned run trees on
 2026-06-25. See `models/README.md` and
 `docs/model_source_hashes_20260625.csv` for the exact source paths and SHA256
-hash checks. The code is not yet packaged for user installation; an install
-helper and cleaned environment files can be added after we finish selecting the
-publication scripts.
+hash checks. The code is not yet a polished installable Python package, but the
+repository now includes environment templates and an import checker for
+validating a local setup.
+
+## Installation Check
+
+See `docs/INSTALL.md` for environment notes and setup commands. After installing
+dependencies, run:
+
+```bash
+python scripts/check_install.py --component all
+```
+
+The checker verifies package imports and the curated MPNN/PPGN source snapshots
+without requiring manuscript data or trained checkpoints.
 

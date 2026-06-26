@@ -1,0 +1,9 @@
+numpy
+pandas
+pyyaml
+click
+tqdm
+hdf5storage
+tensorboard
+nbformat
+nbconvert

@@ -20,8 +20,9 @@ The copied files were hash-checked against their source paths on 2026-06-25. See
 Later passes can add:
 
 - in-file documentation and docstrings;
-- minimal install scripts or environment files;
 - small example commands using toy data;
 - a cleaned CLI wrapper for publication use.
 
 Do not add raw datasets, predictions, embeddings, trained models, or generated figures to this directory.
+
+Basic installation notes and an import checker now live in `../docs/INSTALL.md` and `../scripts/check_install.py`.

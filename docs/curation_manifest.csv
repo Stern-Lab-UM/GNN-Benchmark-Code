@@ -24,4 +24,9 @@
 "include","models_ppgn_predict","Z:\Tomer\PPGN_Tomer\dcg","models/ppgn/predict_dcg/dcg","PPGN prediction source snapshot; kept separate for provenance."
 "include","models_ppgn_gl_tail","Z:\Tomer\_gl_finals\dcg_pkg\ppgn_dcg_fixed_pkg\dcg","models/ppgn/gl_tail_fixed_pkg/dcg","Fixed PPGN package used for late GL 1_32 tail run; documented as Armis2-equivalent."
 "include","docs","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\docs\model_source_hashes_20260625.csv","docs/model_source_hashes_20260625.csv","SHA256 source-vs-repo hash verification for curated model snapshots."
-
+"include","install_docs","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\docs\INSTALL.md","docs/INSTALL.md","Installation guide with environment assumptions and checker commands."
+"include","install_requirements","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\requirements\base.txt","requirements/base.txt","Shared lightweight Python dependencies for install checks."
+"include","install_requirements","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\requirements\mpnn.txt","requirements/mpnn.txt","MPNN/PNA dependency starting point; PyTorch/PyG versions may need platform-specific wheels."
+"include","install_requirements","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\requirements\ppgn.txt","requirements/ppgn.txt","PPGN dependency starting point."
+"include","install_requirements","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\environment.yml","environment.yml","Conda/mamba environment template for local source inspection."
+"include","install_checker","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\scripts\check_install.py","scripts/check_install.py","Import checker for third-party packages and curated model source snapshots."
