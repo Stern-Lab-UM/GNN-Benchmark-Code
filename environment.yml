@@ -14,5 +14,5 @@ dependencies:
   - nbconvert
   - pip:
       - hdf5storage
-      - torch
-      - torch-geometric
+      # Install PyTorch separately with scripts/setup_lh_env.sh or with the
+      # official PyTorch command for the target CPU/CUDA platform.

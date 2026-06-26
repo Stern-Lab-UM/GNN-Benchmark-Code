@@ -12,22 +12,29 @@ Options:
   --component all|mpnn|ppgn   Which dependency/check set to install [default: all]
   --env-dir PATH              Environment directory [default: $SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310]
   --python PYTHON             Python executable used to create the venv [default: auto-detect >=3.10]
+  --torch cpu|default|skip    PyTorch install mode [default: cpu]
+                               cpu: install CPU-only PyTorch from the official CPU wheel index
+                               default: install torch from the default pip index, which may pull CUDA wheels
+                               skip: do not install torch; use an already prepared environment
   --skip-install              Create/activate env and run checker without pip installing requirements
   -h, --help                  Show this help
 
 Environment variables:
   DCG_GNN_ENV_DIR             Alternative default for --env-dir
   DCG_GNN_PYTHON              Alternative default for --python
+  DCG_GNN_TORCH_MODE          Alternative default for --torch
 
 Examples:
   bash scripts/setup_lh_env.sh --component all
   bash scripts/setup_lh_env.sh --component mpnn --env-dir "$SCRATCH/dcg_envs/mpnn_pub"
-  bash scripts/setup_lh_env.sh --component ppgn --skip-install
+  bash scripts/setup_lh_env.sh --component ppgn --torch cpu
+  bash scripts/setup_lh_env.sh --component all --torch skip
 EOF
 }
 
 component="all"
 python_bin="${DCG_GNN_PYTHON:-}"
+torch_mode="${DCG_GNN_TORCH_MODE:-cpu}"
 default_base="${SCRATCH:-$HOME}"
 env_dir="${DCG_GNN_ENV_DIR:-$default_base/dcg_gnn_envs/gnn_benchmark_code_py310}"
 do_install=1
@@ -44,6 +51,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --python)
       python_bin="${2:-}"
+      shift 2
+      ;;
+    --torch)
+      torch_mode="${2:-}"
       shift 2
       ;;
     --skip-install)
@@ -70,6 +81,14 @@ case "$component" in
     ;;
 esac
 
+case "$torch_mode" in
+  cpu|default|skip) ;;
+  *)
+    echo "Invalid --torch '$torch_mode'; expected cpu, default, or skip." >&2
+    exit 2
+    ;;
+esac
+
 if [[ -z "$env_dir" ]]; then
   echo "Environment directory is empty." >&2
   exit 2
@@ -77,12 +96,9 @@ fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_dir="$(cd "$script_dir/.." && pwd)"
-
-if [[ "$component" == "ppgn" ]]; then
-  req_file="$repo_dir/requirements/ppgn.txt"
-else
-  req_file="$repo_dir/requirements/mpnn.txt"
-fi
+base_req="$repo_dir/requirements/base.txt"
+mpnn_req="$repo_dir/requirements/mpnn.txt"
+ppgn_req="$repo_dir/requirements/ppgn.txt"
 
 if [[ -z "$python_bin" ]]; then
   for candidate in python3.10 python3.11 python3.12 python3; do
@@ -107,9 +123,9 @@ fi
 
 echo "[setup] repo:         $repo_dir"
 echo "[setup] component:    $component"
+echo "[setup] torch mode:   $torch_mode"
 echo "[setup] python:       $(command -v "$python_bin")"
 echo "[setup] env:          $env_dir"
-echo "[setup] requirements: $req_file"
 
 if [[ ! -x "$env_dir/bin/python" ]]; then
   echo "[setup] creating virtual environment"
@@ -125,11 +141,38 @@ source "$env_dir/bin/activate"
 echo "[setup] active python: $(which python)"
 python -m pip --version
 
+install_torch() {
+  case "$torch_mode" in
+    cpu)
+      echo "[setup] installing CPU-only PyTorch"
+      python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      ;;
+    default)
+      echo "[setup] installing PyTorch from the default pip index; this may pull CUDA wheels"
+      python -m pip install torch
+      ;;
+    skip)
+      echo "[setup] skipping PyTorch install"
+      ;;
+  esac
+}
+
 if [[ "$do_install" -eq 1 ]]; then
   echo "[setup] upgrading pip"
   python -m pip install --upgrade pip
-  echo "[setup] installing requirements"
-  python -m pip install -r "$req_file"
+  echo "[setup] installing base requirements"
+  python -m pip install -r "$base_req"
+  install_torch
+  case "$component" in
+    all|mpnn)
+      echo "[setup] installing MPNN/PyG requirements"
+      python -m pip install -r "$mpnn_req"
+      ;;
+    ppgn)
+      echo "[setup] PPGN uses base requirements plus PyTorch"
+      python -m pip install -r "$ppgn_req"
+      ;;
+  esac
 else
   echo "[setup] skipping pip install"
 fi

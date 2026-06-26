@@ -84,7 +84,7 @@ cd GNN-Benchmark-Code
 bash scripts/setup_lh_env.sh --component all
 ```
 
-The setup helper creates an isolated virtual environment under `$SCRATCH` by default, installs the relevant requirements, and runs `scripts/check_install.py`. Advanced users can choose a different environment directory:
+The setup helper creates an isolated virtual environment under `$SCRATCH` by default, installs the relevant requirements, and runs `scripts/check_install.py`. By default it installs CPU-only PyTorch to avoid accidentally downloading a large CUDA stack on no-GPU login or CPU sessions. Advanced users can choose a different environment directory:
 
 ```bash
 bash scripts/setup_lh_env.sh --component mpnn --env-dir "$SCRATCH/dcg_gnn_envs/mpnn_publication"
@@ -110,6 +110,29 @@ Important collision points:
 - Keep outputs, checkpoints, prediction files, embeddings, and figures outside the cloned code repository unless they are tiny documented examples.
 
 The checker prints the Python executable, platform, package versions, and imported repository module paths. If those paths do not point to the user's clone, the environment is not isolated correctly.
+
+
+## PyTorch Install Modes
+
+`scripts/setup_lh_env.sh` installs CPU-only PyTorch by default:
+
+```bash
+bash scripts/setup_lh_env.sh --component all --torch cpu
+```
+
+This is the safest choice for no-GPU LH smoke tests and avoids pulling multi-GB CUDA wheels. For a GPU environment where the user intentionally wants the default PyPI CUDA-enabled PyTorch packages, use:
+
+```bash
+bash scripts/setup_lh_env.sh --component all --torch default
+```
+
+For an already prepared environment, use:
+
+```bash
+bash scripts/setup_lh_env.sh --component all --torch skip
+```
+
+Exact GPU reproduction may require installing the specific PyTorch/CUDA build appropriate for the cluster before running the checker.
 
 ## What The Checker Does
 
