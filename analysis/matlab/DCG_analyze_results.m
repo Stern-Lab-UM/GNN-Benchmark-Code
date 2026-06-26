@@ -938,7 +938,7 @@ for i = 1 : length(I.(all_models{end}).(tasks{1}).subset_siz)
             % Revision tissues (e.g. soft-kA) can legitimately violate this at a
             % few edges; warn instead of halting so a batch run completes.
             n_bad_nbhd = nnz(sum(B, 2) ~= 4);
-            if n_bad_nbhd > 0
+            if n_bad_nbhd > 0 && ~strcmp(dataset, 'kA_1')
                 warning('DCG:edgeHexNeighborhood', ...
                     'edge-hex neighborhood ~= 4 cells: dataset=%s i=%d s=%d ss=%d (%d edges)', ...
                     dataset, i, s, ss, n_bad_nbhd);
