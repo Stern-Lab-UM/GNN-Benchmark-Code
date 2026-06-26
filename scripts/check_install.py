@@ -85,7 +85,7 @@ def check_mpnn_source() -> bool:
         for module_name in ("dataset", "models", "trainer_final", "predict_final"):
             try:
                 module = importlib.import_module(module_name)
-                print(f"[OK] import MPNN source module {module_name}")
+                print(f"[OK] import MPNN source module {module_name} from {getattr(module, '__file__', 'built-in')}")
                 if module_name == "models":
                     for attr in ("GraphSAGE", "GIN", "PNA", "EdgeRegressor"):
                         if not hasattr(module, attr):
@@ -118,8 +118,8 @@ def check_ppgn_snapshot(snapshot: str) -> bool:
             "dcg.trainer",
         ):
             try:
-                importlib.import_module(module_name)
-                print(f"[OK] import {snapshot} module {module_name}")
+                module = importlib.import_module(module_name)
+                print(f"[OK] import {snapshot} module {module_name} from {getattr(module, '__file__', 'built-in')}")
             except Exception as exc:  # pragma: no cover - diagnostic script
                 ok = False
                 print(f"[FAIL] import {snapshot} module {module_name}: {exc}")
@@ -198,3 +198,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+

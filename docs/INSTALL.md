@@ -71,6 +71,44 @@ python -m pip install -r requirements/mpnn.txt
 python scripts/check_install.py --component mpnn
 ```
 
+
+## Shared Cluster / Lighthouse Isolation Notes
+
+Multiple copies of this code can coexist on Lighthouse or another shared HPC system if each user keeps both the clone and Python environment isolated.
+
+Recommended pattern for a new user:
+
+```bash
+git clone https://github.com/Stern-Lab-UM/GNN-Benchmark-Code.git
+cd GNN-Benchmark-Code
+python3.10 -m venv "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310"
+source "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310/bin/activate"
+python -m pip install --upgrade pip
+python -m pip install -r requirements/mpnn.txt
+python scripts/check_install.py --component all
+```
+
+If using conda/mamba on a shared system, prefer an explicit environment prefix rather than a generic named environment:
+
+```bash
+mamba env create --prefix "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310" -f environment.yml
+conda activate "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310"
+python scripts/check_install.py --component all
+```
+
+This avoids collisions with older environments named `dcg-gnn` or with other versions already present under the same account.
+
+Important collision points:
+
+- Do not permanently export this repository, an older repository, or old run folders in `PYTHONPATH` from `.bashrc` or `.bash_profile`.
+- Do not install multiple editable versions of packages named `dcg` into the same environment. PPGN uses the Python package name `dcg`, so only one PPGN snapshot should be active on `PYTHONPATH` at a time.
+- The MPNN scripts use local top-level module names such as `dataset`, `models`, `trainer_final`, and `predict_final`. Run them from this repository/source tree or use explicit paths so Python does not import an older local file with the same name.
+- Activate the intended environment before installing or running anything, and prefer `python -m pip ...` over plain `pip ...`.
+- Before long runs, check `which python`, `python -m pip --version`, and `python scripts/check_install.py --component all`.
+- Keep outputs, checkpoints, prediction files, embeddings, and figures outside the cloned code repository unless they are tiny documented examples.
+
+The checker prints the Python executable, platform, package versions, and imported repository module paths. If those paths do not point to the user's clone, the environment is not isolated correctly.
+
 ## What The Checker Does
 
 `scripts/check_install.py` verifies:
@@ -92,3 +130,4 @@ The current checker is an installation/import check. A stronger future smoke tes
 - a command that compares produced outputs to expected values within a fixed tolerance.
 
 Training from scratch with a seed is usually not enough for exact equality across machines, especially on GPU. For exact reproducibility, prefer fixed input plus fixed checkpoint plus CPU inference.
+
