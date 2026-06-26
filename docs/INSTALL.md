@@ -81,11 +81,13 @@ Recommended pattern for a new user:
 ```bash
 git clone https://github.com/Stern-Lab-UM/GNN-Benchmark-Code.git
 cd GNN-Benchmark-Code
-python3.10 -m venv "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310"
-source "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310/bin/activate"
-python -m pip install --upgrade pip
-python -m pip install -r requirements/mpnn.txt
-python scripts/check_install.py --component all
+bash scripts/setup_lh_env.sh --component all
+```
+
+The setup helper creates an isolated virtual environment under `$SCRATCH` by default, installs the relevant requirements, and runs `scripts/check_install.py`. Advanced users can choose a different environment directory:
+
+```bash
+bash scripts/setup_lh_env.sh --component mpnn --env-dir "$SCRATCH/dcg_gnn_envs/mpnn_publication"
 ```
 
 If using conda/mamba on a shared system, prefer an explicit environment prefix rather than a generic named environment:
@@ -130,4 +132,3 @@ The current checker is an installation/import check. A stronger future smoke tes
 - a command that compares produced outputs to expected values within a fixed tolerance.
 
 Training from scratch with a seed is usually not enough for exact equality across machines, especially on GPU. For exact reproducibility, prefer fixed input plus fixed checkpoint plus CPU inference.
-

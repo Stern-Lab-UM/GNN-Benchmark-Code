@@ -30,3 +30,4 @@
 "include","install_requirements","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\requirements\ppgn.txt","requirements/ppgn.txt","PPGN dependency starting point."
 "include","install_requirements","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\environment.yml","environment.yml","Conda/mamba environment template for local source inspection."
 "include","install_checker","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\scripts\check_install.py","scripts/check_install.py","Import checker for third-party packages and curated model source snapshots."
+"include","install_checker","C:\Users\tomers\Documents\DCG revision\dcg_publication_code\scripts\setup_lh_env.sh","scripts/setup_lh_env.sh","Lighthouse/shared-HPC setup helper that creates an isolated venv, installs requirements, and runs the checker."
