@@ -11,7 +11,7 @@ Usage: bash scripts/setup_lh_env.sh [options]
 Options:
   --component all|mpnn|ppgn   Which dependency/check set to install [default: all]
   --env-dir PATH              Environment directory [default: $SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310]
-  --python PYTHON             Python executable used to create the venv [default: python3.10]
+  --python PYTHON             Python executable used to create the venv [default: auto-detect >=3.10]
   --skip-install              Create/activate env and run checker without pip installing requirements
   -h, --help                  Show this help
 
@@ -27,7 +27,7 @@ EOF
 }
 
 component="all"
-python_bin="${DCG_GNN_PYTHON:-python3.10}"
+python_bin="${DCG_GNN_PYTHON:-}"
 default_base="${SCRATCH:-$HOME}"
 env_dir="${DCG_GNN_ENV_DIR:-$default_base/dcg_gnn_envs/gnn_benchmark_code_py310}"
 do_install=1
@@ -84,9 +84,24 @@ else
   req_file="$repo_dir/requirements/mpnn.txt"
 fi
 
-if ! command -v "$python_bin" >/dev/null 2>&1; then
-  echo "Could not find Python executable '$python_bin'." >&2
-  echo "Try: module load python/3.10  # or pass --python /path/to/python3.10" >&2
+if [[ -z "$python_bin" ]]; then
+  for candidate in python3.10 python3.11 python3.12 python3; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; then
+      python_bin="$candidate"
+      break
+    fi
+  done
+fi
+
+if [[ -z "$python_bin" ]] || ! command -v "$python_bin" >/dev/null 2>&1; then
+  echo "Could not find a usable Python >= 3.10 executable." >&2
+  echo "Try loading a Python module, for example: module load python/3.11.5" >&2
+  echo "Or pass --python /path/to/python3.10-or-newer" >&2
+  exit 1
+fi
+
+if ! "$python_bin" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; then
+  echo "Python executable '$python_bin' is too old; Python >= 3.10 is required." >&2
   exit 1
 fi
 

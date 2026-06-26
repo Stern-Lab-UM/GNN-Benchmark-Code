@@ -8,7 +8,7 @@ This repository currently contains source snapshots and analysis code, not a pol
 
 ## Recommended Python Version
 
-Use Python 3.10. The PPGN run packages were Python 3.10-based, and the curated MPNN tree had Python 3.10/3.11 bytecode artifacts in the original run tree.
+Use Python 3.10 or newer; Python 3.10 or 3.11 is preferred. The PPGN run packages were Python 3.10-based, and the curated MPNN tree had Python 3.10/3.11 bytecode artifacts in the original run tree. The LH setup helper auto-detects a usable Python >= 3.10 and refuses older defaults such as Python 3.6.
 
 ## Known Run-Time Context
 
