@@ -63,8 +63,11 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %     'keep_trial_dirs': If true, keep every trial's `dcg train --out-dir`
 %                        (default false -- only the final BayesianOptimization
 %                        object and each trial's metrics.csv are retained).
-%     'module_prefix'  : Shell prefix that brings `dcg` onto PATH. Default
-%                        activates the environment that provides the `dcg` command.
+%     'module_prefix'  : Shell prefix that places the curated PPGN package on
+%                        PYTHONPATH or activates a prepared environment.
+%     'dcg_cmd'        : command used to invoke the PPGN CLI. Default is
+%                        'python -m dcg.main', so a fresh clone does not
+%                        require an installed console-script entry point.
 %
 %   Output
 %   ------
@@ -172,8 +175,23 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     %                        while threshold-zero F1 underrates the model.
     default_module_prefix = getenv('DCG_PPGN_MODULE_PREFIX');
     if isempty(default_module_prefix)
-        default_module_prefix = ['export TERM=xterm; ', ...
-            'export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 NUMEXPR_NUM_THREADS=2; '];
+        repo_root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+        ppgn_src = fullfile(repo_root, 'models', 'ppgn', 'train_dcg');
+        if ispc
+            default_module_prefix = sprintf(['set "PYTHONPATH=%s;%%PYTHONPATH%%" & ', ...
+                'set TERM=xterm & set OMP_NUM_THREADS=2 & set MKL_NUM_THREADS=2 & ', ...
+                'set OPENBLAS_NUM_THREADS=2 & set NUMEXPR_NUM_THREADS=2 & '], ppgn_src);
+        else
+            default_module_prefix = sprintf(['export PYTHONPATH="%s:$PYTHONPATH"; ', ...
+                'export TERM=xterm; ', ...
+                'export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 NUMEXPR_NUM_THREADS=2; '], ppgn_src);
+        end
+    end
+    default_dcg_cmd = getenv('DCG_PPGN_CMD');
+    if isempty(default_dcg_cmd)
+        default_python = getenv('DCG_PYTHON');
+        if isempty(default_python), default_python = 'python'; end
+        default_dcg_cmd = [default_python, ' -m dcg.main'];
     end
 
     addParameter(p, 'bo_objective',    'val_loss');
@@ -190,6 +208,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     % DCG_PPGN_MODULE_PREFIX or pass 'module_prefix' for cluster-specific
     % activation commands.
     addParameter(p, 'module_prefix', default_module_prefix, @(x) ischar(x) || isstring(x));
+    addParameter(p, 'dcg_cmd', default_dcg_cmd, @(x) ischar(x) || isstring(x));
     parse(p, dataset_filename, inds_dirname, hp_ranges, n_trials, varargin{:});
     opts = p.Results;
 
@@ -509,7 +528,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
         mkdir(out_dir);
     end
 
-    com = ['dcg train --training-data "', dataset_filename, ...
+    com = [char(opts.dcg_cmd), ' train --training-data "', dataset_filename, ...
            '" --out-dir "', out_dir, '"', ...
            ' --no-evaluation ', ...
            ' --args "', args_string, '"', ...

@@ -23,6 +23,11 @@ function report = DCG_generate_vertex_model_datasets(varargin)
 %     'overwrite'     rerun simulator outputs that already exist; false
 %     'assemble_only' skip simulator and only assemble existing raw graph files
 %     'datasets'      optional dataset key or cell array of keys to run
+%     'max_graphs_per_dataset'
+%                     optional finite graph limit per dataset, used by the
+%                     end-to-end mini pipeline to create a fast but trainable
+%                     subset from the publication graph order
+%     'split_counts'  optional [n_train n_val n_test] split for limited runs
 %     'counterfactual'          also write a perturbed weighted-input variant
 %                               for the fallback-copying diagnostic; false
 %     'counterfactual_h_min'    perturb interfaces whose edge-hop distance from
@@ -45,6 +50,8 @@ p.addParameter('workers', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1);
 p.addParameter('overwrite', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('assemble_only', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('datasets', {}, @(x) iscell(x) || isstring(x) || ischar(x));
+p.addParameter('max_graphs_per_dataset', inf, @(x) isnumeric(x) && isscalar(x) && x >= 1);
+p.addParameter('split_counts', [], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
 p.addParameter('counterfactual', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x) && x >= 0);
 p.addParameter('counterfactual_delta', 0.05, @(x) isnumeric(x) && isscalar(x) && x >= 0);
@@ -77,6 +84,12 @@ if ~isempty(opts.datasets)
     end
     specs = specs(keep);
 end
+if isfinite(opts.max_graphs_per_dataset)
+    for k = 1:numel(specs)
+        n_keep = min(height(specs(k).rows), floor(opts.max_graphs_per_dataset));
+        specs(k).rows = specs(k).rows(1:n_keep, :);
+    end
+end
 exe_path = fullfile(opts.output_root, 'build', executable_name());
 
 if ~opts.assemble_only
@@ -106,7 +119,9 @@ for s = 1:numel(specs)
 
     assembly = DCG_assemble_vertex_model_graphs(raw_output_dir, spec.rows, model_ready_dir, spec.key);
     splits_dir = fullfile(opts.output_root, 'model_ready', spec.key, 'splits');
-    if strcmp(opts.mode, 'publication')
+    if isfinite(opts.max_graphs_per_dataset)
+        write_limited_split(model_ready_dir, splits_dir, height(spec.rows), opts.split_counts);
+    elseif strcmp(opts.mode, 'publication')
         copy_split_manifests(spec.split_manifest_dir, splits_dir);
         copy_default_split(splits_dir, model_ready_dir);
     else
@@ -132,7 +147,9 @@ for s = 1:numel(specs)
             'counterfactual_h_min', opts.counterfactual_h_min, ...
             'counterfactual_delta', opts.counterfactual_delta, ...
             'counterfactual_seed', opts.counterfactual_seed);
-        if strcmp(opts.mode, 'publication')
+        if isfinite(opts.max_graphs_per_dataset)
+            write_limited_split(cf_model_ready_dir, cf_splits_dir, height(spec.rows), opts.split_counts);
+        elseif strcmp(opts.mode, 'publication')
             copy_split_manifests(spec.split_manifest_dir, cf_splits_dir);
             copy_default_split(cf_splits_dir, cf_model_ready_dir);
         else
@@ -353,6 +370,56 @@ write_text_file(fullfile(splits_dir, 'minimal_one_graph', 'val.inds'), '');
 write_text_file(fullfile(splits_dir, 'minimal_one_graph', 'test.inds'), sprintf('0\n'));
 end
 
+function write_limited_split(model_ready_dir, splits_dir, n_graphs, split_counts)
+% write_limited_split  Write a train/val/test split for limited mini runs.
+% Inputs:
+%   model_ready_dir  Folder containing the generated model-ready graph files.
+%   splits_dir       Folder where named split subdirectories are mirrored.
+%   n_graphs         Number of generated graphs in the limited dataset.
+%   split_counts     Optional [train val test] counts. When empty, reserve one
+%                    validation and one test graph when possible.
+% Outputs:
+%   None. Writes train.inds, val.inds, and test.inds beside the dataset and
+%   under splits/limited_<n>_graphs/.
+if nargin < 4 || isempty(split_counts)
+    if n_graphs >= 3
+        split_counts = [n_graphs - 2, 1, 1];
+    elseif n_graphs == 2
+        split_counts = [1, 0, 1];
+    else
+        split_counts = [0, 0, 1];
+    end
+else
+    split_counts = floor(split_counts(:).');
+end
+if sum(split_counts) > n_graphs
+    error('write_limited_split:tooManyGraphs', ...
+        'split_counts sum to %d but only %d graph(s) were generated.', ...
+        sum(split_counts), n_graphs);
+end
+idx = 0:(n_graphs - 1);
+train_idx = idx(1:split_counts(1));
+val_idx = idx(split_counts(1) + (1:split_counts(2)));
+test_idx = idx(sum(split_counts(1:2)) + (1:split_counts(3)));
+split_name = sprintf('limited_%d_graphs', n_graphs);
+split_dir = fullfile(splits_dir, split_name);
+ensure_dir(split_dir);
+write_index_file(fullfile(model_ready_dir, 'train.inds'), train_idx);
+write_index_file(fullfile(model_ready_dir, 'val.inds'), val_idx);
+write_index_file(fullfile(model_ready_dir, 'test.inds'), test_idx);
+write_index_file(fullfile(split_dir, 'train.inds'), train_idx);
+write_index_file(fullfile(split_dir, 'val.inds'), val_idx);
+write_index_file(fullfile(split_dir, 'test.inds'), test_idx);
+end
+
+function write_index_file(path, idx)
+% write_index_file  Write zero-based graph indices, one per line.
+if isempty(idx)
+    write_text_file(path, '');
+    return
+end
+write_text_file(path, sprintf('%d\n', idx));
+end
 function write_text_file(path, txt)
 % write_text_file  Write text file to disk.
 % Inputs: path, txt

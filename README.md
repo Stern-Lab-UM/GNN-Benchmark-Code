@@ -13,12 +13,23 @@ screenshots, and cluster-specific scratch logs.
 - `external/spring_embed/` - source for the spring-relaxation executable used by MATLAB embedding example figures.
 - `models/mpnn/` - source snapshot used for the GraphSAGE, GAT, GIN, and PNA training and prediction runs.
 - `models/ppgn/` - source snapshots used for PPGN, kept split into training, prediction, and GL tail packages to preserve provenance.
+- `pipeline/matlab/` - MATLAB top-level orchestration for mini and publication-scale end-to-end runs.
 - `training/bayesopt/` - MATLAB Bayesian-optimization drivers and final search-space definitions.
 - `docs/` - installation notes, provenance records, and analysis-pipeline documentation.
 
 ## Bayesian Optimization
 
 The MATLAB BayesOpt drivers are under `training/bayesopt/`. They launch the curated MPNN or PPGN training code once per trial, checkpoint partial `bayesopt` results, and store the final V1 search spaces in `DCG_bayesopt_search_spaces.m`. See `training/bayesopt/README.md`.
+
+## End-To-End MATLAB Pipeline
+
+The MATLAB conductor under `pipeline/matlab/` can run either a small trainable mini workflow or a publication-scale workflow from one entry point:
+
+```matlab
+manifest = DCG_run_publication_pipeline('mode', 'mini')
+```
+
+Use `mode='publication'` for full-scale regeneration, BO, final training, prediction, analysis, and figure generation. See `pipeline/matlab/README.md`.
 
 ## MATLAB Analysis
 
