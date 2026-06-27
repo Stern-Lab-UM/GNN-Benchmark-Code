@@ -148,6 +148,10 @@ For conda or local `venv` setup, see `docs/INSTALL.md`. The checker verifies
 package imports and curated MPNN/PPGN source snapshots; it does not require raw
 manuscript data or trained checkpoints.
 
+## External Data Package
+
+Manuscript data are deposited outside this Git repository. See [docs/DATA_PACKAGE.md](docs/DATA_PACKAGE.md) for the recommended archive layout and the MATLAB commands for using an extracted data package with the analysis scripts.
+
 ## Contact
 
 For questions or issues, please contact Tomer Stern, University of Michigan,
