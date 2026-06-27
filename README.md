@@ -150,7 +150,7 @@ manuscript data or trained checkpoints.
 
 ## External Data Package
 
-Manuscript data are deposited outside this Git repository. See [docs/DATA_PACKAGE.md](docs/DATA_PACKAGE.md) for the recommended archive layout and the MATLAB commands for using an extracted data package with the analysis scripts.
+Manuscript data are deposited outside this Git repository. See [docs/DATA_PACKAGE.md](docs/DATA_PACKAGE.md) for the recommended archive layout. After extracting the data, run `GNNBenchmark_run_from_data_package(package_root)` in MATLAB to rebuild summaries, regenerate analysis figures, and analyze saved embedding outputs without retraining models.
 
 ## Contact
 

@@ -12,7 +12,11 @@
 %   - manuscript hexagonality panels (those belong to the hex dataset only).
 %
 % By default, the driver reuses existing result summaries and regenerates the
-% figures only. The generic per-dataset plotter still skips Flip_two's
+% figures only. Callers may set `analysis_cache_root` and
+% `figures_root_override` before running this script to redirect generated
+% summaries and figures away from the input prediction folder; this is how the
+% public data-package runner keeps downloaded data read-only.
+% The generic per-dataset plotter still skips Flip_two's
 % single-root MAE-vs-hop panel, because there is no unique T1 root. The driver
 % then runs GNNBenchmark_plot_Flip_two_interaction, which produces the
 % Flip_two-specific h_min nearest-T1 profiles, single-T1 vs two-T1 comparison
@@ -65,6 +69,12 @@ end
 if ~exist('embed_examples', 'var') || isempty(embed_examples)
     embed_examples = true;   % 2D embedding example panels for each revision dataset
 end
+if ~exist('analysis_cache_root', 'var') || isempty(analysis_cache_root)
+    analysis_cache_root = '';
+end
+if ~exist('figures_root_override', 'var') || isempty(figures_root_override)
+    figures_root_override = '';
+end
 
 code_dir = fileparts(mfilename('fullpath'));
 analyzer_script = fullfile(code_dir, 'GNNBenchmark_analyze_results.m');
@@ -98,6 +108,14 @@ else
     source_cache_root = fullfile(data_root, 'Analyzer cache');
     revision_cache_root = fullfile(source_cache_root, 'revision_2026');
     figures_root = fullfile(data_root, 'Output figures', 'revision_2026');
+end
+
+if ~isempty(analysis_cache_root)
+    source_cache_root = analysis_cache_root;
+    revision_cache_root = fullfile(source_cache_root, 'revision_2026');
+end
+if ~isempty(figures_root_override)
+    figures_root = figures_root_override;
 end
 
 if ~isfolder(revision_cache_root), mkdir(revision_cache_root); end

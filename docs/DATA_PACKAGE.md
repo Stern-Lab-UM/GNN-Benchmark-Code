@@ -24,24 +24,30 @@ gnn_benchmark_public_data_<date>/
     compute_sha256_manifest.ps1
 ```
 
-For analysis-only reproduction, point the MATLAB analysis code at the
-consolidated prediction folder:
+For analysis-only reproduction, use the MATLAB data-package runner. It treats
+the downloaded package as input and writes rebuilt summaries, regenerated
+figures, embedding-bound tables, and a JSON/MAT report under a separate output
+folder:
 
 ```matlab
+addpath(genpath('/path/to/GNN-Benchmark-Code'))
 package_root = '/path/to/gnn_benchmark_public_data_20260627';
-data_root = fullfile(package_root, 'predictions', 'consolidated');
-setenv('GNN_BENCHMARK_DATA_ROOT', data_root);
-
-GNNBenchmark_rebuild_all_summaries
-GNNBenchmark_plot_everything
+report = GNNBenchmark_run_from_data_package(package_root);
 ```
 
-For embedding-bound analyses that start from saved spring-embedding outputs:
+To choose the destination explicitly:
 
 ```matlab
-embedding_root = fullfile(package_root, 'embeddings', 'per_graph');
-GNNBenchmark_analyze_embedding_error_bounds('embedding_root', embedding_root)
+report = GNNBenchmark_run_from_data_package(package_root, ...
+    'output_root', '/path/to/reanalysis_outputs');
 ```
+
+By default the runner reparses the consolidated prediction files instead of
+trusting cached summaries. It also analyzes `embeddings/per_graph/` when that
+folder is present. Embedding example panels inside the main plotting script are
+off by default because they require vt2d geometry and a spring executable; the
+saved per-graph embedding outputs are sufficient for the manuscript
+embedding-error bound analysis.
 
 The `final_models/consolidated/` folder is included for provenance and optional
 reuse, but manuscript figure reproduction should not require retraining if
