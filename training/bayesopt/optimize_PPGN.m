@@ -68,7 +68,43 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %   RESULTS : the BayesianOptimization object. Also persisted to disk as
 %             a .mat file in output_dirname.
 %
-%   See also OPTIMIZE_MPNN, DCG_PIPELINE_2D_REVISION.
+%   Saved files and restart behavior
+%   --------------------------------
+%   The final result is written to:
+%       <output_dirname>/<run_name>.mat
+%   A text diary is written beside it as:
+%       <output_dirname>/<run_name>.log
+%   A trial-level checkpoint is written after each completed BAYESOPT
+%   objective evaluation as:
+%       <output_dirname>/<run_name>.partial.mat
+%   PPGN trial outputs are staged under:
+%       <output_dirname>/trials_PPGN_<weighted>_<dataset>/
+%   On restart, RUN_OR_RESUME_BAYESOPT loads the partial checkpoint and
+%   re-seeds a fresh BAYESOPT call from completed finite observations.
+%   This preserves finished trials after a wall-time kill or crash while
+%   avoiding MATLAB resume() closures that may contain stale runtime
+%   options. A crash during an individual dcg train run can still lose
+%   that one in-progress trial, because BAYESOPT checkpoints only after
+%   the objective function returns.
+%
+%   How it works
+%   ------------
+%   * BAYESOPT samples HPs according to HP_RANGES. Numeric cell arrays
+%     such as batch_size and factor are represented as ordinal integer
+%     variables, so the Gaussian-process surrogate treats neighboring
+%     numeric choices as nearby rather than unrelated categories.
+%   * Each trial builds a `dcg train` command with fixed architecture
+%     arguments, the sampled optimization arguments, the requested split,
+%     and the configured CUDA device/environment prefix.
+%   * The objective reads the trial's metrics.csv, extracts the validation
+%     loss curve, and returns the minimum of the smoothed validation loss
+%     curve by default. Failed or degenerate trials return NaN and are not
+%     used as warm-start observations when resuming.
+%   * If n_parallel >= 2, a local MATLAB parpool is used and BAYESOPT
+%     dispatches multiple trials concurrently. Parallel batches are less
+%     sequentially adaptive than fully serial BO but can reduce wall time.
+%
+%   See also OPTIMIZE_MPNN, RUN_OR_RESUME_BAYESOPT, BAYESOPT.
 
     %% ---- parse inputs --------------------------------------------------
     p = inputParser;

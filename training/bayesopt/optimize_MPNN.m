@@ -77,6 +77,23 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
 %   RESULTS : the BayesianOptimization object returned by BAYESOPT.
 %             Also persisted to disk as a .mat file in output_dirname.
 %
+%   Saved files and restart behavior
+%   --------------------------------
+%   The final result is written to:
+%       <output_dirname>/<run_name>.mat
+%   A text diary is written beside it as:
+%       <output_dirname>/<run_name>.log
+%   A trial-level checkpoint is written after each completed BAYESOPT
+%   objective evaluation as:
+%       <output_dirname>/<run_name>.partial.mat
+%   On restart, RUN_OR_RESUME_BAYESOPT loads the partial checkpoint and
+%   re-seeds a fresh BAYESOPT call from completed finite observations.
+%   This preserves finished trials after a wall-time kill or crash while
+%   avoiding MATLAB resume() closures that may contain stale runtime
+%   options. A crash during an individual trainer run can still lose that
+%   one in-progress trial, because BAYESOPT checkpoints only after the
+%   objective function returns.
+%
 %   How it works
 %   ------------
 %   * A shared working directory is created under output_dirname with

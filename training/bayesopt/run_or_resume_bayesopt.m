@@ -17,6 +17,25 @@ function results = run_or_resume_bayesopt(fun, optVars, partial_filename, n_tria
 %
 %   BO_ARGS is the full name/value list to pass (includes SaveFileName).
 %   INITIAL_X is optional (default: empty table).
+%
+%   Checkpoint contents
+%   -------------------
+%   MATLAB's @saveToFile callback stores the object as variable
+%   BayesoptResults inside PARTIAL_FILENAME. The helper uses XTrace,
+%   ObjectiveTrace, and ObjectiveEvaluationTimeTrace from that object.
+%   Failed trials with non-finite objectives are intentionally omitted
+%   from restart InitialObjective entries, because BAYESOPT requires
+%   finite warm-start objective values.
+%
+%   Restart semantics
+%   -----------------
+%   The helper does not itself write the final .mat file; callers save
+%   the returned BayesianOptimization object after BAYESOPT completes.
+%   Restarting from a partial file is safe across changes to run-time
+%   execution options because only the observations are reused, not the
+%   old objective function closure. INITIAL_X is for deliberate manual
+%   warm starts; those rows consume part of NumSeedPoints so the total
+%   number of non-GP-guided seed evaluations remains the requested value.
 
 if nargin < 6; initial_x = table(); end
 

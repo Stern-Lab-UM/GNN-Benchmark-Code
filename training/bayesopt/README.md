@@ -73,6 +73,54 @@ export DCG_PPGN_MODULE_PREFIX='source /path/to/ppgn_env/bin/activate; '
 If no prefix is supplied, the functions only set conservative CPU-thread limits.
 That is enough when MATLAB is already running inside the intended environment.
 
+## Output Files and Restart Safety
+
+Each optimizer writes all run products under `output_dirname`. If
+`output_dirname` is not supplied, the default location is:
+
+```text
+<dataset parent>/Bayesian_optimization_results/
+```
+
+For each optimization run, the main files are:
+
+- `<run_name>.mat` - final saved MATLAB result, written only after `bayesopt`
+  finishes all requested objective evaluations.
+- `<run_name>.partial.mat` - per-iteration checkpoint written by MATLAB
+  `bayesopt` through `OutputFcn = @saveToFile` and `SaveFileName`. This file is
+  updated after each completed objective evaluation.
+- `<run_name>.log` - text diary containing the run configuration, Bayesian
+  optimization iteration table, objective values, and status messages.
+
+The restart behavior is handled by `run_or_resume_bayesopt.m`. If a
+`.partial.mat` checkpoint exists when an optimizer starts, the helper loads the
+stored `BayesianOptimization` object and inspects the completed objective trace.
+If the checkpoint already contains the requested number of evaluations, it is
+returned as the final result. Otherwise, completed finite-objective observations
+are passed back to a fresh `bayesopt` call as `InitialX`, `InitialObjective`, and
+`InitialObjectiveEvaluationTimes`. This avoids MATLAB's native `resume()` path,
+because `resume()` reuses the old objective-function closure and can therefore
+retain stale options such as an old GPU ID, Python environment, or command
+prefix.
+
+Crash recovery is therefore at the trial level. A crash or wall-time kill after
+trial `k` finishes preserves trials `1:k` in `<run_name>.partial.mat`; restarting
+the same command continues from those observations. A crash in the middle of a
+single training trial may require that one trial to be re-run, because
+`bayesopt` only checkpoints after an objective evaluation returns.
+
+`optimize_MPNN.m` creates one shared working directory per optimization run and
+reuses the MPNN processed-data cache across trials. `optimize_PPGN.m` creates a
+`trials_PPGN_<...>/` directory under `output_dirname`; trial-specific `dcg`
+outputs are written there while the objective is evaluated. By default, large
+per-trial PPGN output directories are cleaned after the relevant metric is read;
+set `keep_trial_dirs = true` when debugging failed trials.
+
+If a `.partial.mat` file is missing but a previous text diary exists,
+`prior_log` can be used to reconstruct completed BO observations with
+`parse_bayesopt_log.m`. This is a fallback path for interrupted historical runs
+and is less complete than the `.partial.mat` checkpoint.
+
 ## MPNN Example
 
 ```matlab
