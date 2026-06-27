@@ -6,6 +6,9 @@ This repository currently contains source snapshots and analysis code, not a pol
 2. make sure the curated source snapshots can be imported;
 3. later add toy data and checkpoint smoke tests for exact numerical checks.
 
+For a record of the platforms, dependency stacks, and validation commands that
+have actually been exercised, see `docs/TESTED_SETTINGS.md`.
+
 ## Recommended Python Version
 
 Use Python 3.10 or newer; Python 3.10 or 3.11 is preferred. The PPGN run packages were Python 3.10-based, and the curated MPNN tree had Python 3.10/3.11 bytecode artifacts in the original run tree. The LH setup helper auto-detects a usable Python >= 3.10 and refuses older defaults such as Python 3.6.

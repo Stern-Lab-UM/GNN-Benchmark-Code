@@ -61,8 +61,9 @@ import checker for validating a local setup.
 
 ## Installation Check
 
-See `docs/INSTALL.md` for environment notes and setup commands. After installing
-dependencies, run:
+See `docs/INSTALL.md` for environment notes and setup commands, and
+`docs/TESTED_SETTINGS.md` for the software/hardware settings that have actually
+been exercised. After installing dependencies, run:
 
 ```bash
 python scripts/check_install.py --component all

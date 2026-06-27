@@ -18,6 +18,7 @@
 "include","analysis_matlab","analysis/matlab/shadedErrorBar.m","Plotting helper. Verify third-party license requirements before public release."
 "include","docs","docs/MATLAB_ANALYSIS_PIPELINE.md","MATLAB analysis workflow and configuration documentation."
 "include","docs","docs/INSTALL.md","Python environment and installation guide."
+"include","docs","docs/TESTED_SETTINGS.md","Recorded platforms, runtime settings, and validation commands used to test the repository."
 "include","docs","docs/model_code_provenance.md","Model-source provenance summary."
 "include","docs","docs/model_source_hashes_20260625.csv","SHA256 hash records for curated model source snapshots."
 "include","models_mpnn","models/mpnn","GraphSAGE/GAT/GIN/PNA source snapshot."
