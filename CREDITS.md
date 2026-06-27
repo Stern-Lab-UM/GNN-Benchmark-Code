@@ -18,6 +18,12 @@ Online preprint URL/DOI: pending public posting.
 - Matej Krajnc provided the tissue-simulation and spring-embedding code.
 - Adnan Hafeez supported code installation and computing-environment setup.
 
+## Publication Repository Curation
+
+The publication repository was organized, cleaned, and documented with assistance
+from Claude (Anthropic) and Codex (OpenAI), under Tomer Stern's direction and
+review.
+
 ## Contact
 
 For questions or issues, please contact Tomer Stern, University of Michigan,
