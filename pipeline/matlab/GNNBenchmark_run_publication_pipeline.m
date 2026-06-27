@@ -446,8 +446,12 @@ if strcmp(opts.mode, 'mini')
     table_file = fullfile(paths.analysis_tables, 'mini_prediction_mae.csv');
     if ~isfile(table_file), mini_analysis(paths); end
     T = readtable(table_file, 'TextType', 'string');
+    vars = string(T.Properties.VariableNames);
+    label_var = vars(1);
+    mae_var = vars(strcmpi(vars, 'mae'));
+    if isempty(mae_var), error('GNNBenchmark:pipeline:miniFigureSchema', 'Mini MAE table has no mae column.'); end
     fig = figure('Color', 'w', 'Name', 'Mini pipeline MAE smoke test');
-    bar(categorical(T.job_id), T.mae);
+    bar(categorical(string(T.(label_var))), T.(mae_var(1)));
     ylabel('Mean absolute error');
     title('Mini pipeline prediction MAE');
     xtickangle(45);

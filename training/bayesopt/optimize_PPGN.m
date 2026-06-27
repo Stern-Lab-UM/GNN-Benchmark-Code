@@ -54,12 +54,11 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %                        skip the run and load/return (default false).
 %     'smooth_val_loss': If true (default), each trial's objective is the
 %                        min of the smoothed val_loss curve (medfilt1 w=5,
-%                        moving-average span 100, trimmed to [50:end-10]),
-%                        and trials with <=60 logged epochs return NaN.
-%                        If false, skip both: objective = min(val_loss)
-%                        over the whole curve, and no minimum-length gate.
-%                        Use false for smoke tests where you only want to
-%                        confirm each trial runs, not how well it trains.
+%                        moving-average span 100, trimmed to [50:end-10])
+%                        when enough epochs are available. Shorter runs fall
+%                        back to objective = min(val_loss), which supports
+%                        smoke tests and quickly early-stopped trials.
+%                        Use false to always skip smoothing and use raw min.
 %     'keep_trial_dirs': If true, keep every trial's `gnn_benchmark_ppgn train --out-dir`
 %                        (default false -- only the final BayesianOptimization
 %                        object and each trial's metrics.csv are retained).
@@ -583,7 +582,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
 
     % gnn_benchmark_ppgn train writes a CSV with header `epochs,train_loss,val_loss,...`.
     T = readtable(metrics_file);
-    if ~ismember('val_loss', T.Properties.VariableNames) || height(T) < 5
+    if ~ismember('val_loss', T.Properties.VariableNames) || height(T) < 1
         maybe_cleanup(out_dir, opts.keep_trial_dirs);
         return;
     end
