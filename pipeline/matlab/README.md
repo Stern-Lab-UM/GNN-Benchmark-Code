@@ -7,6 +7,7 @@ duplicating their logic:
 - `data_generation/vertex_model/` regenerates vertex-model graph files.
 - `training/bayesopt/` runs Bayesian optimization and stores partial results.
 - `models/mpnn/` and `models/ppgn/` train and predict.
+- `external/spring_embed/` builds the spring-relaxation executable for embedding predictions.
 - `analysis/matlab/` rebuilds summaries and plots manuscript figures.
 
 ## Mini End-To-End Run
@@ -39,6 +40,13 @@ manifest = GNNBenchmark_run_publication_pipeline( ...
     'models', {'GraphSAGE'}, ...
     'weights', {'W'}, ...
     'cuda', -1);
+```
+
+The embedding stage builds `external/spring_embed/build/spring_embed` if needed, embeds the held-out mini test graph for each generated prediction file, and writes outputs under:
+
+```text
+<output_root>/embeddings/per_graph/
+<output_root>/analysis_tables/embedding_error_bounds/
 ```
 
 The mini figure is a simple MAE smoke-test plot under:
@@ -98,6 +106,8 @@ Each run is self-contained:
 <output_root>/final_models/
 <output_root>/predictions/raw/
 <output_root>/predictions/consolidated/
+<output_root>/embeddings/per_graph/
+<output_root>/embeddings/work/
 <output_root>/analysis_tables/
 <output_root>/figures/
 <output_root>/logs/
@@ -115,7 +125,9 @@ They record options, paths, git commit, cache policy, stage status, and outputs.
 - PPGN is invoked through `python -m gnn_benchmark_ppgn.main` with the curated source tree on
   `PYTHONPATH`, so a fresh clone does not require a globally installed `gnn_benchmark_ppgn`
   console script.
-- Full manuscript embedding caches can be analyzed by passing
-  `'embedding_root', '/path/to/embeddings/per_graph'`. Embedding example panels
-  still depend on the existing figure scripts and `GNN_BENCHMARK_EMBED_ENGINE`/vt2d path
-  configuration.
+- If `embedding_root` is omitted, the pipeline generates per-graph spring embeddings
+  from its own prediction files and generated `.vt2d` geometries. In mini mode it
+  embeds one held-out test graph per prediction file by default; in publication mode
+  it can embed all test graphs, so use the embedding cache policy for long runs.
+- Existing full manuscript embedding caches can still be analyzed by passing
+  `'embedding_root', '/path/to/embeddings/per_graph'`.

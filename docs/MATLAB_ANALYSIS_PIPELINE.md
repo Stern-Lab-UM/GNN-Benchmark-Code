@@ -159,7 +159,7 @@ files, embeddings, and trained checkpoints are intentionally not tracked by git.
 
 ## Embedding Example Figures
 
-Embedding example figures require additional local paths:
+Standalone embedding example figures require additional local paths:
 
 - `embed_engine`
 - `embed_workdir`
@@ -193,6 +193,12 @@ setenv('GNN_BENCHMARK_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/sprin
 
 Compiled binaries and generated engine outputs are intentionally not tracked by
 git. The committed engine uses `kA = 0` and 2000 integration updates.
+
+The top-level publication pipeline can also generate embeddings directly from
+its own prediction files. If `embedding_root` is omitted,
+`GNNBenchmark_run_publication_pipeline` builds the spring engine when needed,
+matches each generated prediction block to its `.vt2d` geometry, and writes
+per-graph outputs under `<output_root>/embeddings/per_graph/`.
 
 ## Statistical Conventions
 

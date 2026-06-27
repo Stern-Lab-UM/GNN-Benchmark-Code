@@ -191,10 +191,12 @@ condition list, raw file conventions, and output layout.
 
 ## Spring Embedding Engine
 
-The MATLAB embedding example figures use a small external spring-relaxation
-executable. The source is included under `external/spring_embed/`; compiled
-binaries are not committed. The committed engine uses `kA = 0` and 2000
-integration updates.
+The MATLAB pipeline and embedding example figures use a small external
+spring-relaxation executable. The source is included under `external/spring_embed/`;
+compiled binaries are not committed. The committed engine uses `kA = 0` and
+2000 integration updates. `GNNBenchmark_run_publication_pipeline` builds this
+engine automatically when embedding generation is enabled and no executable is
+found at `external/spring_embed/build/spring_embed`.
 
 On Linux or a shared cluster with `g++`:
 
@@ -222,8 +224,7 @@ cmake -S external/spring_embed -B external/spring_embed/build
 cmake --build external/spring_embed/build
 ```
 
-If the engine or `.vt2d` geometry folders are not available, disable embedding
-example panels with:
+For the top-level pipeline, omit `embedding_root` to generate embeddings from the run's own predictions and generated `.vt2d` files, or pass an existing embedding root to analyze saved per-graph embedding outputs. For the standalone legacy plotting scripts, if the engine or `.vt2d` geometry folders are not available, disable embedding example panels with:
 
 ```matlab
 GNNBenchmark_CONFIG.embed_examples = false;

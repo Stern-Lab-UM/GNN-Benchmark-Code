@@ -42,9 +42,10 @@ It compiles the vertex-model simulator, regenerates raw `final_*.vt2d` and
 `graph_*.txt` files, and assembles weighted/unweighted model-ready graph files.
 See `data_generation/vertex_model/README.md`.
 
-Embedding example figures additionally require compiling the spring engine under
-`external/spring_embed/` and pointing MATLAB to the resulting executable through
-`GNN_BENCHMARK_EMBED_ENGINE` or `GNNBenchmark_local_config.m`.
+The top-level mini/publication pipeline can build the spring engine under
+`external/spring_embed/` and run spring embeddings for generated prediction files.
+Standalone manuscript example-panel plotting can also use a prebuilt executable
+through `GNN_BENCHMARK_EMBED_ENGINE` or `GNNBenchmark_local_config.m`.
 
 ## Data Policy
 
