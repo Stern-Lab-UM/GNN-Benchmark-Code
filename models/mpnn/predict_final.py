@@ -224,16 +224,15 @@ def predict(
     edge_dim = dataset[0].edge_attr.size(1) if dataset[0].edge_attr.numel() else None
     Model, deg = get_model(model_name, dataset)
 
+    model_kwargs = dict(dropout=0.0, norm="instance_norm", jk="cat", edge_dim=edge_dim)
+    if deg is not None:
+        model_kwargs["deg"] = deg
     gnn = Model(
         in_channels,
         cfg["hidden_channels"],
         cfg["num_layers"],
         cfg["hidden_channels"],
-        dropout=0.0,
-        norm="instance_norm",
-        jk="cat",
-        edge_dim=edge_dim,
-        deg=deg,
+        **model_kwargs,
     ).to(device)
 
     # Build the head that matches the checkpoint.

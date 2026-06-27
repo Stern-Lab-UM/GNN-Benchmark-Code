@@ -63,8 +63,9 @@ class GIN(BaseGIN):
             norm=self.norm,
             norm_kwargs=self.norm_kwargs,
         )
-        if kwargs['edge_dim'] is not None:
-            return GINEConv(mlp, **kwargs)
+        edge_dim = kwargs.pop('edge_dim', None)
+        if edge_dim is not None:
+            return GINEConv(mlp, edge_dim=edge_dim, **kwargs)
         else:
             self.supports_edge_attr = False
             return GINConv(mlp, **kwargs)

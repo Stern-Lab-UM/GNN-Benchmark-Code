@@ -453,7 +453,10 @@ def main():
     test_loader = DataLoader(dataset[dataset.idx_split['test']], batch_size=batch_size, shuffle=False)
 
     Model, deg = get_model(model_name, train_loader)
-    gnn = Model(in_channels, hidden_channels, num_layers, hidden_channels, dropout=dropout, norm='instance_norm', jk='cat', edge_dim=edge_dim, deg=deg).to(device)
+    model_kwargs = dict(dropout=dropout, norm='instance_norm', jk='cat', edge_dim=edge_dim)
+    if deg is not None:
+        model_kwargs['deg'] = deg
+    gnn = Model(in_channels, hidden_channels, num_layers, hidden_channels, **model_kwargs).to(device)
     head = build_head(head_type, hidden_channels, out_channels, dropout, head_edge_dim).to(device)
     print(f'[INFO] Prediction head: {head_type} ({type(head).__name__})')
     print(f'[INFO] ablate_head_edge_attr: {ablate_head_edge_attr}; backbone edge_dim={edge_dim}; head edge_dim={head_edge_dim}')
