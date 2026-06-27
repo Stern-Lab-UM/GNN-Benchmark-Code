@@ -32,7 +32,7 @@ manifest = GNNBenchmark_run_publication_pipeline( ...
 
 ``mini_simulation_times`` rescales the three C-simulator relaxation windows used only for mini smoke tests. Leave it empty, or run publication mode, to use the publication defaults compiled in the simulator.
 
-Mini mode still exercises Bayesian optimization, but it caps the PPGN learning-rate search range with `mini_ppgn_max_learning_rate` (default `1.1e-5`). This prevents a one-trial smoke test from drawing a high PPGN learning rate that diverges before the pipeline can validate the rest of the workflow. Publication mode uses the full manuscript search space. Mini analysis also fails loudly if any prediction file produces a non-finite or implausibly large MAE above `mini_max_prediction_mae` (default `10`).
+Mini mode still exercises Bayesian optimization, but it caps the PPGN learning-rate search range with `mini_ppgn_max_learning_rate` (default `1.1e-5`). The BO result is saved for inspection; by default, final PPGN mini training then uses deterministic smoke-test hyperparameters (`mini_ppgn_use_fixed_hps = true`) and at least `mini_ppgn_final_epochs = 15`. This keeps the tiny installation example from depending on a single random categorical BO draw while preserving the full BO code path. Publication mode uses the full manuscript search space and BO-selected hyperparameters. Mini analysis also fails loudly if any prediction file produces a non-finite or implausibly large MAE above `mini_max_prediction_mae` (default `10`).
 
 For a CPU-only smoke test, set `'cuda', -1` and optionally restrict models:
 

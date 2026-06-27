@@ -29,6 +29,11 @@ function manifest = GNNBenchmark_run_publication_pipeline(varargin)
 %     mini_ppgn_max_learning_rate
 %                      mini-mode-only cap that prevents one-trial PPGN BO smoke
 %                      tests from drawing unstable learning rates
+%     mini_ppgn_use_fixed_hps / mini_ppgn_final_epochs
+%                      mini-mode-only stabilizers: BO is still executed, but
+%                      final PPGN smoke training can use deterministic fixed
+%                      HPs and a few extra epochs so the public installation
+%                      check is not sensitive to one random categorical draw
 %     mini_max_prediction_mae
 %                      mini-mode sanity threshold; larger/non-finite MAE values
 %                      are treated as failed predictions, not valid outputs
@@ -137,6 +142,8 @@ p.addParameter('num_seed_points', [], @(x) isempty(x) || (isnumeric(x) && isscal
 p.addParameter('bo_max_epochs', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('final_epochs', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('mini_ppgn_max_learning_rate', 1.1e-5, @(x) isnumeric(x) && isscalar(x) && x > 0);
+p.addParameter('mini_ppgn_use_fixed_hps', true, @(x) islogical(x) && isscalar(x));
+p.addParameter('mini_ppgn_final_epochs', 15, @(x) isnumeric(x) && isscalar(x) && x >= 1);
 p.addParameter('mini_max_prediction_mae', 10, @(x) isnumeric(x) && isscalar(x) && x > 0);
 p.addParameter('run_bayesopt', true, @(x) islogical(x) && isscalar(x));
 p.addParameter('reuse_best_hps', true, @(x) islogical(x) && isscalar(x));
@@ -349,6 +356,11 @@ for j = 1:numel(jobs)
         else
             hp = default_hps(job.model, job.family);
         end
+        if use_mini_ppgn_fixed_hps(opts, job)
+            bo_hp = hp; %#ok<NASGU>
+            hp = mini_ppgn_smoke_hps(job);
+            fprintf('[bayesopt] mini PPGN final training uses fixed smoke-test HPs for %s.\n', job.job_id);
+        end
     end
     save(best_file, 'hp', 'job');
     write_json(strrep(best_file, '.mat', '.json'), hp);
@@ -389,7 +401,7 @@ jobs = enumerate_jobs(opts, paths);
 rows = struct('job_id', {}, 'seed', {}, 'status', {}, 'model_path', {}, 'log_file', {});
 for j = 1:numel(jobs)
     job = jobs(j);
-    hp = load_hps(job, paths);
+    hp = load_hps(job, paths, opts);
     for s = opts.seeds
         model_dir = fullfile(paths.model_root, job.job_id, sprintf('seed_%d', s));
         ensure_dir(model_dir);
@@ -435,7 +447,7 @@ for j = 1:numel(jobs)
         end
         log_file = fullfile(paths.logs, sprintf('predict_%s_seed_%d.log', job.job_id, s));
         if strcmp(job.family, 'MPNN')
-            hp = load_hps(job, paths);
+            hp = load_hps(job, paths, opts);
             ckpt = find_checkpoint(fullfile(paths.model_root, job.job_id, sprintf('seed_%d', s)), job.model, job.weight, s);
             cmd = mpnn_predict_cmd(opts, ckpt, job.dataset_file, raw_out, max(1, round(hp.batch_size)));
         else
@@ -832,7 +844,7 @@ end
 
 function cmd = ppgn_train_cmd(opts, job, hp, data_file, split_dir, out_dir)
 src = fullfile(repo_root(), 'models', 'ppgn', 'train_gnn_benchmark');
-args = ppgn_args(job, hp, opts.final_epochs);
+args = ppgn_args(job, hp, training_epochs_for_job(opts, job));
 core = sprintf('"%s" -m gnn_benchmark_ppgn.main train --training-data "%s" --out-dir "%s" --inds-dir "%s" --no-evaluation --args "%s"', ...
     opts.python, data_file, out_dir, split_dir, args);
 cmd = with_pythonpath(core, src, opts.cuda);
@@ -864,13 +876,39 @@ parts = {sprintf('epochs=%d', epochs), 'patience=20', 'early_stop=40', 'threshol
 args = strjoin(parts, ';');
 end
 
-function hp = load_hps(job, paths)
+function hp = load_hps(job, paths, opts)
 file = fullfile(paths.best_hp_root, [job.job_id, '_best_hps.mat']);
 if isfile(file)
     S = load(file, 'hp');
     hp = S.hp;
+elseif nargin >= 3 && use_mini_ppgn_fixed_hps(opts, job)
+    hp = mini_ppgn_smoke_hps(job);
 else
     hp = default_hps(job.model, job.family);
+end
+end
+
+function tf = use_mini_ppgn_fixed_hps(opts, job)
+tf = strcmp(opts.mode, 'mini') && opts.mini_ppgn_use_fixed_hps && strcmp(job.family, 'PPGN');
+end
+
+function hp = mini_ppgn_smoke_hps(job)
+% Deterministic PPGN HPs for the tiny public smoke test. Publication-scale
+% training and BO are unaffected; these values only prevent the 1-trial mini
+% example from depending on a categorical BO draw that may under-train UW PPGN.
+if strcmp(job.weight, 'UW')
+    hp = struct('learning_rate', 1.05e-5, 'batch_size', 32, 'factor', 0.7, ...
+        'gradient_clipping', 0.01, 'mini_smoke_fixed', true);
+else
+    hp = struct('learning_rate', 1.05e-5, 'batch_size', 16, 'factor', 0.7, ...
+        'gradient_clipping', 0.1, 'mini_smoke_fixed', true);
+end
+end
+
+function epochs = training_epochs_for_job(opts, job)
+epochs = opts.final_epochs;
+if strcmp(opts.mode, 'mini') && strcmp(job.family, 'PPGN')
+    epochs = max(epochs, opts.mini_ppgn_final_epochs);
 end
 end
 
