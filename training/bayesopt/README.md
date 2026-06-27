@@ -37,7 +37,10 @@ For GraphSAGE, GAT, GIN, and PNA, Bayesian optimization searched:
 - batch size: `{1, 2, 4}`
 
 The MPNN depth was fixed at 16 layers, scheduler factor at 0.75, and weight
-decay at 0.
+decay at 0. By default the revision length-informed architecture passes raw
+edge attributes to the final regression head. Set `ablate_head_edge_attr = true`
+in `optimize_MPNN` to run the head-input ablation; the backbone still receives
+the same edge attributes.
 
 For PPGN, Bayesian optimization searched:
 
@@ -47,7 +50,9 @@ For PPGN, Bayesian optimization searched:
 - gradient clipping: `{0.001, 0.01, 0.1, 1}`
 
 The PPGN architecture was fixed at `block_features = [400, 400, 400]` and
-`depth_of_mlp = 2`.
+`depth_of_mlp = 2`. By default all `RegularBlock` skip connections are kept.
+Set `disable_first_skip = true` in `optimize_PPGN` to run the first-skip
+ablation.
 
 ## Environment Configuration
 
@@ -141,6 +146,9 @@ results = optimize_MPNN( ...
     'early_stop_min_delta', spaces.mpnn_v1_l16.early_stop_min_delta, ...
     'num_seed_points', spaces.mpnn_v1_l16.num_seed_points, ...
     'module_prefix', getenv('DCG_MPNN_MODULE_PREFIX'));
+
+% Ablation variant:
+% results = optimize_MPNN(..., 'ablate_head_edge_attr', true);
 ```
 
 ## PPGN Example
@@ -161,6 +169,9 @@ results = optimize_PPGN( ...
     'block_features', spaces.ppgn_v1.fixed.block_features, ...
     'depth_of_mlp', spaces.ppgn_v1.fixed.depth_of_mlp, ...
     'module_prefix', getenv('DCG_PPGN_MODULE_PREFIX'));
+
+% Ablation variant:
+% results = optimize_PPGN(..., 'disable_first_skip', true);
 ```
 
 ## Notes

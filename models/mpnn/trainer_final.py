@@ -15,12 +15,16 @@ Head options (CLI flag --head):
 
 The head choice is coupled to several other things, all handled here:
   * y-scaling : sigmoid trains on dataset.scale_y(y) in [0,1]; regressor on raw y.
-  * edge_attr : passed to the head only for the regressor.
+  * edge_attr : passed to the head only for the regressor. The optional
+                --ablate_head_edge_attr flag removes raw edge attributes from
+                the final regressor head while leaving the message-passing
+                backbone unchanged.
   * grad clip : applied only for the regressor (the linear head is unbounded).
   * checkpoint: model_config['head'] and model_config['edge_dim'] are recorded so
                 predict_final.py can rebuild the matching head; head weights are
                 saved under 'head_state_dict' for BOTH heads.
-  * file name : gnn_<MODEL>_weighted_<W>_<head>_seed_<S>.pth
+  * file name : gnn_<MODEL>_weighted_<W>_<head>_<norm>_seed_<S>.pth
+                (ablation checkpoints append _ablateHeadEdgeAttr_True).
 
 Everything else (data pipeline, hyperparameters, GPU monitoring, TB logging) is
 unchanged from the published trainer_final.py.
@@ -363,6 +367,8 @@ def main():
                         help="InstanceNorm scope. 'per_graph' (DEFAULT): normalize each graph on "
                              "its own -- fixes the batch-size dependence (I3). 'pooled': normalize "
                              "over the whole minibatch -- the original published behavior.")
+    parser.add_argument('--ablate_head_edge_attr', action='store_true',
+                        help='Ablation mode for length-informed MPNNs: remove raw edge attributes from the final EdgeRegressor head only. The message-passing backbone still receives edge features.')
     parser.add_argument('--weighted', type=str, default = True)
     parser.add_argument('--use_node_feats', type=str, default="True",
                     help="Use 35 node features (LDP+Laplacian). Set to 'False' to disable.")
@@ -395,7 +401,7 @@ def main():
     dim = args.dim
     head_type = args.head
     norm_mode = args.norm_mode
-
+    ablate_head_edge_attr = bool(args.ablate_head_edge_attr)
     if (args.weighted == "False"):
         is_weighted = False
     elif (args.weighted == "True"):
@@ -415,7 +421,8 @@ def main():
     # tensorboard2csv path at the end cannot drift apart.
     log_subdir = (
         f'{timestamp}_dim_{args.dim}_weighted_{args.weighted}_nodefeats_{args.use_node_feats}'
-        f'_model_{args.model}_head_{head_type}_norm_{norm_mode}_epochs_{args.epochs}'
+        f'_model_{args.model}_head_{head_type}_norm_{norm_mode}'
+        f'_ablateHeadEdgeAttr_{ablate_head_edge_attr}_epochs_{args.epochs}'
         f'_hiddenChannels_{args.hidden_channels}_numLayers_{args.num_layers}'
         f'_dropout_{args.dropout}_ls_{args.lr}_wd_{args.wd}'
     )
@@ -424,6 +431,7 @@ def main():
     in_channels = dataset[0].x.size(1)
     edge_dim = dataset[0].edge_attr.size(1) if dataset[0].edge_attr.shape[0] > 0 else None
 
+    head_edge_dim = 0 if ablate_head_edge_attr else edge_dim
     ### Hyperparameters ###
     hidden_channels = args.hidden_channels
     out_channels = args.out_channels
@@ -446,8 +454,9 @@ def main():
 
     Model, deg = get_model(model_name, train_loader)
     gnn = Model(in_channels, hidden_channels, num_layers, hidden_channels, dropout=dropout, norm='instance_norm', jk='cat', edge_dim=edge_dim, deg=deg).to(device)
-    head = build_head(head_type, hidden_channels, out_channels, dropout, edge_dim).to(device)
+    head = build_head(head_type, hidden_channels, out_channels, dropout, head_edge_dim).to(device)
     print(f'[INFO] Prediction head: {head_type} ({type(head).__name__})')
+    print(f'[INFO] ablate_head_edge_attr: {ablate_head_edge_attr}; backbone edge_dim={edge_dim}; head edge_dim={head_edge_dim}')
     # I3 fix: make every InstanceNorm normalize per-graph (see top of file).
     n_node_norms = _install_pergraph_norm_hooks(gnn, 'node')
     n_edge_norms = _install_pergraph_norm_hooks(head, 'edge')
@@ -558,6 +567,8 @@ def main():
         if val_loss < best_val_loss:
             best_train_loss, best_val_loss, best_test_loss = train_loss, val_loss, test_loss
             best_epoch = epoch
+            checkpoint_tag = '_ablateHeadEdgeAttr_True' if ablate_head_edge_attr else ''
+            checkpoint_name = f'gnn_{model_name}_weighted_{is_weighted}_{head_type}_{norm_mode}{checkpoint_tag}_seed_{seed}.pth'
             torch.save(
                 {
                     'gnn_state_dict': gnn.state_dict(),
@@ -580,13 +591,15 @@ def main():
                         'criterion': criterion,
                         'use_node_feats': use_node_feats,
                         'cuda': cuda_id,
-                        'edge_dim': edge_dim,
+                        'edge_dim': head_edge_dim,
+                        'backbone_edge_dim': edge_dim,
+                        'ablate_head_edge_attr': ablate_head_edge_attr,
                         'y_min': float(dataset.y_min),
                         'y_max': float(dataset.y_max),
                         'deg_max': float(dataset.deg_max),
                     }
                 },
-                osp.join(root, f'gnn_{model_name}_weighted_{is_weighted}_{head_type}_{norm_mode}_seed_{seed}.pth')
+                osp.join(root, checkpoint_name)
             )
 
         if early_stop_min_delta > 0:

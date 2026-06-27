@@ -12,6 +12,9 @@ checkpoint. Head-selectable copy of nano-main/src/predict_final.py.
 4. **Selectable head** -- auto-detects the prediction head from the checkpoint
    (model_config['head'], or the saved state-dict key for legacy checkpoints)
    and rebuilds the matching head. Override with --head if needed.
+5. **Ablation-aware head width** -- if the checkpoint was trained with
+   ablate_head_edge_attr, the final EdgeRegressor is rebuilt without raw
+   edge attributes while the backbone still receives the graph edge features.
 
 NOTE: this copy imports get_model/run_one_epoch from `trainer_final` -- the
 published predict_final.py imported a stale `trainer` module (audit issue I4).
@@ -171,6 +174,8 @@ def predict(
         raise ValueError(f"Unknown head '{head_type}', expected 'regressor' or 'sigmoid'.")
     print(f"[INFO] Prediction head: {head_type}")
 
+    ablate_head_edge_attr = bool(cfg.get("ablate_head_edge_attr", False))
+    print(f"[INFO] ablate_head_edge_attr: {ablate_head_edge_attr}")
     # Which InstanceNorm scope did this checkpoint train with?
     norm_mode_resolved = norm_mode or cfg.get("norm_mode")
     if norm_mode_resolved is None:
@@ -242,6 +247,7 @@ def predict(
         ).to(device)
     else:
         head_edge_dim = cfg.get("edge_dim", edge_dim)
+        print(f"[INFO] Backbone edge_dim={edge_dim}; head edge_dim={head_edge_dim}")
         head_module = EdgeRegressor(
             cfg["hidden_channels"],
             cfg["hidden_channels"],

@@ -23,6 +23,13 @@ function report = DCG_generate_vertex_model_datasets(varargin)
 %     'overwrite'     rerun simulator outputs that already exist; false
 %     'assemble_only' skip simulator and only assemble existing raw graph files
 %     'datasets'      optional dataset key or cell array of keys to run
+%     'counterfactual'          also write a perturbed weighted-input variant
+%                               for the fallback-copying diagnostic; false
+%     'counterfactual_h_min'    perturb interfaces whose edge-hop distance from
+%                               the newly formed T1 interface is >= this value
+%     'counterfactual_delta'    absolute length shift added with random sign
+%     'counterfactual_seed'     fixed seed controlling the random signs
+%     'counterfactual_suffix'   optional dataset-key suffix for the variant
 %
 %   Dataset conventions:
 %     standard_16 is the canonical kA=100, shear=1.0, 16^2-cell dataset.
@@ -38,9 +45,16 @@ p.addParameter('workers', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1);
 p.addParameter('overwrite', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('assemble_only', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('datasets', {}, @(x) iscell(x) || isstring(x) || ischar(x));
+p.addParameter('counterfactual', false, @(x) islogical(x) && isscalar(x));
+p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x) && x >= 0);
+p.addParameter('counterfactual_delta', 0.05, @(x) isnumeric(x) && isscalar(x) && x >= 0);
+p.addParameter('counterfactual_seed', 20260616, @(x) isnumeric(x) && isscalar(x));
+p.addParameter('counterfactual_suffix', '', @(x) ischar(x) || isstring(x));
 p.parse(varargin{:});
 opts = p.Results;
 opts.workers = max(1, floor(opts.workers));
+opts.counterfactual_h_min = floor(opts.counterfactual_h_min);
+opts.counterfactual_suffix = char(opts.counterfactual_suffix);
 
 paths = local_paths();
 if isempty(opts.output_root)
@@ -105,6 +119,35 @@ for s = 1:numel(specs)
     report.datasets.(matlab.lang.makeValidName(spec.key)).assembly_report = ...
         fullfile(model_ready_dir, [spec.key, '_assembly_report.csv']);
 
+    if opts.counterfactual
+        cf_key = counterfactual_dataset_key(spec.key, opts);
+        cf_model_ready_dir = fullfile(opts.output_root, 'model_ready', cf_key, '2D');
+        cf_splits_dir = fullfile(opts.output_root, 'model_ready', cf_key, 'splits');
+        ensure_dir(cf_model_ready_dir);
+        fprintf('[vertex-model] Counterfactual variant %s: h >= %d, delta = %.8g, seed = %d\n', ...
+            cf_key, opts.counterfactual_h_min, opts.counterfactual_delta, opts.counterfactual_seed);
+        cf_assembly = DCG_assemble_vertex_model_graphs(raw_output_dir, spec.rows, ...
+            cf_model_ready_dir, cf_key, ...
+            'counterfactual', true, ...
+            'counterfactual_h_min', opts.counterfactual_h_min, ...
+            'counterfactual_delta', opts.counterfactual_delta, ...
+            'counterfactual_seed', opts.counterfactual_seed);
+        if strcmp(opts.mode, 'publication')
+            copy_split_manifests(spec.split_manifest_dir, cf_splits_dir);
+            copy_default_split(cf_splits_dir, cf_model_ready_dir);
+        else
+            write_minimal_split(cf_model_ready_dir, cf_splits_dir);
+        end
+        cf_field = matlab.lang.makeValidName(cf_key);
+        report.datasets.(cf_field).raw_root = raw_root;
+        report.datasets.(cf_field).model_ready_dir = cf_model_ready_dir;
+        report.datasets.(cf_field).graphs = height(cf_assembly);
+        report.datasets.(cf_field).assembly_report = ...
+            fullfile(cf_model_ready_dir, [cf_key, '_assembly_report.csv']);
+        report.datasets.(cf_field).counterfactual_h_min = opts.counterfactual_h_min;
+        report.datasets.(cf_field).counterfactual_delta = opts.counterfactual_delta;
+        report.datasets.(cf_field).counterfactual_seed = opts.counterfactual_seed;
+    end
     if ~isempty(spec.aliases)
         write_alias_readmes(opts.output_root, spec.key, spec.aliases);
     end
@@ -115,6 +158,16 @@ write_run_summary(report);
 fprintf('\n[vertex-model] Done. Output root:\n  %s\n', opts.output_root);
 end
 
+function key = counterfactual_dataset_key(base_key, opts)
+% counterfactual_dataset_key  Build a readable, collision-resistant variant key.
+if ~isempty(opts.counterfactual_suffix)
+    suffix = opts.counterfactual_suffix;
+else
+    delta_txt = regexprep(sprintf('%.8g', opts.counterfactual_delta), '[^\dA-Za-z]+', 'p');
+    suffix = sprintf('counterfactual_h%d_delta%s', opts.counterfactual_h_min, delta_txt);
+end
+key = sprintf('%s_%s', base_key, suffix);
+end
 function paths = local_paths()
 % local_paths  Implement local paths for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
 % Inputs: none.
@@ -208,7 +261,7 @@ if workers > 1
     statuses = zeros(numel(commands), 1);
     outputs = cell(numel(commands), 1);
     parfor i = 1:numel(commands)
-        [statuses(i), outputs{i}] = system(commands{i}); %#ok<PFBNS>
+        [statuses(i), outputs{i}] = system(commands{i});
     end
 else
     statuses = zeros(numel(commands), 1);
@@ -340,7 +393,13 @@ for i = 1:numel(keys)
     fprintf(fid, 'graphs: %d\n', ds.graphs);
     fprintf(fid, 'raw_root: %s\n', ds.raw_root);
     fprintf(fid, 'model_ready_dir: %s\n', ds.model_ready_dir);
-    fprintf(fid, 'assembly_report: %s\n\n', ds.assembly_report);
+    fprintf(fid, 'assembly_report: %s\n', ds.assembly_report);
+    if isfield(ds, 'counterfactual_h_min')
+        fprintf(fid, 'counterfactual_h_min: %d\n', ds.counterfactual_h_min);
+        fprintf(fid, 'counterfactual_delta: %.17g\n', ds.counterfactual_delta);
+        fprintf(fid, 'counterfactual_seed: %d\n', ds.counterfactual_seed);
+    end
+    fprintf(fid, '\n');
 end
 fclose(fid);
 end

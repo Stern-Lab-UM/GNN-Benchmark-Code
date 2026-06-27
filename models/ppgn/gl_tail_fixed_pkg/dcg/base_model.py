@@ -16,7 +16,7 @@ class BaseModel(nn.Module):
         BaseModel groups state and methods for this repository component.
     """
     def __init__(self, in_features, out_features,
-                 block_features, depth_of_mlp):
+                 block_features, depth_of_mlp, disable_first_skip=False):
         """
         Build the model computation graph, until scores/values
         are returned at the end
@@ -26,6 +26,8 @@ class BaseModel(nn.Module):
             out_features: Caller-supplied value used by this routine.
             block_features: Caller-supplied value used by this routine.
             depth_of_mlp: Caller-supplied value used by this routine.
+            disable_first_skip: Ablation switch. False keeps the normal PPGN;
+                True removes only the first RegularBlock skip path.
 
         Returns:
             None; the function updates object state, files, logs, or external process state.
@@ -33,6 +35,7 @@ class BaseModel(nn.Module):
         super().__init__()
 
         self.num_targets = out_features
+        self.disable_first_skip = bool(disable_first_skip)
 
         # default no scaling
         self.in_means = np.zeros(in_features)
@@ -51,9 +54,11 @@ class BaseModel(nn.Module):
         # sequential ppgn blocks
         last_layer_features = in_features
         self.reg_blocks = nn.ModuleList()
-        for next_layer_features in block_features:
+        for block_i, next_layer_features in enumerate(block_features):
+            skip_enabled = not (self.disable_first_skip and block_i == 0)
             self.reg_blocks.append(RegularBlock(
-                last_layer_features, next_layer_features, depth_of_mlp))
+                last_layer_features, next_layer_features, depth_of_mlp,
+                skip_enabled=skip_enabled))
             last_layer_features = next_layer_features
 
         # last layer to out_features

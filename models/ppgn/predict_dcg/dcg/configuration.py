@@ -22,6 +22,7 @@ DEFAULT_OPTIONS = {
         'factor': 0.1,
         'patience': 20,
         'threshold': 1e-4,
+        'disable_first_skip': False,
         'bce_fp_weight': None,
         'bce_fn_weight': None,
         'bc_ratio': None,
@@ -60,7 +61,9 @@ HELP_OPTIONS = {
         'bce_fn_weight': '# DOUBLE cost for false negative',
         'bce_ratio': '# DOUBLE  fn_weight / fp_weight ; overrides the two weights',
         'threshold': ('# DOUBLE threshold parameter to '
-                      'ReduceLROnPlateau scheduler')
+                      'ReduceLROnPlateau scheduler'),
+        'disable_first_skip': ('# BOOL ablation switch. False is the normal PPGN; '
+                               '# True removes only the first RegularBlock skip path.'),
     },
     'training_info': {
         'target_features': ('# LIST[STR] which features of'
@@ -235,6 +238,7 @@ TYPE_PARSERS = {
         'factor': float,
         'patience': int,
         'threshold': float,
+        'disable_first_skip': parse_bool,
         'bce_fp_weight': parse_args(check_none, float),
         'bce_fn_weight': parse_args(check_none, float),
         'bce_ratio': parse_args(check_none, float),
@@ -406,7 +410,8 @@ class Configuration():
             len(self.config['training_info']['input_features']) + 1,
             len(self.config['training_info']['target_features']),
             self.config['hyperparameters']['block_features'],
-            self.config['hyperparameters']['depth_of_mlp'])
+            self.config['hyperparameters']['depth_of_mlp'],
+            self.config['hyperparameters'].get('disable_first_skip', False))
         model.to(DEVICE)
         model.set_indices(self)
         model.set_non_negative(self)

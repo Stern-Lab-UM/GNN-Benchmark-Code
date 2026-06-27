@@ -117,6 +117,34 @@ clear DCG_CONFIG
 - `DCG_publication_config.m`
   resolves user-local paths without hard-coding a drive, account, or cluster.
 
+
+## Focused Manuscript Diagnostics
+
+The manuscript-specific numerical checks that do not belong to a single figure
+panel are also MATLAB entry points under `analysis/matlab/`:
+
+- `DCG_analyze_embedding_error_bounds.m` scans saved per-graph embedding outputs,
+  writes graph-level prediction/embedding MAE tables, fits the strict log-log
+  upper envelope, and plots the embedding-error ratio by model and cohort.
+- `DCG_analyze_counterfactual_copying.m` compares regular and counterfactually
+  perturbed prediction files for the distal fallback/copying diagnostic. Pass
+  `inds_dir` to restrict the calculation to `test.inds`; otherwise the function
+  warns and uses all graphs in the files.
+
+Example:
+
+```matlab
+DCG_analyze_embedding_error_bounds( ...
+    'embedding_root', fullfile(data_root, 'embeddings', 'per_graph'), ...
+    'output_dir', fullfile(data_root, '_figures', 'embedding_bounds'))
+
+DCG_analyze_counterfactual_copying( ...
+    'regular_pred_root', data_root, ...
+    'counterfactual_pred_root', '/path/to/counterfactual_predictions', ...
+    'inds_dir', '/path/to/standard_2_16_split', ...
+    'h_min', 14, ...
+    'delta', 0.05)
+```
 ## Output Folders
 
 For a consolidated data root, summaries and figures are written under:

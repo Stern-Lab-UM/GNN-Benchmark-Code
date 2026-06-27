@@ -8,14 +8,12 @@ screenshots, and cluster-specific scratch logs.
 
 ## Repository Layout
 
-- `analysis/matlab/` - MATLAB analysis and plotting pipeline.
+- `analysis/matlab/` - MATLAB analysis, manuscript diagnostics, and plotting pipeline.
 - `data_generation/vertex_model/` - vertex-model simulator source and MATLAB wrappers for regenerating raw and model-ready tissue-graph datasets.
 - `external/spring_embed/` - source for the spring-relaxation executable used by MATLAB embedding example figures.
 - `models/mpnn/` - source snapshot used for the GraphSAGE, GAT, GIN, and PNA training and prediction runs.
 - `models/ppgn/` - source snapshots used for PPGN, kept split into training, prediction, and GL tail packages to preserve provenance.
 - `training/bayesopt/` - MATLAB Bayesian-optimization drivers and final search-space definitions.
-- `manuscript_analyses/` - focused scripts used to compute manuscript-specific numerical checks, fallback diagnostics, embedding summaries, and tables.
-- `remote_examples/` - small example launch scripts for reproducibility.
 - `docs/` - installation notes, provenance records, and analysis-pipeline documentation.
 
 ## Bayesian Optimization
@@ -24,7 +22,7 @@ The MATLAB BayesOpt drivers are under `training/bayesopt/`. They launch the cura
 
 ## MATLAB Analysis
 
-The MATLAB scripts in `analysis/matlab/` perform the post-prediction analysis and plotting. They start from saved prediction files; Bayesian optimization, model training, and prediction generation are implemented in the Python/PyTorch code under `models/`. See `docs/MATLAB_ANALYSIS_PIPELINE.md` for the full MATLAB workflow.
+The MATLAB scripts in `analysis/matlab/` perform the post-prediction analysis, manuscript-specific diagnostics, and plotting. They start from saved prediction files; Bayesian optimization, model training, and prediction generation are implemented in the Python/PyTorch code under `models/`. See `docs/MATLAB_ANALYSIS_PIPELINE.md` for the full MATLAB workflow.
 
 ## Vertex-Model Data
 

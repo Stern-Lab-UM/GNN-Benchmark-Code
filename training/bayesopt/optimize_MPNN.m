@@ -58,6 +58,10 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
 %                       average over several seeds outside this script.
 %   'use_node_feats'  : 'True'|'False' for the 35-dim node features
 %                       (default 'True').
+%   'ablate_head_edge_attr' : logical ablation switch. false (default)
+%                       trains the length-informed architecture. true withholds
+%                       raw edge attributes from only the final regression head,
+%                       leaving the message-passing backbone unchanged.
 %   'num_seed_points' : BAYESOPT NumSeedPoints (default 6).
 %   'acquisition_fn'  : BAYESOPT AcquisitionFunctionName
 %                       (default 'expected-improvement-plus').
@@ -132,6 +136,7 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
     addParameter(p, 'early_stop_min_delta', 1e-4,                   @(x) isnumeric(x) && isscalar(x) && x >= 0);
     addParameter(p, 'seed',            0,                           @(x) isnumeric(x) && isscalar(x));
     addParameter(p, 'use_node_feats',  'True',                      @(x) any(strcmpi(char(x), {'True','False'})));
+    addParameter(p, 'ablate_head_edge_attr', false,                 @(x) islogical(x) && isscalar(x));
     addParameter(p, 'num_seed_points', 6,                          @(x) isnumeric(x) && isscalar(x) && x > 0);
     addParameter(p, 'acquisition_fn',  'expected-improvement-plus', @(x) ischar(x) || isstring(x));
     addParameter(p, 'output_dirname',  '',                          @(x) ischar(x) || isstring(x));
@@ -320,6 +325,7 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
     fprintf('patience        : %d\n', opts.patience);
     fprintf('early_stop_pat  : %d\n', opts.early_stop_patience);
     fprintf('early_stop_delta: %.6g\n', opts.early_stop_min_delta);
+    fprintf('ablate_head_attr: %d\n', opts.ablate_head_edge_attr);
     fprintf('cuda            : %d\n', opts.cuda);
     fprintf('acquisition_fn  : %s\n', char(opts.acquisition_fn));
     fprintf('hp_ranges       :\n');
@@ -399,6 +405,10 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, work_dirname, we
         fname = fixed_names{fk};
         cli_block = sprintf('%s --%s %s', cli_block, fname, char(opts.fixed_hps.(fname)));
     end
+    if opts.ablate_head_edge_attr
+        cli_block = sprintf('%s --ablate_head_edge_attr', cli_block);
+    end
+
     for k = 1:numel(hp_field_names)
         name = hp_field_names{k};
         val  = x.(name);
@@ -469,7 +479,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, work_dirname, we
         catch
         end
         fprintf('[eval_trial] subprocess failed (ret=%d). Tail:\n', ret);
-        lines = regexp(out, '\r'\n', 'split');
+        lines = regexp(out, '\r?\n', 'split');
         lines = lines(max(1,numel(lines)-30):end);
         fprintf('%s\n', strjoin(lines, newline));
         fprintf('[eval_trial] full output: %s\n', stderr_file);
@@ -493,7 +503,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, work_dirname, we
     % Keep only dirs whose basename matches the model/dim/weighted/nodefeats
     % configuration of this trial (this filter is stricter than mtime alone
     % and avoids picking up a parallel run if one ever slips in).
-    rx = sprintf(['_dim_2D_weighted_%s_nodefeats_%s_model_%s_epochs_%d_' ...
+    rx = sprintf(['_dim_2D_weighted_%s_nodefeats_%s_model_%s_.*_epochs_%d_' ...
                   'hiddenChannels_\\d+_numLayers_\\d+_dropout_[\\d\\.e\\-]+' ...
                   '_ls_[\\d\\.e\\-]+_wd_[\\d\\.e\\-]+'], ...
         weighted, use_node_feats, model_name, opts.max_epochs);

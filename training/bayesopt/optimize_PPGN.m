@@ -147,6 +147,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     addParameter(p, 'laplacian_k',     30);
     addParameter(p, 'block_features',  '[400,400,400]');
     addParameter(p, 'depth_of_mlp',    2);   % fixed in paper (Table S1); not optimised
+    addParameter(p, 'disable_first_skip', false, @(x) islogical(x) && isscalar(x));
     addParameter(p, 'num_seed_points', 6);
     addParameter(p, 'acquisition_fn',  'expected-improvement-plus');
     addParameter(p, 'output_dirname',  '');
@@ -333,6 +334,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     fixed_args.epochs            = num2str(opts.max_epochs);
     fixed_args.block_features    = opts.block_features;
     fixed_args.depth_of_mlp      = num2str(opts.depth_of_mlp);
+    fixed_args.disable_first_skip = matlab_bool(opts.disable_first_skip);
     fixed_args.input_features    = input_features;
     fixed_args.target_features   = target_features;
     fixed_args.normalize         = normalize_str;
@@ -363,6 +365,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     fprintf('max_epochs      : %d\n', opts.max_epochs);
     fprintf('patience        : %d\n', opts.patience);
     fprintf('early_stop      : %d\n', opts.early_stop);
+    fprintf('disable_first_skip: %d\n', opts.disable_first_skip);
     fprintf('cuda            : %d\n', opts.cuda);
     fprintf('acquisition_fn  : %s\n', char(opts.acquisition_fn));
     fprintf('hp_ranges       :\n');
@@ -656,5 +659,15 @@ function maybe_cleanup(out_dir, keep)
         if isfile(f)
             delete(f);
         end
+    end
+end
+
+
+function s = matlab_bool(x)
+% matlab_bool  Convert a MATLAB logical scalar to PPGN's CLI boolean spelling.
+    if x
+        s = 'true';
+    else
+        s = 'false';
     end
 end

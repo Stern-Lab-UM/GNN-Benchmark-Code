@@ -21,5 +21,15 @@ DCG_rebuild_all_summaries
 DCG_plot_everything
 ```
 
+Focused diagnostics can be run independently:
+
+```matlab
+DCG_analyze_embedding_error_bounds
+DCG_analyze_counterfactual_copying( ...
+    'regular_pred_root', data_root, ...
+    'counterfactual_pred_root', '/path/to/counterfactual_predictions', ...
+    'inds_dir', '/path/to/split_dir')
+```
+
 The model training and prediction steps are implemented in Python/PyTorch under
 `models/`. MATLAB starts from prediction files already written to disk.

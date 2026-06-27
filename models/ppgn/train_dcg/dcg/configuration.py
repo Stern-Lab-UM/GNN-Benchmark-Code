@@ -21,6 +21,7 @@ DEFAULT_OPTIONS = {
         'factor': 0.1,
         'patience': 20,
         'threshold': 1e-4,
+        'disable_first_skip': False,
     },
     'training_info': {
         'target_features': None,
@@ -55,7 +56,9 @@ HELP_OPTIONS = {
         'factor': '# DOUBLE factor parameter to ReduceLROnPlateau scheduler',
         'patience': '# INT patience parameter to ReduceLROnPlateau scheduler',
         'threshold': ('# DOUBLE threshold parameter to '
-                      'ReduceLROnPlateau scheduler')
+                      'ReduceLROnPlateau scheduler'),
+        'disable_first_skip': ('# BOOL ablation switch. False is the normal PPGN; '
+                               '# True removes only the first RegularBlock skip path.'),
     },
     'training_info': {
         'target_features': ('# LIST[STR] which features of'
@@ -266,6 +269,7 @@ TYPE_PARSERS = {
         'factor': float,
         'patience': int,
         'threshold': float,
+        'disable_first_skip': parse_bool,
     },
     'training_info': {
         'target_features': parse_args(check_none, is_all, list_or(str)),
@@ -430,7 +434,8 @@ class Configuration():
             len(self.config['training_info']['input_features']) + 1,
             len(self.config['training_info']['target_features']),
             self.config['hyperparameters']['block_features'],
-            self.config['hyperparameters']['depth_of_mlp'])
+            self.config['hyperparameters']['depth_of_mlp'],
+            self.config['hyperparameters'].get('disable_first_skip', False))
         model.to(DEVICE)
         model.set_indices(self)
         model.set_non_negative(self)

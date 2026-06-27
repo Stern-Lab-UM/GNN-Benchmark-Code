@@ -121,6 +121,30 @@ For `standard_16`, the split manifests include the final standard V1 cohort size
 The `kA_1` archive contains 815 graph entries rather than 816; the manifest
 records the graph order that exists in the archived merged file.
 
+
+## Counterfactual Copy-Test Variant
+
+The public generator can also write a counterfactual weighted-input variant for
+the distal fallback/copying diagnostic. This is disabled by default. When enabled,
+the normal dataset is generated first, then a second model-ready dataset is
+assembled in which interfaces at edge-hop distance `h >= counterfactual_h_min`
+from the newly formed T1 interface have their pre-T1 input length shifted by
+`+/- counterfactual_delta` with deterministic random signs.
+
+```matlab
+DCG_generate_vertex_model_datasets( ...
+    'mode', 'minimal', ...
+    'datasets', {'standard_16'}, ...
+    'counterfactual', true, ...
+    'counterfactual_h_min', 14, ...
+    'counterfactual_delta', 0.05, ...
+    'counterfactual_seed', 20260616)
+```
+
+The perturbation is applied before directional duplication, so the two directed
+rows of an interface receive the same shifted length. Split files are copied from
+the corresponding unperturbed dataset, allowing already-trained checkpoints to
+be re-evaluated on the perturbed inputs without retraining.
 ## Manual Build
 
 On Linux:

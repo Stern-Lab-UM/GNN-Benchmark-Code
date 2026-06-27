@@ -16,7 +16,7 @@ class RegularBlock(nn.Module):
     :param x: Tensor of shape N x in_features x m x m
     :return: Tensor of shape N x out_features x m x m
     """
-    def __init__(self, in_features, out_features, depth):
+    def __init__(self, in_features, out_features, depth, skip_enabled=True):
         """
         Initialize the RegularBlock instance and store constructor configuration.
 
@@ -24,6 +24,9 @@ class RegularBlock(nn.Module):
             in_features: Caller-supplied value used by this routine.
             out_features: Caller-supplied value used by this routine.
             depth: Caller-supplied value used by this routine.
+            skip_enabled: If False, omit the concatenating skip path and return
+                only the multiplicative PPGN update. This is used for the
+                first-skip ablation; the default True preserves the normal model.
 
         Returns:
             None; the function updates object state, files, logs, or external process state.
@@ -33,11 +36,15 @@ class RegularBlock(nn.Module):
         self.in_features = in_features
         self.out_features = out_features
         self.depth = depth
+        self.skip_enabled = bool(skip_enabled)
 
         self.mlp1 = MlpBlock(in_features, out_features, depth) # multilayer perceptron
         self.mlp2 = MlpBlock(in_features, out_features, depth)
 
-        self.skip = SkipConnection(in_features+out_features, out_features)
+        if self.skip_enabled:
+            self.skip = SkipConnection(in_features+out_features, out_features)
+        else:
+            self.skip = None
 
     def forward(self, inputs):
         """
@@ -51,6 +58,9 @@ class RegularBlock(nn.Module):
         """
         mult = torch.matmul(self.mlp1(inputs),
                             self.mlp2(inputs))
+
+        if not self.skip_enabled:
+            return mult
 
         out = self.skip(in1=inputs, in2=mult)
         return out
@@ -67,7 +77,8 @@ class RegularBlock(nn.Module):
         """
         return (self.in_features == other.in_features and
                 self.out_features == other.out_features and
-                self.depth == other.depth)
+                self.depth == other.depth and
+                self.skip_enabled == other.skip_enabled)
 
 
 class MlpBlock(nn.Module):

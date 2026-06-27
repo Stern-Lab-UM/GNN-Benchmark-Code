@@ -1,6 +1,6 @@
-function report = DCG_assemble_vertex_model_graphs(raw_output_dir, rows, output_dir, dataset_key)
+function report = DCG_assemble_vertex_model_graphs(raw_output_dir, rows, output_dir, dataset_key, varargin)
 % DCG_assemble_vertex_model_graphs  Implement dcg assemble vertex model graphs for this MATLAB workflow.
-% Inputs: raw_output_dir, rows, output_dir, dataset_key
+% Inputs: raw_output_dir, rows, output_dir, dataset_key, varargin
 % Outputs: report
 %DCG_ASSEMBLE_VERTEX_MODEL_GRAPHS  Convert raw vertex-model graphs to ML files.
 %
@@ -33,6 +33,13 @@ function report = DCG_assemble_vertex_model_graphs(raw_output_dir, rows, output_
 %   Both outputs are directed/symmetric: each undirected interface is written
 %   once per direction and then sorted by (cell_id_1, cell_id_2), matching the
 %   archived manuscript data format and both model loaders.
+%
+%   Optional name-value parameters:
+%     'counterfactual'          false by default; when true, perturb weighted
+%                               input lengths for distal interfaces.
+%     'counterfactual_h_min'    minimum edge-hop distance from newly formed T1.
+%     'counterfactual_delta'    absolute perturbation magnitude.
+%     'counterfactual_seed'     deterministic random-sign seed.
 
 if ~isfolder(raw_output_dir)
     error('raw_output_dir does not exist: %s', raw_output_dir);
@@ -41,21 +48,32 @@ if ~isfolder(output_dir)
     mkdir(output_dir);
 end
 
+p = inputParser;
+p.FunctionName = 'DCG_assemble_vertex_model_graphs';
+p.addParameter('counterfactual', false, @(x) islogical(x) && isscalar(x));
+p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x) && x >= 0);
+p.addParameter('counterfactual_delta', 0.05, @(x) isnumeric(x) && isscalar(x) && x >= 0);
+p.addParameter('counterfactual_seed', 20260616, @(x) isnumeric(x) && isscalar(x));
+p.parse(varargin{:});
+opts = p.Results;
+opts.counterfactual_h_min = floor(opts.counterfactual_h_min);
+
 n_graphs = height(rows);
 weighted_path = fullfile(output_dir, [dataset_key, '_weighted.txt']);
 unweighted_path = fullfile(output_dir, [dataset_key, '_unweighted.txt']);
 
 fw = fopen(weighted_path, 'wt');
 if fw < 0, error('Could not open %s for writing', weighted_path); end
-cu = onCleanup(@() fclose(fw)); %#ok<NASGU>
+cu = onCleanup(@() fclose(fw));
 
 fu = fopen(unweighted_path, 'wt');
 if fu < 0, error('Could not open %s for writing', unweighted_path); end
-cu2 = onCleanup(@() fclose(fu)); %#ok<NASGU>
+cu2 = onCleanup(@() fclose(fu));
 
-report = table('Size', [n_graphs, 7], ...
-    'VariableTypes', {'string','string','double','double','double','double','double'}, ...
-    'VariableNames', {'simulation_id','raw_file','n_cells','raw_edges','flipped_edges','assembled_edges','directed_rows'});
+report = table('Size', [n_graphs, 11], ...
+    'VariableTypes', {'string','string','double','double','double','double','double','double','double','double','double'}, ...
+    'VariableNames', {'simulation_id','raw_file','n_cells','raw_edges','flipped_edges','assembled_edges','directed_rows', ...
+    'counterfactual_edges','counterfactual_h_min','counterfactual_delta','counterfactual_seed'});
 
 for g = 1:n_graphs
     row = rows(g, :);
@@ -66,7 +84,7 @@ for g = 1:n_graphs
     end
 
     n_cells = table_number(row, 'n_cells');
-    [directed_weighted, directed_unweighted, n_undirected, n_flipped] = assemble_one_graph(raw, raw_path);
+    [directed_weighted, directed_unweighted, n_undirected, n_flipped, cf] = assemble_one_graph(raw, raw_path, opts, g);
 
     if max(max(directed_weighted(:, 1:2))) > n_cells
         error('Cell id exceeds n_cells in %s', raw_path);
@@ -95,16 +113,23 @@ for g = 1:n_graphs
     report.flipped_edges(g) = n_flipped;
     report.assembled_edges(g) = n_undirected;
     report.directed_rows(g) = size(directed_weighted, 1);
+    report.counterfactual_edges(g) = cf.n_edges;
+    report.counterfactual_h_min(g) = cf.h_min;
+    report.counterfactual_delta(g) = cf.delta;
+    report.counterfactual_seed(g) = cf.seed;
 end
 
 writetable(report, fullfile(output_dir, [dataset_key, '_assembly_report.csv']));
+if opts.counterfactual
+    write_counterfactual_metadata(output_dir, dataset_key, opts, sum(report.counterfactual_edges));
+end
 
 end
 
-function [directed_weighted, directed_unweighted, n_undirected, n_flipped] = assemble_one_graph(raw, raw_path)
+function [directed_weighted, directed_unweighted, n_undirected, n_flipped, cf] = assemble_one_graph(raw, raw_path, opts, graph_index)
 % assemble_one_graph  Implement assemble one graph for data_generation/vertex_model/DCG_assemble_vertex_model_graphs.m.
-% Inputs: raw, raw_path
-% Outputs: directed_weighted, directed_unweighted, n_undirected, n_flipped
+% Inputs: raw, raw_path, opts, graph_index
+% Outputs: directed_weighted, directed_unweighted, n_undirected, n_flipped, cf
 flipped = raw(:, 3) ~= 0;
 base = [raw(:, 1), raw(:, 2), raw(:, 4), double(flipped), raw(:, 5)];
 base(flipped, 5) = 0;
@@ -120,6 +145,8 @@ for i = 1:numel(flip_rows)
 end
 
 undirected = [base; new_edges];
+new_edge_rows = size(base, 1) + (1:size(new_edges, 1));
+[undirected, cf] = maybe_apply_counterfactual(undirected, new_edge_rows, opts, graph_index, raw_path);
 n_flipped = nnz(flipped);
 n_undirected = size(undirected, 1);
 
@@ -152,6 +179,76 @@ if numel(common) ~= 2
 end
 end
 
+function [undirected, cf] = maybe_apply_counterfactual(undirected, root_rows, opts, graph_index, raw_path)
+% maybe_apply_counterfactual  Perturb distal pre-T1 input lengths for copy tests.
+cf = struct('n_edges', 0, 'h_min', NaN, 'delta', NaN, 'seed', NaN);
+if ~opts.counterfactual
+    return
+end
+cf.h_min = opts.counterfactual_h_min;
+cf.delta = opts.counterfactual_delta;
+cf.seed = opts.counterfactual_seed + graph_index - 1;
+if opts.counterfactual_delta == 0 || isempty(root_rows)
+    return
+end
+
+dist = edge_hops_from_roots(undirected(:, 1:2), root_rows(:));
+mask = isfinite(dist) & dist >= opts.counterfactual_h_min;
+cf.n_edges = nnz(mask);
+if cf.n_edges == 0
+    return
+end
+
+stream = RandStream('mt19937ar', 'Seed', cf.seed);
+signs = 2 * randi(stream, 2, cf.n_edges, 1) - 3;  % {-1,+1}
+new_lengths = undirected(mask, 3) + signs .* opts.counterfactual_delta;
+if any(new_lengths <= 0)
+    error('Counterfactual perturbation produced non-positive input lengths in %s. Reduce counterfactual_delta.', raw_path);
+end
+undirected(mask, 3) = new_lengths;
+end
+
+function dist = edge_hops_from_roots(edge_pairs, root_rows)
+% edge_hops_from_roots  Shortest line-graph distance from one or more T1 roots.
+n_edges = size(edge_pairs, 1);
+root_rows = root_rows(isfinite(root_rows) & root_rows >= 1 & root_rows <= n_edges);
+if isempty(root_rows)
+    dist = inf(n_edges, 1);
+    return
+end
+A = false(n_edges, n_edges);
+for e = 1:n_edges
+    shared = edge_pairs(:, 1) == edge_pairs(e, 1) | edge_pairs(:, 2) == edge_pairs(e, 1) | ...
+             edge_pairs(:, 1) == edge_pairs(e, 2) | edge_pairs(:, 2) == edge_pairs(e, 2);
+    shared(e) = false;
+    A(e, shared) = true;
+end
+G = graph(A | A');
+D = distances(G, root_rows);
+if size(D, 1) > 1
+    dist = min(D, [], 1)';
+else
+    dist = D(:);
+end
+end
+
+function write_counterfactual_metadata(output_dir, dataset_key, opts, n_perturbed_rows)
+% write_counterfactual_metadata  Record the exact counterfactual perturbation.
+fid = fopen(fullfile(output_dir, [dataset_key, '_counterfactual_metadata.txt']), 'wt');
+if fid < 0
+    return
+end
+cleanupObj = onCleanup(@() fclose(fid));
+fprintf(fid, 'dataset_key: %s\n', dataset_key);
+fprintf(fid, 'counterfactual: true\n');
+fprintf(fid, 'h_min: %d\n', opts.counterfactual_h_min);
+fprintf(fid, 'delta: %.17g\n', opts.counterfactual_delta);
+fprintf(fid, 'seed_base: %d\n', opts.counterfactual_seed);
+fprintf(fid, 'perturbed_undirected_edges_total: %d\n', n_perturbed_rows);
+fprintf(fid, ['Distances are edge-hop distances on the assembled undirected interface line graph, ' ...
+    'rooted at the newly formed T1 interface rows. Perturbations are applied before ' ...
+    'directional duplication, so both directions of an interface receive the same shift.\n']);
+end
 function write_header(fid, n_graphs, n_cells, n_edges, is_weighted)
 % write_header  Write header to disk.
 % Inputs: fid, n_graphs, n_cells, n_edges, is_weighted
