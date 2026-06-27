@@ -1,3 +1,8 @@
+/*
+ * data_generation/vertex_model/src/_functions.h
+ * Vertex-model C source. Documentation comments describe the publication workflow without changing runtime behavior.
+ */
+
 #include <stdio.h>
 #include <cstring>
 #include <vector>

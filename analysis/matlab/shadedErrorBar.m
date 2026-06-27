@@ -1,4 +1,7 @@
 function varargout=shadedErrorBar(x,y,errBar,varargin)
+% shadedErrorBar  Implement shaded error bar for this MATLAB workflow.
+% Inputs: x, y, errBar, varargin
+% Outputs: varargout
 % generate continuous error bar area around a line plot
 %
 % function H=shadedErrorBar(x,y,errBar, ...)
@@ -125,6 +128,9 @@ end
 
 
 function H = makePlot(x,y,errBar,lineProps,transparent,patchSaturation)
+% makePlot  Implement make plot for this MATLAB workflow.
+% Inputs: x, y, errBar, lineProps, transparent, patchSaturation
+% Outputs: H
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Determine host application
 if (sum( size(ver('MATLAB'))) > 0  )
@@ -136,7 +142,7 @@ end % if
 % Plot to get the parameters of the line
 if hostName == 'MATLAB'
     H.mainLine=plot(x,y,lineProps{:});
-    
+
 elseif hostName == 'Octave'
     boolxDatestr = checkOctave_datestr(x);
     if boolxDatestr
@@ -202,6 +208,9 @@ end
 
 
 function boolDate = checkOctave_datestr(x)
+% checkOctave_datestr  Implement check octave datestr for this MATLAB workflow.
+% Inputs: x
+% Outputs: boolDate
 %% Simple try/catch for casting datenums, requireing valid datestr
 boolDate = true;
 try

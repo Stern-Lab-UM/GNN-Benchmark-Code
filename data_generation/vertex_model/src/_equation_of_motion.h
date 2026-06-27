@@ -3,6 +3,11 @@
 //***********************EQUATION OF MOTION***********************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * calc_forces: Compute force contributions for the current vertex-model state.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double calc_forces(){
 
     //EDGE LENGTHS
@@ -36,6 +41,11 @@ double calc_forces(){
     return Fmax;
 }
 //****************************************************************************
+/*
+ * propagate_tension: Implement the propagate tension operation for the C vertex-model code.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void propagate_tension(){
     for(int i=1; i<=Ne; i++) if(exist[2][i]==1){
         double gOLD=e_g[i];
@@ -46,10 +56,20 @@ void propagate_tension(){
     }
 }
 //****************************************************************************
+/*
+ * reset_forces: Compute force contributions for the current vertex-model state.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void reset_forces(){
     for(int i=1; i<=Nv; i++) if(exist[1][i]==1) for(int j=1; j<=2; j++) v_F[i][j] = 0;
 }
 //****************************************************************************
+/*
+ * eqOfMotion: Advance the vertex-model equations of motion.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double eqOfMotion(){
 
     //CALCULATE FORCES

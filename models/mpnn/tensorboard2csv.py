@@ -1,3 +1,5 @@
+"""Utilities for models / mpnn / tensorboard2csv.py in the DCG benchmark codebase."""
+
 import os
 import numpy as np
 import pandas as pd
@@ -11,11 +13,29 @@ parser.add_argument('--path', type=str, default='')
 args = parser.parse_args()
 
 def _event_entries(dpath):
+    """
+    Implement the event entries step for models / mpnn / tensorboard2csv.py.
+
+    Args:
+        dpath: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     return [d for d in os.listdir(dpath)
             if os.path.isdir(os.path.join(dpath, d)) or d.startswith('events.out.tfevents')]
 
 
 def tabulate_events(dpath):
+    """
+    Implement the tabulate events step for models / mpnn / tensorboard2csv.py.
+
+    Args:
+        dpath: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     summary_iterators = [EventAccumulator(os.path.join(dpath, dname)).Reload() for dname in _event_entries(dpath)]
 
     tags = summary_iterators[0].Tags()['scalars']
@@ -38,6 +58,15 @@ def tabulate_events(dpath):
 
 
 def to_csv(dpath):
+    """
+    Implement the to csv step for models / mpnn / tensorboard2csv.py.
+
+    Args:
+        dpath: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     dirs = _event_entries(dpath)
 
     d, steps_by_tag = tabulate_events(dpath)
@@ -48,6 +77,16 @@ def to_csv(dpath):
 
 
 def get_file_path(dpath, tag):
+    """
+    Return file path for the current object or workflow.
+
+    Args:
+        dpath: Caller-supplied value used by this routine.
+        tag: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     file_name = tag.replace("/", "_") + '.csv'
     folder_path = os.path.join(dpath, 'csv')
     if not os.path.exists(folder_path):

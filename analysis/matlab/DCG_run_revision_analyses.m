@@ -273,6 +273,9 @@ fprintf('\nRevision analysis batch complete.\n');
 
 
 function path_out = first_existing(candidates)
+% first_existing  Implement first existing for this MATLAB workflow.
+% Inputs: candidates
+% Outputs: path_out
 %FIRST_EXISTING  First path in a candidate list that exists on disk.
 %
 %   PURPOSE   Tolerate the two historical cache-filename conventions by trying

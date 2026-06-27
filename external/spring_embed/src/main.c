@@ -25,6 +25,11 @@ double h;
 #endif
 
 #include "_functions.h"
+/*
+ * ensure_output_dir: Write vertex-model state or graph data to output files.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 
 static int ensure_output_dir(void)
 {
@@ -40,6 +45,11 @@ static int ensure_output_dir(void)
 // Reads col6 (predicted_length) -> e_l0 and col4 (was_flipped); to embed GT or the
 // baseline, feed a prediction file whose col6 has been replaced by col5 / col3.
 // All outputs (X_/Y_/out_) go to ./output relative to the working directory.
+/*
+ * main: Run the command-line entry point for this C executable.
+ * Parameters: int argc, char *argv[].
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int main(int argc, char *argv[]){
 
 

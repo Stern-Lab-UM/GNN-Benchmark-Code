@@ -1,4 +1,7 @@
 function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_ranges, n_trials, varargin)
+% optimize_MPNN  Implement optimize mpnn for this MATLAB workflow.
+% Inputs: dataset_filename, inds_dirname, model_name, hp_ranges, n_trials, varargin
+% Outputs: results
 %OPTIMIZE_MPNN  Bayesian hyper-parameter optimization for any MPNN model.
 %
 %   RESULTS = OPTIMIZE_MPNN(DATASET_FILENAME, INDS_DIRNAME, MODEL_NAME,
@@ -385,6 +388,9 @@ end
 % =====================================================================
 function objective = eval_trial(x, hp_field_names, ordinal_map, work_dirname, weighted, ...
                                 model_name, use_node_feats, opts)
+% eval_trial  Implement eval trial for this MATLAB workflow.
+% Inputs: x, hp_field_names, ordinal_map, work_dirname, weighted, model_name, use_node_feats, opts
+% Outputs: objective
 
     % Build the CLI argument block from fixed HPs plus sampled HPs.
     cli_block = '';
@@ -553,6 +559,9 @@ end
 % Helpers
 % =====================================================================
 function stage_symlink(src_path, work_dirname)
+% stage_symlink  Implement stage symlink for this MATLAB workflow.
+% Inputs: src_path, work_dirname
+% Outputs: none; performs side effects or updates the caller workflow.
 % Symlink a file into work_dirname, overwriting any stale link/file.
     [~, name, ext] = fileparts(src_path);
     dst = fullfile(work_dirname, [name ext]);

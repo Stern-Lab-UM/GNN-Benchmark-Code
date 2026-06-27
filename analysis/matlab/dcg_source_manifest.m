@@ -1,4 +1,7 @@
 function m = dcg_source_manifest(data_root)
+% dcg_source_manifest  Implement dcg source manifest for this MATLAB workflow.
+% Inputs: data_root
+% Outputs: m
 %DCG_SOURCE_MANIFEST  Deterministic fingerprint of a prediction-file set.
 %
 % PURPOSE

@@ -38,10 +38,28 @@ PPGN_IMPORTS = [
 
 
 def _module_version(module: object) -> str:
+    """
+    Return a displayable version string for an imported module.
+
+    Args:
+        module: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     return str(getattr(module, "__version__", "unknown"))
 
 
 def _clear_modules(prefix: str) -> None:
+    """
+    Remove cached modules with the requested prefix from sys.modules.
+
+    Args:
+        prefix: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     for name in list(sys.modules):
         if name == prefix or name.startswith(prefix + "."):
             del sys.modules[name]
@@ -49,6 +67,15 @@ def _clear_modules(prefix: str) -> None:
 
 @contextmanager
 def _prepended_path(path: Path):
+    """
+    Temporarily prepend a path to sys.path during a check.
+
+    Args:
+        path: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     path_str = str(path)
     sys.path.insert(0, path_str)
     try:
@@ -61,6 +88,15 @@ def _prepended_path(path: Path):
 
 
 def check_imports(imports: list[tuple[str, str]]) -> bool:
+    """
+    Verify that required Python imports are available.
+
+    Args:
+        imports: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     ok = True
     for module_name, package_name in imports:
         try:
@@ -73,6 +109,12 @@ def check_imports(imports: list[tuple[str, str]]) -> bool:
 
 
 def check_mpnn_source() -> bool:
+    """
+    Verify that the MPNN source tree can be imported.
+
+    Returns:
+        Computed value used by the caller.
+    """
     src = REPO_ROOT / "models" / "mpnn"
     if not src.exists():
         print(f"[FAIL] missing MPNN source directory: {src}")
@@ -98,6 +140,15 @@ def check_mpnn_source() -> bool:
 
 
 def check_ppgn_snapshot(snapshot: str) -> bool:
+    """
+    Verify that a PPGN package snapshot can be imported.
+
+    Args:
+        snapshot: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     src = REPO_ROOT / "models" / "ppgn" / snapshot
     if not src.exists():
         print(f"[FAIL] missing PPGN source directory: {src}")
@@ -128,6 +179,12 @@ def check_ppgn_snapshot(snapshot: str) -> bool:
 
 
 def check_ppgn_source() -> bool:
+    """
+    Verify that the PPGN source snapshots can be imported.
+
+    Returns:
+        Computed value used by the caller.
+    """
     ok = True
     for snapshot in ("train_dcg", "predict_dcg", "gl_tail_fixed_pkg"):
         ok = check_ppgn_snapshot(snapshot) and ok
@@ -135,6 +192,12 @@ def check_ppgn_source() -> bool:
 
 
 def print_header() -> None:
+    """
+    Print a section header for the installation checker.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     print("DCG/GNN install checker")
     print(f"repo: {REPO_ROOT}")
     print(f"python: {sys.version.split()[0]} ({sys.executable})")
@@ -144,6 +207,12 @@ def print_header() -> None:
 
 
 def main() -> int:
+    """
+    Parse command-line arguments and run this script entry point.
+
+    Returns:
+        Computed value used by the caller.
+    """
     parser = argparse.ArgumentParser(
         description="Check imports for the curated DCG/GNN publication code."
     )

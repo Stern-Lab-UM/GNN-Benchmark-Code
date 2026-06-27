@@ -1,3 +1,8 @@
+/*
+ * external/spring_embed/src/_functions.h
+ * Spring embedding C source. Documentation comments describe the publication workflow without changing runtime behavior.
+ */
+
 #include <stdio.h>
 #include <cstring>
 #include <vector>

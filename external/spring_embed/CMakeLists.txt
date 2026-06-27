@@ -1,3 +1,7 @@
+# Purpose: configure the spring embedding C executable with CMake.
+# Inputs: CMake generator variables and source files in external/spring_embed/src.
+# Outputs: a build system for the spring_embed executable.
+
 cmake_minimum_required(VERSION 3.12)
 project(dcg_spring_embed LANGUAGES CXX)
 

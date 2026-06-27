@@ -1,4 +1,7 @@
 function stop = email_bayesopt_outputfcn(BO, State, email_addr, run_label)
+% email_bayesopt_outputfcn  Implement email bayesopt outputfcn for this MATLAB workflow.
+% Inputs: BO, State, email_addr, run_label
+% Outputs: stop
 %EMAIL_BAYESOPT_OUTPUTFCN  Send an email after each completed bayesopt iter.
 %
 %   stop = email_bayesopt_outputfcn(BO, State, email_addr, run_label)

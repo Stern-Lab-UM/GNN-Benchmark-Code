@@ -1,4 +1,7 @@
 function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_trials, varargin)
+% optimize_PPGN  Implement optimize ppgn for this MATLAB workflow.
+% Inputs: dataset_filename, inds_dirname, hp_ranges, n_trials, varargin
+% Outputs: results
 %OPTIMIZE_PPGN  Bayesian hyper-parameter optimization for PPGN.
 %
 %   RESULTS = OPTIMIZE_PPGN(DATASET_FILENAME, INDS_DIRNAME, HP_RANGES,
@@ -464,6 +467,9 @@ end
 % =====================================================================
 function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
                                 dataset_filename, inds_dirname, trials_root, opts)
+% eval_trial  Implement eval trial for this MATLAB workflow.
+% Inputs: x, hp_field_names, ordinal_map, fixed_args, dataset_filename, inds_dirname, trials_root, opts
+% Outputs: objective
 
     % Build the --args string. Start from the fixed args, then overlay
     % any hp sampled by BAYESOPT (so a swept HP overrides the fixed one
@@ -637,6 +643,9 @@ end
 
 
 function maybe_cleanup(out_dir, keep)
+% maybe_cleanup  Implement maybe cleanup for this MATLAB workflow.
+% Inputs: out_dir, keep
+% Outputs: none; performs side effects or updates the caller workflow.
 % Delete big artefacts (model.tar etc.), keep metrics.csv for forensics.
     if keep || ~isfolder(out_dir)
         return;

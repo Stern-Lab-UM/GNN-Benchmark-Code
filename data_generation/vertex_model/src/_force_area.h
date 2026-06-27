@@ -6,6 +6,11 @@
 //****************************************************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * dA_new: Implement the d a new operation for the C vertex-model code.
+ * Parameters: int cellID, int j.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double dA_new(int cellID, int j){
 
     int vert_ref_id=c_vertices[cellID][1];
@@ -55,12 +60,22 @@ double dA_new(int cellID, int j){
     return 0.5*(-v2x*v1y + v1x*v2y);
 }
 //****************************************************************************
+/*
+ * CellArea_new: Compute or update cell-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double CellArea_new(int i){
     double areaSum=0;
     for(int j=1; j<=c_vertices[i][0]; j++ ) areaSum += dA_new(i,j);
     return areaSum;
 }
 //****************************************************************************
+/*
+ * c_Adot_j: Implement the c adot j operation for the C vertex-model code.
+ * Parameters: int i, int j.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double c_Adot_j(int i, int j){
 
     int vert_ref_id=c_vertices[i][1];
@@ -121,12 +136,22 @@ double c_Adot_j(int i, int j){
     return forceX*(v3y-v1y)-forceY*(v3x-v1x);
 }
 //****************************************************************************
+/*
+ * c_AdotCalc: Implement the c adot calc operation for the C vertex-model code.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double c_AdotCalc(int i){
     double sum=0;
     for(int j=1; j<=c_vertices[i][0]; j++) sum+=c_Adot_j(i,j);
     return 0.5*sum;
 }
 //****************************************************************************
+/*
+ * v_AreaCompressibility_force_New: Compute force contributions for the current vertex-model state.
+ * Parameters: int j, int cellID, double _Cellarea.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void v_AreaCompressibility_force_New(int j, int cellID, double _Cellarea){
 
     int vert_ref_id=c_vertices[cellID][1];
@@ -187,6 +212,11 @@ void v_AreaCompressibility_force_New(int j, int cellID, double _Cellarea){
 
 }
 //****************************************************************************
+/*
+ * c_AreaCompressibility_force_New: Compute force contributions for the current vertex-model state.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double c_AreaCompressibility_force_New(int i){
     double _Cellarea=c_area[i];
     for(int j=1; j<=c_vertices[i][0]; j++ ) v_AreaCompressibility_force_New(j,i,_Cellarea);

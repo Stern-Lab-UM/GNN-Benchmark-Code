@@ -3,6 +3,11 @@
 //***********************T1***************************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * nr_of_triangles: Implement the nr of triangles operation for the C vertex-model code.
+ * Parameters: int eID.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int nr_of_triangles(int eID){
     int nrTRI=0;
     for(int i=1; i<=e_cells[eID][0]; i++){
@@ -12,12 +17,22 @@ int nr_of_triangles(int eID){
     return nrTRI;
 }
 //****************************************************************************
+/*
+ * appropriate_for_T1: Apply or convert a T1 transition in the vertex-model topology.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int appropriate_for_T1(int i){
     if( nr_of_triangles(i)!=0 ) return 0;
     if( v_edges[e[i][1]][0]>3 || v_edges[e[i][2]][0]>3 ) return 0;
     return 1;
 }
 //****************************************************************************
+/*
+ * T1_transitions: Apply or convert a T1 transition in the vertex-model topology.
+ * Parameters: double fin_len, double clck, int flag.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void T1_transitions(double fin_len, double clck, int flag){
 
     if(flag==1 || flag==12){

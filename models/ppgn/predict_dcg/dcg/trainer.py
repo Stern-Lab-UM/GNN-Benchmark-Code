@@ -1,3 +1,5 @@
+"""Utilities for models / ppgn / predict_dcg / dcg / trainer.py in the DCG benchmark codebase."""
+
 from typing import Dict
 import copy
 import torch
@@ -11,7 +13,26 @@ import logging
 import torch.nn.functional as F
 
 class Trainer(object):
+    """
+    train and evaluate PPGN models
+
+
+    Role:
+        Trainer groups state and methods for this repository component.
+    """
     def __init__(self, model, dataloader, config, device):
+        """
+        Initialize the Trainer instance and store constructor configuration.
+
+        Args:
+            model: Caller-supplied value used by this routine.
+            dataloader: Caller-supplied value used by this routine.
+            config: Caller-supplied value used by this routine.
+            device: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.best_epoch = -1
         self.cur_epoch = 0
         self.device = device
@@ -41,8 +62,8 @@ class Trainer(object):
         else:
             raise ValueError(f'Unsupported loss function "{loss}"\n'
                              f'Options are [{", ".join(loss_fns.keys())}]')
-        
-        self.is_bce = (loss == 'BCE')                    
+
+        self.is_bce = (loss == 'BCE')
 
         self.optimizer = torch.optim.Adam(
             params=self.model.parameters(),
@@ -59,21 +80,21 @@ class Trainer(object):
             factor=params['factor'],
             threshold=params['threshold'],
         )
-        
-        
+
+
         # THIS IS FOR LOSS FUNCTION << ADDED BY RIYA SAMANTA.
         ratio = params.get('bce_ratio', None)
         fp_w  = params.get('bce_fp_weight', None)
         fn_w  = params.get('bce_fn_weight', None)
-        
-        
+
+
         if ratio is not None:                        # CASE B
             self.pos_weight_val = float(ratio)       # (= fn / fp)
         elif fp_w is not None and fn_w is not None:  # CASE A
             self.pos_weight_val = float(fn_w) / max(float(fp_w), 1e-12)
         """
-        else:   
-            
+        else:
+
             pos_cnt = neg_cnt = 0                               # CASE C – compute from data
             with torch.no_grad():                              # no gradients needed
                 for g, t in dataloader.train:                  # loop over train set
@@ -95,10 +116,10 @@ class Trainer(object):
                     pos_cnt += is_pos.sum().item()
 #                    neg_cnt += (local_mask[:, 0].sum() - is_pos.sum()).item()
                     neg_cnt += (local_mask[:, mother_idx].sum() - is_pos.sum()).item()
-                    
+
             #print (pos_cnt,neg_cnt)
             self.pos_weight_val = neg_cnt / max(pos_cnt, 1)    # fallback to 1 if no positives
-        
+
         """
         self.pos_weight_val = 1.0; # for now, we don't need it
         # Keep a tensor ready on the correct device
@@ -109,13 +130,19 @@ class Trainer(object):
 
         # create the masker (enabled by default, can be turned off via config)
 #        self.candidate_masker = CandidateMask(enabled=True)
-        
+
         #<< EDITED BY RIYA - END
-        
+
 
     def train(self, epochs):
         """
         Trains for the num of epochs.
+
+        Args:
+            epochs: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
         """
         best_loss = float('inf')
         best_dists = None
@@ -183,6 +210,9 @@ class Trainer(object):
 
         Train one epoch
         :return dist and loss on train set
+
+        Args:
+            epoch: Caller-supplied value used by this routine.
         """
         return self.evaluate_batches(self.data.train, 'Training', epoch, optimize=True)
 
@@ -199,11 +229,24 @@ class Trainer(object):
     def validate(self, epoch, best_loss):
         """
         Forward pass on the validation set (no gradient).
+
+        Args:
+            epoch: Caller-supplied value used by this routine.
+            best_loss: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
         """
         with torch.no_grad():
             return self.evaluate_batches(self.data.val, 'Val', epoch, best_loss=best_loss)
 
     def load_best_model(self):
+        """
+        Restore the best checkpointed model state.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.model = self.best_model
         self.cur_epoch = self.best_epoch
 
@@ -220,12 +263,28 @@ class Trainer(object):
     def test(self):
         """
         Forward pass on the test set (no gradient).
+
+        Returns:
+            Computed value used by the caller.
         """
         with torch.no_grad():
             return self.evaluate_batches(self.data.test, 'Test', self.cur_epoch)
 
     def evaluate_batches(self, dataset, name, epoch,
                          optimize=False, best_loss=None):
+        """
+        Evaluate all batches in a split and aggregate metrics.
+
+        Args:
+            dataset: Caller-supplied value used by this routine.
+            name: Caller-supplied value used by this routine.
+            epoch: Caller-supplied value used by this routine.
+            optimize: Caller-supplied value used by this routine.
+            best_loss: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         start_time = datetime.now()
 
         if optimize:
@@ -294,44 +353,44 @@ class Trainer(object):
 #        cand_mask = self.candidate_masker(graphs, self.data.input_features)                     # (B, 1, N, N)
         #mask2 = mask # real mask
 #        mask = mask & cand_mask                                   # broadcast over X
-        
+
         #breakpoint()
         # Original resumes
         for i, n in enumerate(self.target_features):
             if not mask[:, i].any():
                 continue                                      # ADDED BY RIYA SAMANTA
-            
+
             logits = scores[:, i][mask[:, i]]
             truth = targets[:, i][mask[:, i]]
-            
+
             #logits2 = scores[:,i][mask2[:,i]] # for debugging
             #truth2 = targets[:,i][mask2[:,i]] # for debugging
-            
+
             loss = self.loss_fn(logits,truth)
-            
+
             #if self.is_bce:                                   # ADDED BY RIYA
-  
+
              #   loss = F.binary_cross_entropy_with_logits(
-             #           logits, truth, pos_weight=self.pos_weight)  
-                        
+             #           logits, truth, pos_weight=self.pos_weight)
+
                 #loss2 = F.binary_cross_entropy_with_logits(logits2, truth2)
-                #loss3 = F.binary_cross_entropy_with_logits(logits2,truth2,pos_weight=self.pos_weight)  
+                #loss3 = F.binary_cross_entropy_with_logits(logits2,truth2,pos_weight=self.pos_weight)
                 #loss = F.binary_cross_entropy_with_logits(
                 #    logits, truth, weight=sample_weight, pos_weight=pos_w)
                 #print(logits,truth,logits2,truth2,loss,loss2,loss3)
                 #breakpoint()
-                
+
               #  loss_fn = torch.nn.BCEWithLogitsLoss(
               #          weight=sample_weight,
               #          pos_weight=pos_w,
-              #          reduction='none'      
+              #          reduction='none'
               #          )
-              #  loss = loss_fn(logits,truth)        
-                        
+              #  loss = loss_fn(logits,truth)
+
             #else:
             #    loss = self.loss_fn(logits,truth)
-                
-            #breakpoint()    
+
+            #breakpoint()
             total_loss += loss
             if (self.penalties is not None
                     and n in self.penalties
@@ -342,7 +401,7 @@ class Trainer(object):
                     targets[:, i][mask[:, i]].sum()
                 )
             dists[i] = loss.cpu().item() * self.norm_factors.loc[n, 'std']
-            #breakpoint()   
+            #breakpoint()
 
         return total_loss, dists
 
@@ -350,21 +409,50 @@ class Trainer(object):
         '''
         Set the penalty attribute of the trainer
         Used to scale the loss of features differently
+
+        Args:
+            penalties: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
         '''
         self.penalties = penalties
-        
-    
-    
+
+
+
 
 
 
 
 class RMSLELoss(nn.Module):
+    """
+    Provide the rmsleloss component used by models / ppgn / predict_dcg / dcg / trainer.py.
+
+
+    Role:
+        RMSLELoss groups state and methods for this repository component.
+    """
     def __init__(self):
+        """
+        Initialize the RMSLELoss instance and store constructor configuration.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         super().__init__()
         self.mse = nn.MSELoss()
-        
+
     def forward(self, pred, actual):
+        """
+        Run the neural-network forward pass for this module.
+
+        Args:
+            pred: Caller-supplied value used by this routine.
+            actual: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return torch.sqrt(self.mse(torch.log(pred + 1), torch.log(actual + 1)))
 
 

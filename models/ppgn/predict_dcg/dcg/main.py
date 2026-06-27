@@ -1,3 +1,5 @@
+"""Utilities for models / ppgn / predict_dcg / dcg / main.py in the DCG benchmark codebase."""
+
 import click
 import torch
 import numpy as np
@@ -14,7 +16,23 @@ from dcg.file_reader import NodeMap
 # override the alphabetical order of help text
 # https://github.com/pallets/click/issues/513
 class NaturalOrderGroup(click.Group):
+    """
+    Provide the natural order group component used by models / ppgn / predict_dcg / dcg / main.py.
+
+
+    Role:
+        NaturalOrderGroup groups state and methods for this repository component.
+    """
     def list_commands(self, ctx):
+        """
+        Implement the list commands step for models / ppgn / predict_dcg / dcg / main.py.
+
+        Args:
+            ctx: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self.commands.keys()
 
 
@@ -29,6 +47,14 @@ def cli(ctx, print_config, seed):
     Deep Cell Graphs
 
     Simulating cellular interactions in a network of neighbors
+
+    Args:
+        ctx: Caller-supplied value used by this routine.
+        print_config: Caller-supplied value used by this routine.
+        seed: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
     '''
     if ctx.invoked_subcommand is None and not print_config:
         click.echo(ctx.get_help())
@@ -74,6 +100,18 @@ def train(config_file, args, out_dir, training_data,
     train a provably powerful graph network to relate adjacencies to output
     properties.  By default, the performance is evaluated and reported in the
     output directory along with the model parameters.
+
+    Args:
+        config_file: Caller-supplied value used by this routine.
+        args: Caller-supplied value used by this routine.
+        out_dir: Caller-supplied value used by this routine.
+        training_data: Caller-supplied value used by this routine.
+        evaluation: Caller-supplied value used by this routine.
+        inds_dir: Caller-supplied value used by this routine.
+        transfer_from: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
     '''
     #click.echo('THIS IS RIYA VERSION')
     click.echo('Training')
@@ -170,7 +208,7 @@ def train(config_file, args, out_dir, training_data,
     # ----------------------------------------------------------------
 
     """
-    
+
     if evaluation:
         click.echo('Performing detailed evaluation')
         out_dir = recorder.out_dir
@@ -197,6 +235,16 @@ def evaluate(ctx, models, test_data, notebook, html):
     '''
     With one or more trained MODELS directories and testing data,
     report the model performance in a jupyter notebook or html.
+
+    Args:
+        ctx: Caller-supplied value used by this routine.
+        models: Caller-supplied value used by this routine.
+        test_data: Caller-supplied value used by this routine.
+        notebook: Caller-supplied value used by this routine.
+        html: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
     '''
     if notebook is None and html is None:
         click.echo("Must specify at least one output, "
@@ -220,6 +268,18 @@ def evaluate(ctx, models, test_data, notebook, html):
               help='Output file, matches input with predicted values added')
 @click.pass_context
 def predict(ctx, model, input: str, output):
+    """
+    Run model inference and return or save predictions.
+
+    Args:
+        ctx: Caller-supplied value used by this routine.
+        model: Caller-supplied value used by this routine.
+        input: Caller-supplied value used by this routine.
+        output: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     saved = SavedModel(model)
     loader = saved.config.build_loader()
     inputs = loader.input_features
@@ -330,6 +390,18 @@ def predict(ctx, model, input: str, output):
 def simulate(model, polygonality, topology, output, kbt, steps, seed):
     '''
     Simulate the dynamics of a cell network using a trained model.
+
+    Args:
+        model: Caller-supplied value used by this routine.
+        polygonality: Caller-supplied value used by this routine.
+        topology: Caller-supplied value used by this routine.
+        output: Caller-supplied value used by this routine.
+        kbt: Caller-supplied value used by this routine.
+        steps: Caller-supplied value used by this routine.
+        seed: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
     '''
     click.echo('Simulating')
     np.random.seed(seed)

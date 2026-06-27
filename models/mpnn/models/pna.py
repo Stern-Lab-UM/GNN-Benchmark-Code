@@ -1,3 +1,5 @@
+"""Utilities for models / mpnn / models / pna.py in the DCG benchmark codebase."""
+
 from torch_geometric.nn.conv  import MessagePassing
 from torch_geometric.nn import PNAConv
 from torch_geometric.nn.models import PNA as BasePNA
@@ -42,6 +44,17 @@ class PNA(BasePNA):
 
     def init_conv(self, in_channels: int, out_channels: int,
                   **kwargs) -> MessagePassing:
+        """
+        Implement the init conv step for models / mpnn / models / pna.py.
+
+        Args:
+            in_channels: Caller-supplied value used by this routine.
+            out_channels: Caller-supplied value used by this routine.
+            **kwargs: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return PNAConv(in_channels, out_channels,
                        aggregators=['sum', 'mean', 'max', 'min', 'std'],
                        scalers=['identity', 'amplification', 'attenuation', 'linear', 'inverse_linear'],

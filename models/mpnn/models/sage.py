@@ -1,3 +1,5 @@
+"""Utilities for models / mpnn / models / sage.py in the DCG benchmark codebase."""
+
 from torch import Tensor
 from torch_geometric.typing import Adj, OptPairTensor, OptTensor, Size
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -66,6 +68,27 @@ class GraphSAGE(BaseGraphSAGE):
         edge_dim=None,
         **kwargs,
     ):
+        """
+        Initialize the GraphSAGE instance and store constructor configuration.
+
+        Args:
+            in_channels: Caller-supplied value used by this routine.
+            hidden_channels: Caller-supplied value used by this routine.
+            num_layers: Caller-supplied value used by this routine.
+            out_channels: Caller-supplied value used by this routine.
+            dropout: Caller-supplied value used by this routine.
+            act: Caller-supplied value used by this routine.
+            act_first: Caller-supplied value used by this routine.
+            act_kwargs: Caller-supplied value used by this routine.
+            norm: Caller-supplied value used by this routine.
+            norm_kwargs: Caller-supplied value used by this routine.
+            jk: Caller-supplied value used by this routine.
+            edge_dim: Caller-supplied value used by this routine.
+            **kwargs: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         super().__init__(hidden_channels, hidden_channels, num_layers, out_channels, dropout,
                          act, act_first, act_kwargs, norm, norm_kwargs, jk, **kwargs)
         self.node_encoder = MLP([in_channels, hidden_channels])
@@ -74,6 +97,17 @@ class GraphSAGE(BaseGraphSAGE):
 
     def init_conv(self, in_channels: Union[int, Tuple[int, int]],
                   out_channels: int, **kwargs) -> MessagePassing:
+        """
+        Implement the init conv step for models / mpnn / models / sage.py.
+
+        Args:
+            in_channels: Caller-supplied value used by this routine.
+            out_channels: Caller-supplied value used by this routine.
+            **kwargs: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return SAGEConv(in_channels, out_channels, **kwargs)
 
     def forward(
@@ -84,7 +118,17 @@ class GraphSAGE(BaseGraphSAGE):
         edge_weight: OptTensor = None,
         edge_attr: OptTensor = None,
     ) -> Tensor:
-        """"""
+        """
+
+        Args:
+            x: Caller-supplied value used by this routine.
+            edge_index: Caller-supplied value used by this routine.
+            edge_weight: Caller-supplied value used by this routine.
+            edge_attr: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         xs: List[Tensor] = []
         x = self.node_encoder(x)
         if edge_attr is not None:
@@ -121,6 +165,13 @@ class GraphSAGE(BaseGraphSAGE):
 
 
 class SAGEConv(BaseSAGEConv):
+    """
+    Provide the sageconv component used by models / mpnn / models / sage.py.
+
+
+    Role:
+        SAGEConv groups state and methods for this repository component.
+    """
     def __init__(
         self,
         in_channels: Union[int, Tuple[int, int]],
@@ -132,11 +183,37 @@ class SAGEConv(BaseSAGEConv):
         bias: bool = True,
         **kwargs,
     ):
+        """
+        Initialize the SAGEConv instance and store constructor configuration.
+
+        Args:
+            in_channels: Caller-supplied value used by this routine.
+            out_channels: Caller-supplied value used by this routine.
+            aggr: Caller-supplied value used by this routine.
+            normalize: Caller-supplied value used by this routine.
+            root_weight: Caller-supplied value used by this routine.
+            project: Caller-supplied value used by this routine.
+            bias: Caller-supplied value used by this routine.
+            **kwargs: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         super().__init__(in_channels, out_channels, aggr, normalize, root_weight, project, bias, **kwargs)
 
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj, edge_attr=None,
                 size: Size = None) -> Tensor:
-        """"""
+        """
+
+        Args:
+            x: Caller-supplied value used by this routine.
+            edge_index: Caller-supplied value used by this routine.
+            edge_attr: Caller-supplied value used by this routine.
+            size: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if isinstance(x, Tensor):
             x: OptPairTensor = (x, x)
 
@@ -157,6 +234,16 @@ class SAGEConv(BaseSAGEConv):
         return out
 
     def message(self, x_j: Tensor, edge_attr) -> Tensor:
+        """
+        Implement the message step for models / mpnn / models / sage.py.
+
+        Args:
+            x_j: Caller-supplied value used by this routine.
+            edge_attr: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if edge_attr is not None:
             return (x_j + edge_attr).relu()
         return x_j

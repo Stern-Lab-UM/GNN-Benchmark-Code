@@ -1,3 +1,5 @@
+"""Utilities for models / ppgn / predict_dcg / dcg / cell_loader.py in the DCG benchmark codebase."""
+
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
@@ -8,7 +10,20 @@ from dcg.file_reader import FileReader
 
 
 class CellLoader():
+    """
+    Coordinate cell loader responsibilities for the DCG PPGN workflow.
+
+
+    Role:
+        CellLoader groups state and methods for this repository component.
+    """
     def __init__(self):
+        """
+        Initialize the CellLoader instance and store constructor configuration.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         # user can modify before loading
         self.subset = None  # load a subset of the overall dataset
         # which features to target
@@ -29,6 +44,15 @@ class CellLoader():
         self.directed = False #<< ADDED BY RIYA
 
     def apply_config(self, config):
+        """
+        Implement the apply config step for models / ppgn / predict_dcg / dcg / cell_loader.py.
+
+        Args:
+            config: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         config_settings = {
             'training_info': ('subset', 'batch_size',
                               'training_fraction', 'input_features',
@@ -43,6 +67,17 @@ class CellLoader():
                         self.__dict__[key] = config[category][key]
 
     def load_cells(self, file, apply_norm=True, only_test=False):
+        """
+        Load graphs and split assignments into memory for training/evaluation.
+
+        Args:
+            file: Caller-supplied value used by this routine.
+            apply_norm: Caller-supplied value used by this routine.
+            only_test: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if only_test:
             # want all graphs
             subset = self.subset
@@ -86,6 +121,15 @@ class CellLoader():
         return graphs.shape[0]
 
     def read_cells(self, file):
+        """
+        Read cell graph tensors and target arrays from the configured file.
+
+        Args:
+            file: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         reader = FileReader(self.subset,
                             self.target_features,
                             self.input_features,
@@ -105,6 +149,13 @@ class CellLoader():
         Can specify the training fraction, the remainder will be split between
         validation and testing.
         Validation and testing will contain at least one value
+
+        Args:
+            n: Caller-supplied value used by this routine.
+            training_fraction: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
         '''
         if n < 3:
             raise ValueError('Must have at least 3 indices to split')
@@ -123,6 +174,16 @@ class CellLoader():
         }
 
     def calculate_norm_factors(self, training_graphs, training_targets):
+        """
+        Compute training-set normalization factors for inputs and targets.
+
+        Args:
+            training_graphs: Caller-supplied value used by this routine.
+            training_targets: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if self.target_features is None or self.input_features is None:
             raise ValueError('No feature names are present!')
 
@@ -151,7 +212,7 @@ class CellLoader():
 
         has_inputs = len(self.input_features) != 0
         has_input_nodes = input_node != len(self.input_features) + 1
-        has_output_nodes = output_node != len(self.target_features) 
+        has_output_nodes = output_node != len(self.target_features)
 
         for graph, target in zip(training_graphs, training_targets):
             if has_inputs:
@@ -196,6 +257,16 @@ class CellLoader():
                 self.norm_factors.loc[feature, :] = [0, 1]
 
     def apply_norm_factors(self, graphs, targets):
+        """
+        Apply stored normalization factors to graph tensors and targets.
+
+        Args:
+            graphs: Caller-supplied value used by this routine.
+            targets: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if self.norm_factors is None:
             raise ValueError('No norm factors are loaded!')
 
@@ -247,6 +318,16 @@ class CellLoader():
         return graphs, targets
 
     def build_dataloader(self, graphs, targets):
+        """
+        Wrap graph examples in PyTorch DataLoader objects grouped by split.
+
+        Args:
+            graphs: Caller-supplied value used by this routine.
+            targets: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return DataLoader(
             CellsData(graphs, targets),
             batch_size=self.batch_size,
@@ -255,24 +336,51 @@ class CellLoader():
 
     @property
     def train(self):
+        """
+        Implement the train step for models / ppgn / predict_dcg / dcg / cell_loader.py.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         for batch in self.data['train']:
             for size in batch:
                 yield size
 
     @property
     def test(self):
+        """
+        Evaluate the test split.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         for batch in self.data['test']:
             for size in batch:
                 yield size
 
     @property
     def val(self):
+        """
+        Implement the val step for models / ppgn / predict_dcg / dcg / cell_loader.py.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         for batch in self.data['val']:
             for size in batch:
                 yield size
 
 
 def collate_by_size(batch):
+    """
+    Batch same-sized PPGN graph tensors together.
+
+    Args:
+        batch: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     # batch is a list of (graph, target) tuples
     # iterate over all graphs (x[0]) and store the number of nodes (shape[-1])
     sizes = set(x[0].shape[-1] for x in batch)
@@ -286,16 +394,46 @@ def collate_by_size(batch):
 
 
 class CellsData(Dataset):
+    """
+    Provide the cells data component used by models / ppgn / predict_dcg / dcg / cell_loader.py.
+
+
+    Role:
+        CellsData groups state and methods for this repository component.
+    """
     def __init__(self, graphs, targets):
+        """
+        Initialize the CellsData instance and store constructor configuration.
+
+        Args:
+            graphs: Caller-supplied value used by this routine.
+            targets: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.graphs = graphs
         self.targets = targets
 
     def __len__(self):
-        """Returns the length of the dataset"""
+        """
+        Returns the length of the dataset
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self.graphs.shape[0]
 
     def __getitem__(self, index):
-        """Generates a single instance of data"""
+        """
+        Generates a single instance of data
+
+        Args:
+            index: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self.graphs[index], self.targets[index]
 
 
@@ -303,14 +441,32 @@ class StreamingStats():
     '''
     Keeps running tally of values to determine mean and stdev
     Assumes you want to perform operations along axis 1 of values
+
+    Role:
+        StreamingStats groups state and methods for this repository component.
     '''
     def __init__(self):
+        """
+        Initialize the StreamingStats instance and store constructor configuration.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.sum = 0
         self.count = 0
         self.sum_sq = 0
         self.max = None
 
     def update(self, values: np.array):
+        """
+        Implement the update step for models / ppgn / predict_dcg / dcg / cell_loader.py.
+
+        Args:
+            values: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.count += values.shape[-1]
         self.sum += values.sum(axis=-1)
         self.sum_sq += (values**2).sum(axis=-1)
@@ -324,12 +480,24 @@ class StreamingStats():
 
     @property
     def mean(self):
+        """
+        Implement the mean step for models / ppgn / predict_dcg / dcg / cell_loader.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if self.count == 0:
             return []
         return (self.sum / self.count).tolist()
 
     @property
     def std(self):
+        """
+        Implement the std step for models / ppgn / predict_dcg / dcg / cell_loader.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if self.count == 0:
             return []
         # set 0.01 as minimum for stdev

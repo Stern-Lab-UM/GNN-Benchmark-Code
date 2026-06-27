@@ -1,4 +1,7 @@
 function report = DCG_assemble_vertex_model_graphs(raw_output_dir, rows, output_dir, dataset_key)
+% DCG_assemble_vertex_model_graphs  Implement dcg assemble vertex model graphs for this MATLAB workflow.
+% Inputs: raw_output_dir, rows, output_dir, dataset_key
+% Outputs: report
 %DCG_ASSEMBLE_VERTEX_MODEL_GRAPHS  Convert raw vertex-model graphs to ML files.
 %
 %   REPORT = DCG_ASSEMBLE_VERTEX_MODEL_GRAPHS(RAW_OUTPUT_DIR, ROWS,
@@ -99,6 +102,9 @@ writetable(report, fullfile(output_dir, [dataset_key, '_assembly_report.csv']));
 end
 
 function [directed_weighted, directed_unweighted, n_undirected, n_flipped] = assemble_one_graph(raw, raw_path)
+% assemble_one_graph  Implement assemble one graph for data_generation/vertex_model/DCG_assemble_vertex_model_graphs.m.
+% Inputs: raw, raw_path
+% Outputs: directed_weighted, directed_unweighted, n_undirected, n_flipped
 flipped = raw(:, 3) ~= 0;
 base = [raw(:, 1), raw(:, 2), raw(:, 4), double(flipped), raw(:, 5)];
 base(flipped, 5) = 0;
@@ -128,6 +134,9 @@ end
 end
 
 function common = infer_new_edge_cells(raw, old_a, old_b)
+% infer_new_edge_cells  Implement infer new edge cells for data_generation/vertex_model/DCG_assemble_vertex_model_graphs.m.
+% Inputs: raw, old_a, old_b
+% Outputs: common
 not_flipped = raw(:, 3) == 0;
 edges = raw(not_flipped, 1:2);
 
@@ -144,6 +153,9 @@ end
 end
 
 function write_header(fid, n_graphs, n_cells, n_edges, is_weighted)
+% write_header  Write header to disk.
+% Inputs: fid, n_graphs, n_cells, n_edges, is_weighted
+% Outputs: none; performs side effects or updates the caller workflow.
 n_vertices = 2 * n_cells;
 fprintf(fid, 'Total graphs: %d\n\n', n_graphs);
 fprintf(fid, '#cells: %d, #vertices: %d, #edges: %d\n\n', n_cells, n_vertices, n_edges);
@@ -155,6 +167,9 @@ end
 end
 
 function [raw_name, raw_path] = resolve_raw_graph_path(raw_output_dir, row)
+% resolve_raw_graph_path  Implement resolve raw graph path for data_generation/vertex_model/DCG_assemble_vertex_model_graphs.m.
+% Inputs: raw_output_dir, row
+% Outputs: raw_name, raw_path
 current_name = expected_raw_graph_name(row);
 current_path = fullfile(raw_output_dir, current_name);
 if isfile(current_path)
@@ -175,6 +190,9 @@ error('Could not find raw graph. Tried %s and %s', current_path, archived_path);
 end
 
 function name = expected_raw_graph_name(row)
+% expected_raw_graph_name  Implement expected raw graph name for data_generation/vertex_model/DCG_assemble_vertex_model_graphs.m.
+% Inputs: row
+% Outputs: name
 n_cells = table_number(row, 'n_cells');
 package_id = table_number(row, 'package_id');
 sigma_index = table_number(row, 'sigma_index');
@@ -186,6 +204,9 @@ name = sprintf('graph_%d_%d_%d_%d_%d_%s.txt', ...
 end
 
 function x = table_number(row, name)
+% table_number  Implement table number for data_generation/vertex_model/DCG_assemble_vertex_model_graphs.m.
+% Inputs: row, name
+% Outputs: x
 v = row.(name);
 if iscell(v), v = v{1}; end
 if isstring(v) || ischar(v)
@@ -196,5 +217,8 @@ end
 end
 
 function s = c_g_format(x)
+% c_g_format  Implement c g format for data_generation/vertex_model/DCG_assemble_vertex_model_graphs.m.
+% Inputs: x
+% Outputs: s
 s = sprintf('%.6g', x);
 end

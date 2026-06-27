@@ -1,4 +1,7 @@
 function specs = DCG_vertex_model_publication_manifest(mode)
+% DCG_vertex_model_publication_manifest  Implement dcg vertex model publication manifest for this MATLAB workflow.
+% Inputs: mode
+% Outputs: specs
 %DCG_VERTEX_MODEL_PUBLICATION_MANIFEST  Publication vertex-model datasets.
 %
 %   SPECS = DCG_VERTEX_MODEL_PUBLICATION_MANIFEST(MODE) returns the dataset

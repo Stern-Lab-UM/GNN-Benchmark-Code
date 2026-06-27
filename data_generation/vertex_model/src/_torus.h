@@ -3,6 +3,11 @@
 //*******************************TORUS****************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * torus_vertex: Apply periodic-boundary geometry for coordinates or distances.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void torus_vertex(int i){
     //x
     if      (v[i][1]<0)             v[i][1] += perioXYZ[1];
@@ -12,6 +17,11 @@ void torus_vertex(int i){
     else if (v[i][2]>perioXYZ[2])   v[i][2] -= perioXYZ[2];
 }
 //****************************************************************************
+/*
+ * torus_dx_dy_dz: Apply periodic-boundary geometry for coordinates or distances.
+ * Parameters: double *dxdydz, int vert_id, int vert_ref_id.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void torus_dx_dy_dz(double *dxdydz, int vert_id, int vert_ref_id){
 
     dxdydz[1]=0; dxdydz[2]=0;
@@ -30,6 +40,11 @@ void torus_dx_dy_dz(double *dxdydz, int vert_id, int vert_ref_id){
     else dxdydz[2]=0;
 }
 //****************************************************************************
+/*
+ * expand_box: Implement the expand box operation for the C vertex-model code.
+ * Parameters: double xNEW, double yNEW.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void expand_box(double xNEW, double yNEW){
 
     double xOLD=perioXYZ[1];

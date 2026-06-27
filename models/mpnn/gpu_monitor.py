@@ -1,3 +1,5 @@
+"""Utilities for models / mpnn / gpu_monitor.py in the DCG benchmark codebase."""
+
 # gpu_monitor.py
 from __future__ import annotations
 import time, threading
@@ -9,6 +11,15 @@ except Exception:
     _HAS_NVML = False
 
 def bytes_to_gb(b: int) -> float:
+    """
+    Implement the bytes to gb step for models / mpnn / gpu_monitor.py.
+
+    Args:
+        b: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     return round(float(b) / (1024**3), 3)
 
 class GPUMonitor:
@@ -16,8 +27,21 @@ class GPUMonitor:
     Lightweight NVML sampler. Records GPU utilization (%), memory used (bytes),
     power draw (W), and clocks every ~0.25s (configurable). Safe to use on
     single-GPU runs; does nothing if NVML is unavailable.
+
+    Role:
+        GPUMonitor groups state and methods for this repository component.
     """
     def __init__(self, device_index=0, interval_sec=0.25):
+        """
+        Initialize the GPUMonitor instance and store constructor configuration.
+
+        Args:
+            device_index: Caller-supplied value used by this routine.
+            interval_sec: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.device_index = device_index
         self.interval = interval_sec
         self.samples = []
@@ -38,6 +62,12 @@ class GPUMonitor:
                 self.nvml_ok = False
 
     def start(self):
+        """
+        Implement the start step for models / mpnn / gpu_monitor.py.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if not self.nvml_ok:
             print("[INFO] GPUMonitor: NVML unavailable – utilization/power sampling disabled "
                   "(install 'nvidia-ml-py3' if you want these).")
@@ -46,12 +76,24 @@ class GPUMonitor:
         self._thread.start()
 
     def stop(self):
+        """
+        Implement the stop step for models / mpnn / gpu_monitor.py.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if not self.nvml_ok:
             return
         self._stop.set()
         self._thread.join(timeout=1.0)
 
     def _loop(self):
+        """
+        Implement the loop step for models / mpnn / gpu_monitor.py.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         while not self._stop.is_set():
             t = time.perf_counter()
             try:
@@ -72,6 +114,12 @@ class GPUMonitor:
             time.sleep(self.interval)
 
     def summary(self) -> dict:
+        """
+        Implement the summary step for models / mpnn / gpu_monitor.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if not self.nvml_ok or not self.samples:
             return {'nvml_available': False}
         t0, t1 = self.samples[0][0], self.samples[-1][0]

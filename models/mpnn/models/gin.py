@@ -1,3 +1,5 @@
+"""Utilities for models / mpnn / models / gin.py in the DCG benchmark codebase."""
+
 
 from torch_geometric.nn.conv  import MessagePassing
 
@@ -43,6 +45,17 @@ class GIN(BaseGIN):
 
     def init_conv(self, in_channels: int, out_channels: int,
                   **kwargs) -> MessagePassing:
+        """
+        Implement the init conv step for models / mpnn / models / gin.py.
+
+        Args:
+            in_channels: Caller-supplied value used by this routine.
+            out_channels: Caller-supplied value used by this routine.
+            **kwargs: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         mlp = MLP(
             [in_channels, out_channels, out_channels],
             act=self.act,

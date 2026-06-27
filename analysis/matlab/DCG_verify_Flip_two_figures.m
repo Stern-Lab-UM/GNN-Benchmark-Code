@@ -21,6 +21,9 @@
 %     or whitespace of the original code has been changed.
 % =========================================================================
 function report = DCG_verify_Flip_two_figures(figures_output_dir)
+% DCG_verify_Flip_two_figures  Implement dcg verify flip two figures for this MATLAB workflow.
+% Inputs: figures_output_dir
+% Outputs: report
 %DCG_VERIFY_FLIP_TWO_FIGURES Structural QA for Flip_two figures.
 %
 % PURPOSE

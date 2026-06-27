@@ -1,4 +1,7 @@
 function y_limits = DCG_calibrate_saved_fig_y_ranges(figures_root, datasets, figure_filenames, save_png)
+% DCG_calibrate_saved_fig_y_ranges  Implement dcg calibrate saved fig y ranges for this MATLAB workflow.
+% Inputs: figures_root, datasets, figure_filenames, save_png
+% Outputs: y_limits
 %DCG_CALIBRATE_SAVED_FIG_Y_RANGES
 % Match y-limits across corresponding saved .fig files.
 %
@@ -162,6 +165,9 @@ end
 
 
 function dcg_savefig_visible(fig_handle, filename)
+% dcg_savefig_visible  Save MATLAB figures in the publication output format.
+% Inputs: fig_handle, filename
+% Outputs: none; performs side effects or updates the caller workflow.
 %DCG_SAVEFIG_VISIBLE  Save a figure to a .fig with a readable window title, visible.
 %
 % PURPOSE:
@@ -207,6 +213,9 @@ end
 
 
 function [v_min, v_max] = axis_data_extent(ax, property_name)
+% axis_data_extent  Implement axis data extent for this MATLAB workflow.
+% Inputs: ax, property_name
+% Outputs: v_min, v_max
 %AXIS_DATA_EXTENT  Finite min/max of a named data property over all objects in an axis.
 %
 % PURPOSE:
@@ -266,6 +275,9 @@ end
 
 
 function [y_min, y_max] = padded_axis_limits(y_min, y_max, prefer_zero_for_positive_raw)
+% padded_axis_limits  Implement padded axis limits for this MATLAB workflow.
+% Inputs: y_min, y_max, prefer_zero_for_positive_raw
+% Outputs: y_min, y_max
 %PADDED_AXIS_LIMITS  Expand a [y_min, y_max] data range with symmetric 5% padding.
 %
 % PURPOSE:
@@ -328,6 +340,9 @@ end
 
 
 function ax = data_axes(fig)
+% data_axes  Implement data axes for this MATLAB workflow.
+% Inputs: fig
+% Outputs: ax
 %DATA_AXES  Return the real plotting axes of a figure, excluding legend/colorbar.
 %
 % PURPOSE:

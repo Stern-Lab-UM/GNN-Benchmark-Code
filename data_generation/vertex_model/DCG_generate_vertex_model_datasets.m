@@ -1,4 +1,7 @@
 function report = DCG_generate_vertex_model_datasets(varargin)
+% DCG_generate_vertex_model_datasets  Implement dcg generate vertex model datasets for this MATLAB workflow.
+% Inputs: varargin
+% Outputs: report
 %DCG_GENERATE_VERTEX_MODEL_DATASETS  Generate manuscript vertex-model graphs.
 %
 %   REPORT = DCG_GENERATE_VERTEX_MODEL_DATASETS() builds the vertex-model
@@ -113,12 +116,18 @@ fprintf('\n[vertex-model] Done. Output root:\n  %s\n', opts.output_root);
 end
 
 function paths = local_paths()
+% local_paths  Implement local paths for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: none.
+% Outputs: paths
 paths.this_dir = fileparts(mfilename('fullpath'));
 paths.repo_root = fileparts(fileparts(paths.this_dir));
 paths.src_dir = fullfile(paths.this_dir, 'src');
 end
 
 function build_simulator(src_dir, exe_path)
+% build_simulator  Implement build simulator for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: src_dir, exe_path
+% Outputs: none; performs side effects or updates the caller workflow.
 ensure_dir(fileparts(exe_path));
 cmd = sprintf('g++ -O2 -std=c++11 -Wall -Wextra -o "%s" "%s" -lm', ...
     exe_path, fullfile(src_dir, 'main.c'));
@@ -130,6 +139,9 @@ end
 end
 
 function run_initial_phase(exe_path, run_root, rows, opts)
+% run_initial_phase  Implement run initial phase for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: exe_path, run_root, rows, opts
+% Outputs: none; performs side effects or updates the caller workflow.
 unique_rows = unique(rows(:, {'nx','kA','package_id','sigma_index'}), 'rows');
 fprintf('[vertex-model] Initial tissues queued: %d\n', height(unique_rows));
 commands = cell(height(unique_rows), 1);
@@ -151,6 +163,9 @@ run_commands(commands, opts.workers, 'initial');
 end
 
 function run_graph_phase(exe_path, run_root, rows, opts)
+% run_graph_phase  Implement run graph phase for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: exe_path, run_root, rows, opts
+% Outputs: none; performs side effects or updates the caller workflow.
 fprintf('[vertex-model] T1 graph relaxations queued: %d\n', height(rows));
 commands = cell(height(rows), 1);
 for i = 1:height(rows)
@@ -175,6 +190,9 @@ run_commands(commands, opts.workers, 'graph');
 end
 
 function run_commands(commands, workers, label)
+% run_commands  Implement run commands for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: commands, workers, label
+% Outputs: none; performs side effects or updates the caller workflow.
 if isempty(commands)
     fprintf('[vertex-model] No %s commands needed; files already exist.\n', label);
     return
@@ -207,6 +225,9 @@ end
 end
 
 function cmd = make_run_command(run_root, exe_path, args)
+% make_run_command  Implement make run command for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: run_root, exe_path, args
+% Outputs: cmd
 ensure_dir(fullfile(run_root, 'output'));
 if ispc
     cmd = sprintf('cd /d "%s" && "%s" %s', run_root, exe_path, args);
@@ -216,6 +237,9 @@ end
 end
 
 function copy_split_manifests(src_dir, dst_dir)
+% copy_split_manifests  Implement copy split manifests for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: src_dir, dst_dir
+% Outputs: none; performs side effects or updates the caller workflow.
 if ~isfolder(src_dir)
     return
 end
@@ -232,6 +256,9 @@ end
 end
 
 function copy_default_split(splits_dir, model_ready_dir)
+% copy_default_split  Implement copy default split for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: splits_dir, model_ready_dir
+% Outputs: none; performs side effects or updates the caller workflow.
 if ~isfolder(splits_dir)
     return
 end
@@ -261,6 +288,9 @@ end
 end
 
 function write_minimal_split(model_ready_dir, splits_dir)
+% write_minimal_split  Write minimal split to disk.
+% Inputs: model_ready_dir, splits_dir
+% Outputs: none; performs side effects or updates the caller workflow.
 ensure_dir(fullfile(splits_dir, 'minimal_one_graph'));
 write_text_file(fullfile(model_ready_dir, 'train.inds'), '');
 write_text_file(fullfile(model_ready_dir, 'val.inds'), '');
@@ -271,6 +301,9 @@ write_text_file(fullfile(splits_dir, 'minimal_one_graph', 'test.inds'), sprintf(
 end
 
 function write_text_file(path, txt)
+% write_text_file  Write text file to disk.
+% Inputs: path, txt
+% Outputs: none; performs side effects or updates the caller workflow.
 fid = fopen(path, 'wt');
 if fid < 0, error('Could not open %s for writing', path); end
 fprintf(fid, '%s', txt);
@@ -278,6 +311,9 @@ fclose(fid);
 end
 
 function write_alias_readmes(output_root, canonical_key, aliases)
+% write_alias_readmes  Write alias readmes to disk.
+% Inputs: output_root, canonical_key, aliases
+% Outputs: none; performs side effects or updates the caller workflow.
 for i = 1:numel(aliases)
     alias_dir = fullfile(output_root, 'model_ready', aliases{i});
     ensure_dir(alias_dir);
@@ -289,6 +325,9 @@ end
 end
 
 function write_run_summary(report)
+% write_run_summary  Write run summary to disk.
+% Inputs: report
+% Outputs: none; performs side effects or updates the caller workflow.
 summary_path = fullfile(report.output_root, 'generation_summary.txt');
 fid = fopen(summary_path, 'wt');
 fprintf(fid, 'mode: %s\n', report.mode);
@@ -307,6 +346,9 @@ fclose(fid);
 end
 
 function name = expected_raw_graph_name(row)
+% expected_raw_graph_name  Implement expected raw graph name for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: row
+% Outputs: name
 n_cells = table_number(row, 'n_cells');
 package_id = table_number(row, 'package_id');
 sigma_index = table_number(row, 'sigma_index');
@@ -318,6 +360,9 @@ name = sprintf('graph_%d_%d_%d_%d_%d_%s.txt', ...
 end
 
 function x = table_number(row, name)
+% table_number  Implement table number for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: row, name
+% Outputs: x
 v = row.(name);
 if iscell(v), v = v{1}; end
 if isstring(v) || ischar(v)
@@ -328,16 +373,25 @@ end
 end
 
 function s = c_g_format(x)
+% c_g_format  Implement c g format for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: x
+% Outputs: s
 s = sprintf('%.6g', x);
 end
 
 function ensure_dir(d)
+% ensure_dir  Implement ensure dir for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: d
+% Outputs: none; performs side effects or updates the caller workflow.
 if ~isfolder(d)
     mkdir(d);
 end
 end
 
 function name = executable_name()
+% executable_name  Implement executable name for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
+% Inputs: none.
+% Outputs: name
 if ispc
     name = 'vertex_model_generator.exe';
 else

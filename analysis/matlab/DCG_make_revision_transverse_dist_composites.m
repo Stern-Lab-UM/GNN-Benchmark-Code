@@ -1,4 +1,7 @@
 function output_paths = DCG_make_revision_transverse_dist_composites(figures_root, save_png)
+% DCG_make_revision_transverse_dist_composites  Implement dcg make revision transverse dist composites for this MATLAB workflow.
+% Inputs: figures_root, save_png
+% Outputs: output_paths
 %DCG_MAKE_REVISION_TRANSVERSE_DIST_COMPOSITES
 % Build 3x3 comparison panels from the already-saved single-dataset
 % MAE-vs-transverse-distance figures.
@@ -264,6 +267,9 @@ end
 
 
 function ax = best_data_axes(fig)
+% best_data_axes  Implement best data axes for this MATLAB workflow.
+% Inputs: fig
+% Outputs: ax
 % ---------------------------------------------------------------------------
 % FUNCTION: best_data_axes (local)
 % ---------------------------------------------------------------------------
@@ -330,6 +336,9 @@ end
 
 
 function copy_axis_contents(src_ax, dst_ax)
+% copy_axis_contents  Implement copy axis contents for this MATLAB workflow.
+% Inputs: src_ax, dst_ax
+% Outputs: none; performs side effects or updates the caller workflow.
 % ---------------------------------------------------------------------------
 % FUNCTION: copy_axis_contents (local)
 % ---------------------------------------------------------------------------
@@ -387,6 +396,9 @@ end
 
 
 function dcg_savefig_visible(fig_handle, filename)
+% dcg_savefig_visible  Save MATLAB figures in the publication output format.
+% Inputs: fig_handle, filename
+% Outputs: none; performs side effects or updates the caller workflow.
 % ---------------------------------------------------------------------------
 % FUNCTION: dcg_savefig_visible (local)
 % ---------------------------------------------------------------------------
@@ -430,6 +442,9 @@ end
 
 
 function [v_min, v_max] = axis_data_extent(ax, property_name)
+% axis_data_extent  Implement axis data extent for this MATLAB workflow.
+% Inputs: ax, property_name
+% Outputs: v_min, v_max
 % ---------------------------------------------------------------------------
 % FUNCTION: axis_data_extent (local)
 % ---------------------------------------------------------------------------
@@ -491,6 +506,9 @@ end
 
 
 function [y_min, y_max] = padded_axis_limits(y_min, y_max, prefer_zero_for_positive_raw)
+% padded_axis_limits  Implement padded axis limits for this MATLAB workflow.
+% Inputs: y_min, y_max, prefer_zero_for_positive_raw
+% Outputs: y_min, y_max
 % ---------------------------------------------------------------------------
 % FUNCTION: padded_axis_limits (local)
 % ---------------------------------------------------------------------------
@@ -559,6 +577,9 @@ end
 
 
 function write_composite_assumptions(output_dir, panel_dirs, panel_titles)
+% write_composite_assumptions  Write composite assumptions to disk.
+% Inputs: output_dir, panel_dirs, panel_titles
+% Outputs: none; performs side effects or updates the caller workflow.
 % ---------------------------------------------------------------------------
 % FUNCTION: write_composite_assumptions (local)
 % ---------------------------------------------------------------------------

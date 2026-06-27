@@ -1,4 +1,7 @@
 function outputs = DCG_plot_Flip_two_interaction(analyses_filename, figures_output_dir, save_png, single_t1_analyses_filename)
+% DCG_plot_Flip_two_interaction  Implement dcg plot flip two interaction for this MATLAB workflow.
+% Inputs: analyses_filename, figures_output_dir, save_png, single_t1_analyses_filename
+% Outputs: outputs
 %DCG_PLOT_FLIP_TWO_INTERACTION
 % Two-source diagnostics for the Flip_two revision dataset.
 %
@@ -228,6 +231,9 @@ end
 
 
 function [GraphT, NearestT, PairT, ZoneT, skipped] = extract_flip_two_records(I, task, split_name, trained_models, near_radius)
+% extract_flip_two_records  Extract flip two records records from analysis structures.
+% Inputs: I, task, split_name, trained_models, near_radius
+% Outputs: GraphT, NearestT, PairT, ZoneT, skipped
 %EXTRACT_FLIP_TWO_RECORDS
 % H1: Reconstruct per-edge two-flip distances/errors into four long tables.
 %
@@ -432,6 +438,9 @@ end
 
 
 function [GraphT, NearestT, ZoneT, skipped, subset_info] = extract_single_t1_records(I, task, split_name, trained_models, near_radius)
+% extract_single_t1_records  Extract single t1 records records from analysis structures.
+% Inputs: I, task, split_name, trained_models, near_radius
+% Outputs: GraphT, NearestT, ZoneT, skipped, subset_info
 %EXTRACT_SINGLE_T1_RECORDS
 % H1: Build graph and nearest-distance records for the weighted single-T1 v1 task.
 %
@@ -600,6 +609,9 @@ end
 
 
 function subset_info = select_single_t1_reference_subset(I, task, split_name)
+% select_single_t1_reference_subset  Select single t1 reference subset for the current analysis.
+% Inputs: I, task, split_name
+% Outputs: subset_info
 %SELECT_SINGLE_T1_REFERENCE_SUBSET
 % H1: Locate the weighted v1 16-cohort bin used as the single-T1 reference.
 %
@@ -673,6 +685,9 @@ end
 
 
 function txt = format_available_subset_bins(subset_siz, subset_idx)
+% format_available_subset_bins  Implement format available subset bins for this MATLAB workflow.
+% Inputs: subset_siz, subset_idx
+% Outputs: txt
 %FORMAT_AVAILABLE_SUBSET_BINS
 % H1: Compact diagnostic string for available v1 cohort bins.
 
@@ -686,6 +701,9 @@ end
 
 
 function LineG = flip_two_line_graph_preserve_rows(C, varargin)
+% flip_two_line_graph_preserve_rows  Build a line graph whose rows preserve source edge ordering.
+% Inputs: C, varargin
+% Outputs: LineG
 %FLIP_TWO_LINE_GRAPH_PRESERVE_ROWS
 % H1: Build a row-preserving historical vertex-line interface graph.
 %
@@ -790,6 +808,9 @@ LineG = graph(spones(L));
 LineG.Nodes.Interface = C;
 
     function key = pair_key(a, b)
+% pair_key  Implement pair key for analysis/matlab/DCG_plot_Flip_two_interaction.m.
+% Inputs: a, b
+% Outputs: key
         if a > b
             tmp = a;
             a = b;
@@ -799,6 +820,9 @@ LineG.Nodes.Interface = C;
     end
 
     function rows = rows_for_pair(a, b)
+% rows_for_pair  Implement rows for pair for analysis/matlab/DCG_plot_Flip_two_interaction.m.
+% Inputs: a, b
+% Outputs: rows
         key = pair_key(a, b);
         if isKey(pairRows, key)
             rows = pairRows(key);
@@ -808,6 +832,9 @@ LineG.Nodes.Interface = C;
     end
 
     function connect_sets(rowsA, rowsB)
+% connect_sets  Implement connect sets for analysis/matlab/DCG_plot_Flip_two_interaction.m.
+% Inputs: rowsA, rowsB
+% Outputs: none; performs side effects or updates the caller workflow.
         L(rowsA, rowsB) = 1;
         L(rowsB, rowsA) = 1;
     end
@@ -815,6 +842,9 @@ end
 
 
 function assert_root_rows_match_line_graph(line_G, original_edges, root_rows, context)
+% assert_root_rows_match_line_graph  Build a line graph whose rows preserve source edge ordering.
+% Inputs: line_G, original_edges, root_rows, context
+% Outputs: none; performs side effects or updates the caller workflow.
 %ASSERT_ROOT_ROWS_MATCH_LINE_GRAPH
 % H1: Fail loudly if line-graph node rows no longer match prediction rows.
 
@@ -834,6 +864,9 @@ end
 
 
 function T = combine_single_two_records(SingleT, FlipT, model_names, record_kind)
+% combine_single_two_records  Implement combine single two records for this MATLAB workflow.
+% Inputs: SingleT, FlipT, model_names, record_kind
+% Outputs: T
 %COMBINE_SINGLE_TWO_RECORDS
 % H1: Align single-T1 and two-T1 records into one condition-coded table.
 %
@@ -876,6 +909,9 @@ end
 
 
 function T = combine_single_two_zone_records(SingleZoneT, FlipZoneT, model_names)
+% combine_single_two_zone_records  Implement combine single two zone records for this MATLAB workflow.
+% Inputs: SingleZoneT, FlipZoneT, model_names
+% Outputs: T
 %COMBINE_SINGLE_TWO_ZONE_RECORDS
 % H1: Build one zone table containing matched single-T1 and two-T1 zone classes.
 %
@@ -908,6 +944,9 @@ end
 
 
 function PairVsSingleSummary = add_single_reference_to_pair_summary(PairSummary, NearestComparisonSummary, model_names)
+% add_single_reference_to_pair_summary  Implement add single reference to pair summary for this MATLAB workflow.
+% Inputs: PairSummary, NearestComparisonSummary, model_names
+% Outputs: PairVsSingleSummary
 %ADD_SINGLE_REFERENCE_TO_PAIR_SUMMARY
 % H1: Add heatmap-ready deltas from the same-model single-T1 d_near profile.
 %
@@ -948,6 +987,9 @@ end
 
 
 function [meta_out, err_out] = grow_record_arrays(meta_in, err_in, n_models)
+% grow_record_arrays  Implement grow record arrays for this MATLAB workflow.
+% Inputs: meta_in, err_in, n_models
+% Outputs: meta_out, err_out
 %GROW_RECORD_ARRAYS
 % H1: Double the row capacity of a meta/err preallocation pair with NaN pad.
 %
@@ -978,6 +1020,9 @@ end
 
 
 function T = records_to_table(meta, err, meta_names, model_names)
+% records_to_table  Implement records to table for this MATLAB workflow.
+% Inputs: meta, err, meta_names, model_names
+% Outputs: T
 %RECORDS_TO_TABLE
 % H1: Glue a metadata matrix and an error matrix into one named table.
 %
@@ -1010,6 +1055,9 @@ end
 
 
 function Summary = summarize_wide_records(T, group_vars, model_names)
+% summarize_wide_records  Compute summarize wide records summary values.
+% Inputs: T, group_vars, model_names
+% Outputs: Summary
 %SUMMARIZE_WIDE_RECORDS
 % H1: Seed-ladder aggregate of a long record table into per-group summaries.
 %
@@ -1121,6 +1169,9 @@ end
 
 
 function edges = inter_flip_distance_group_edges(inter_flip_dist)
+% inter_flip_distance_group_edges  Implement inter flip distance group edges for this MATLAB workflow.
+% Inputs: inter_flip_dist
+% Outputs: edges
 %INTER_FLIP_DISTANCE_GROUP_EDGES
 % H1: Tertile bin edges for per-graph inter-flip distance (close/middle/far).
 %
@@ -1152,6 +1203,9 @@ end
 
 
 function group_id = inter_flip_distance_group(inter_flip_dist, edges)
+% inter_flip_distance_group  Implement inter flip distance group for this MATLAB workflow.
+% Inputs: inter_flip_dist, edges
+% Outputs: group_id
 %INTER_FLIP_DISTANCE_GROUP
 % H1: Assign each graph's inter-flip distance to a tertile group id 1/2/3.
 %
@@ -1185,6 +1239,9 @@ end
 
 
 function labels = distance_group_label_from_id(group_id)
+% distance_group_label_from_id  Implement distance group label from id for this MATLAB workflow.
+% Inputs: group_id
+% Outputs: labels
 %DISTANCE_GROUP_LABEL_FROM_ID
 % H1: Map inter-flip distance group ids {1,2,3} to "close"/"middle"/"far".
 %
@@ -1213,6 +1270,9 @@ end
 
 
 function labels = zone_label_from_id(zone_id, near_radius)
+% zone_label_from_id  Implement zone label from id for this MATLAB workflow.
+% Inputs: zone_id, near_radius
+% Outputs: labels
 %ZONE_LABEL_FROM_ID
 % H1: Map interaction-zone ids {1,2,3} to descriptive strings (with radius).
 %
@@ -1245,6 +1305,9 @@ end
 
 
 function labels = comparison_zone_label_from_id(comparison_zone_id, near_radius)
+% comparison_zone_label_from_id  Implement comparison zone label from id for this MATLAB workflow.
+% Inputs: comparison_zone_id, near_radius
+% Outputs: labels
 %COMPARISON_ZONE_LABEL_FROM_ID
 % H1: Label the five-zone single-vs-two comparison axis.
 %
@@ -1264,6 +1327,9 @@ end
 
 
 function labels = comparison_zone_short_label_from_id(comparison_zone_id)
+% comparison_zone_short_label_from_id  Implement comparison zone short label from id for this MATLAB workflow.
+% Inputs: comparison_zone_id
+% Outputs: labels
 %COMPARISON_ZONE_SHORT_LABEL_FROM_ID
 % H1: Compact tick labels for the five-zone comparison figure.
 
@@ -1278,6 +1344,9 @@ end
 
 
 function labels = condition_label_from_id(condition_id)
+% condition_label_from_id  Implement condition label from id for this MATLAB workflow.
+% Inputs: condition_id
+% Outputs: labels
 %CONDITION_LABEL_FROM_ID
 % H1: Human-readable labels for benchmark condition ids.
 %
@@ -1300,6 +1369,9 @@ end
 
 
 function single_t1_analyses_filename = default_single_t1_analyses_filename(analyses_filename)
+% default_single_t1_analyses_filename  Return the default single t1 analyses filename.
+% Inputs: analyses_filename
+% Outputs: single_t1_analyses_filename
 %DEFAULT_SINGLE_T1_ANALYSES_FILENAME
 % H1: Locate the weighted v1 single-T1 cache next to the Flip_two cache.
 %
@@ -1335,6 +1407,9 @@ end
 
 
 function write_outputs_tables(figures_output_dir, GraphT, NearestT, PairT, ZoneT, GraphSummary, NearestSummary, PairSummary, ZoneSummary, NearestGroupSummary)
+% write_outputs_tables  Write outputs tables to disk.
+% Inputs: figures_output_dir, GraphT, NearestT, PairT, ZoneT, GraphSummary, NearestSummary, PairSummary, ZoneSummary, NearestGroupSummary
+% Outputs: none; performs side effects or updates the caller workflow.
 %WRITE_OUTPUTS_TABLES
 % H1: Persist all record and summary tables to CSV (+ pair records to .mat).
 %
@@ -1386,6 +1461,9 @@ end
 
 
 function write_single_vs_two_outputs(figures_output_dir, SingleGraphT, SingleNearestT, SingleZoneT, ComparisonGraphT, ComparisonNearestT, ComparisonZoneT, OverallComparisonSummary, NearestComparisonSummary, ZoneComparisonSummary, PairVsSingleSummary)
+% write_single_vs_two_outputs  Write single vs two outputs to disk.
+% Inputs: figures_output_dir, SingleGraphT, SingleNearestT, SingleZoneT, ComparisonGraphT, ComparisonNearestT, ComparisonZoneT, OverallComparisonSummary, NearestComparisonSummary, ZoneComparisonSummary, PairVsSingleSummary
+% Outputs: none; performs side effects or updates the caller workflow.
 %WRITE_SINGLE_VS_TWO_OUTPUTS
 % H1: Persist the recommendation-1/2 single-T1 vs two-T1 comparison tables.
 %
@@ -1433,6 +1511,9 @@ end
 
 
 function write_assumptions(figures_output_dir, analyses_filename, single_t1_analyses_filename, split_name, near_radius, skipped, skipped_single, distance_group_edges, single_subset)
+% write_assumptions  Write assumptions to disk.
+% Inputs: figures_output_dir, analyses_filename, single_t1_analyses_filename, split_name, near_radius, skipped, skipped_single, distance_group_edges, single_subset
+% Outputs: none; performs side effects or updates the caller workflow.
 %WRITE_ASSUMPTIONS
 % H1: Write a human-readable text log of every analysis decision and skip count.
 %
@@ -1513,6 +1594,9 @@ end
 
 
 function output_path = plot_single_vs_two_overall(OverallComparisonSummary, model_names, colors, figures_output_dir, save_png)
+% plot_single_vs_two_overall  Render the plot single vs two overall panel or plotting primitive.
+% Inputs: OverallComparisonSummary, model_names, colors, figures_output_dir, save_png
+% Outputs: output_path
 %PLOT_SINGLE_VS_TWO_OVERALL
 % H1: Recommendation 1 plot: overall graph MAE/nMAE for single-T1 vs two-T1.
 %
@@ -1551,6 +1635,9 @@ end
 
 
 function output_path = plot_single_vs_two_bar_summary_2x2(OverallComparisonSummary, ZoneComparisonSummary, model_names, colors, near_radius, figures_output_dir, save_png, use_log_mae_axis)
+% plot_single_vs_two_bar_summary_2x2  Render the plot single vs two bar summary 2x2 panel or plotting primitive.
+% Inputs: OverallComparisonSummary, ZoneComparisonSummary, model_names, colors, near_radius, figures_output_dir, save_png, use_log_mae_axis
+% Outputs: output_path
 %PLOT_SINGLE_VS_TWO_BAR_SUMMARY_2X2
 % H1: Combine the overall and near/far bar summaries into one 2x2 figure.
 %
@@ -1598,6 +1685,9 @@ end
 
 
 function plot_condition_bars(ax, Summary, model_names, colors, mean_var, sd_var, y_label, plot_title, log_y_axis)
+% plot_condition_bars  Render the plot condition bars panel or plotting primitive.
+% Inputs: ax, Summary, model_names, colors, mean_var, sd_var, y_label, plot_title, log_y_axis
+% Outputs: none; performs side effects or updates the caller workflow.
 %PLOT_CONDITION_BARS
 % H1: Draw grouped condition bars colored by model.
 %
@@ -1658,6 +1748,9 @@ end
 
 
 function output_path = plot_single_vs_two_nearest_distance(NearestComparisonSummary, model_names, colors, mean_var, sd_var, y_label, file_stem, figures_output_dir, save_png)
+% plot_single_vs_two_nearest_distance  Render the plot single vs two nearest distance panel or plotting primitive.
+% Inputs: NearestComparisonSummary, model_names, colors, mean_var, sd_var, y_label, file_stem, figures_output_dir, save_png
+% Outputs: output_path
 %PLOT_SINGLE_VS_TWO_NEAREST_DISTANCE
 % H1: Recommendation 2 plot: error vs nearest-T1 distance, single vs two.
 %
@@ -1726,6 +1819,9 @@ end
 
 
 function output_path = plot_nearest_distance_single_two_2x3(NearestSummary, NearestComparisonSummary, model_names, colors, figures_output_dir, save_png)
+% plot_nearest_distance_single_two_2x3  Render the plot nearest distance single two 2x3 panel or plotting primitive.
+% Inputs: NearestSummary, NearestComparisonSummary, model_names, colors, figures_output_dir, save_png
+% Outputs: output_path
 %PLOT_NEAREST_DISTANCE_SINGLE_TWO_2X3
 % H1: Compare nearest-distance profiles as separate single-T1 and two-T1 rows.
 %
@@ -1770,6 +1866,9 @@ end
 
 
 function output_path = plot_single_vs_two_nearest_distance_panels(NearestComparisonSummary, model_names, colors, mean_var, sd_var, y_label, file_stem, figures_output_dir, save_png)
+% plot_single_vs_two_nearest_distance_panels  Render the plot single vs two nearest distance panels panel or plotting primitive.
+% Inputs: NearestComparisonSummary, model_names, colors, mean_var, sd_var, y_label, file_stem, figures_output_dir, save_png
+% Outputs: output_path
 %PLOT_SINGLE_VS_TWO_NEAREST_DISTANCE_PANELS
 % H1: Side-by-side nearest-distance profiles for single-T1 and two-T1 data.
 %
@@ -1804,6 +1903,9 @@ end
 
 
 function output_path = plot_single_vs_two_zones(ZoneComparisonSummary, model_names, colors, near_radius, figures_output_dir, save_png)
+% plot_single_vs_two_zones  Render the plot single vs two zones panel or plotting primitive.
+% Inputs: ZoneComparisonSummary, model_names, colors, near_radius, figures_output_dir, save_png
+% Outputs: output_path
 %PLOT_SINGLE_VS_TWO_ZONES
 % H1: Compare single-T1 near/far zones with two-T1 interaction zones.
 %
@@ -1829,6 +1931,9 @@ end
 
 
 function output_path = plot_graph_mae_vs_inter_flip(GraphSummary, model_names, colors, figures_output_dir, save_png, OverallComparisonSummary)
+% plot_graph_mae_vs_inter_flip  Render the plot graph mae vs inter flip panel or plotting primitive.
+% Inputs: GraphSummary, model_names, colors, figures_output_dir, save_png, OverallComparisonSummary
+% Outputs: output_path
 %PLOT_GRAPH_MAE_VS_INTER_FLIP
 % H1: Two-panel line plot of whole-graph MAE vs inter-flip distance.
 %
@@ -1901,6 +2006,9 @@ end
 
 
 function output_path = plot_nearest_distance(Summary, model_names, colors, mean_var, sd_var, y_label, file_stem, figures_output_dir, save_png)
+% plot_nearest_distance  Render the plot nearest distance panel or plotting primitive.
+% Inputs: Summary, model_names, colors, mean_var, sd_var, y_label, file_stem, figures_output_dir, save_png
+% Outputs: output_path
 %PLOT_NEAREST_DISTANCE
 % H1: Single-axis line plot of MAE vs nearest-T1 distance for a chosen metric.
 %
@@ -1944,6 +2052,9 @@ end
 
 
 function output_path = plot_interaction_zones(ZoneSummary, model_names, colors, near_radius, figures_output_dir, save_png)
+% plot_interaction_zones  Render the plot interaction zones panel or plotting primitive.
+% Inputs: ZoneSummary, model_names, colors, near_radius, figures_output_dir, save_png
+% Outputs: output_path
 %PLOT_INTERACTION_ZONES
 % H1: Two-panel grouped bar chart of MAE across the three interaction zones.
 %
@@ -1987,6 +2098,9 @@ end
 
 
 function output_path = plot_pair_heatmaps(PairSummary, model_names, metric_var, metric_label, file_stem, figures_output_dir, save_png, center_zero)
+% plot_pair_heatmaps  Render the plot pair heatmaps panel or plotting primitive.
+% Inputs: PairSummary, model_names, metric_var, metric_label, file_stem, figures_output_dir, save_png, center_zero
+% Outputs: output_path
 %PLOT_PAIR_HEATMAPS
 % H1: 2x2 grid of (d_near x d_far) MAE heatmaps, one per trained model.
 %
@@ -2071,6 +2185,9 @@ end
 
 
 function y = signed_log10_magnitude(x)
+% signed_log10_magnitude  Implement signed log10 magnitude for this MATLAB workflow.
+% Inputs: x
+% Outputs: y
 %SIGNED_LOG10_MAGNITUDE
 % H1: Signed log transform for heatmap color values.
 %
@@ -2100,6 +2217,9 @@ end
 
 
 function output_path = plot_close_far_nearest(NearestGroupSummary, model_names, colors, figures_output_dir, save_png, NearestComparisonSummary)
+% plot_close_far_nearest  Render the plot close far nearest panel or plotting primitive.
+% Inputs: NearestGroupSummary, model_names, colors, figures_output_dir, save_png, NearestComparisonSummary
+% Outputs: output_path
 %PLOT_CLOSE_FAR_NEAREST
 % H1: Three-panel nearest-distance log2(nMAE) curves, faceted by tertile group.
 %
@@ -2147,6 +2267,9 @@ end
 
 
 function plot_summary_lines(ax, Summary, x_var, model_names, colors, mean_var, sd_var, x_label, y_label, plot_title)
+% plot_summary_lines  Render the plot summary lines panel or plotting primitive.
+% Inputs: ax, Summary, x_var, model_names, colors, mean_var, sd_var, x_label, y_label, plot_title
+% Outputs: none; performs side effects or updates the caller workflow.
 %PLOT_SUMMARY_LINES
 % H1: Draw one shaded mean+/-SD line per model on a shared axis.
 %
@@ -2211,6 +2334,9 @@ end
 
 
 function overlay_single_overall_reference(ax, OverallComparisonSummary, model_names, colors, mean_var, sd_var)
+% overlay_single_overall_reference  Implement overlay single overall reference for this MATLAB workflow.
+% Inputs: ax, OverallComparisonSummary, model_names, colors, mean_var, sd_var
+% Outputs: none; performs side effects or updates the caller workflow.
 %OVERLAY_SINGLE_OVERALL_REFERENCE
 % H1: Add same-model dotted horizontal single-T1 references to a Flip_two axis.
 
@@ -2244,6 +2370,9 @@ end
 
 
 function overlay_single_nearest_reference(ax, NearestComparisonSummary, model_names, colors, mean_var, sd_var)
+% overlay_single_nearest_reference  Implement overlay single nearest reference for this MATLAB workflow.
+% Inputs: ax, NearestComparisonSummary, model_names, colors, mean_var, sd_var
+% Outputs: none; performs side effects or updates the caller workflow.
 %OVERLAY_SINGLE_NEAREST_REFERENCE
 % H1: Add same-model dotted single-T1 d_near profiles to a Flip_two distance axis.
 
@@ -2275,6 +2404,9 @@ end
 
 
 function plot_zone_bars(ax, ZoneSummary, model_names, colors, mean_var, sd_var, y_label, plot_title)
+% plot_zone_bars  Render the plot zone bars panel or plotting primitive.
+% Inputs: ax, ZoneSummary, model_names, colors, mean_var, sd_var, y_label, plot_title
+% Outputs: none; performs side effects or updates the caller workflow.
 %PLOT_ZONE_BARS
 % H1: Grouped bar chart (zones x models) with error bars on one axis.
 %
@@ -2335,6 +2467,9 @@ end
 
 
 function plot_comparison_zone_bars(ax, ZoneComparisonSummary, model_names, colors, mean_var, sd_var, y_label, plot_title, log_y_axis)
+% plot_comparison_zone_bars  Render the plot comparison zone bars panel or plotting primitive.
+% Inputs: ax, ZoneComparisonSummary, model_names, colors, mean_var, sd_var, y_label, plot_title, log_y_axis
+% Outputs: none; performs side effects or updates the caller workflow.
 %PLOT_COMPARISON_ZONE_BARS
 % H1: Grouped bars for the five single-vs-two distance-zone categories.
 
@@ -2380,6 +2515,9 @@ end
 
 
 function set_log_axis_from_positive_data(ax)
+% set_log_axis_from_positive_data  Implement set log axis from positive data for this MATLAB workflow.
+% Inputs: ax
+% Outputs: none; performs side effects or updates the caller workflow.
 %SET_LOG_AXIS_FROM_POSITIVE_DATA
 % H1: Put an axis on a positive-only logarithmic y scale.
 %
@@ -2419,6 +2557,9 @@ end
 
 
 function plot_one_heatmap(ax, PairSummary, model_name, metric_var, color_limits)
+% plot_one_heatmap  Render the plot one heatmap panel or plotting primitive.
+% Inputs: ax, PairSummary, model_name, metric_var, color_limits
+% Outputs: none; performs side effects or updates the caller workflow.
 %PLOT_ONE_HEATMAP
 % H1: Render one model's (d_near x d_far) metric grid as an imagesc heatmap.
 %
@@ -2475,6 +2616,9 @@ end
 
 
 function h_line = plot_shaded_line(ax, x, y, e, color, line_style)
+% plot_shaded_line  Render the plot shaded line panel or plotting primitive.
+% Inputs: ax, x, y, e, color, line_style
+% Outputs: h_line
 %PLOT_SHADED_LINE
 % H1: Draw a line with a translucent +/-e error band; return the line handle.
 %
@@ -2523,6 +2667,9 @@ end
 
 
 function axis_tight_with_padding(ax, raw_axis)
+% axis_tight_with_padding  Implement axis tight with padding for this MATLAB workflow.
+% Inputs: ax, raw_axis
+% Outputs: none; performs side effects or updates the caller workflow.
 %AXIS_TIGHT_WITH_PADDING
 % H1: Set x/y limits to the data range plus a small margin (optional y=0 floor).
 %
@@ -2594,6 +2741,9 @@ end
 
 
 function colors = paper_model_colors(model_names)
+% paper_model_colors  Implement paper model colors for this MATLAB workflow.
+% Inputs: model_names
+% Outputs: colors
 %PAPER_MODEL_COLORS
 % H1: Return the fixed paper RGB palette for the requested model names.
 %
@@ -2639,6 +2789,9 @@ end
 
 
 function dcg_savefig_visible(fig_handle, filename)
+% dcg_savefig_visible  Save MATLAB figures in the publication output format.
+% Inputs: fig_handle, filename
+% Outputs: none; performs side effects or updates the caller workflow.
 %DCG_SAVEFIG_VISIBLE
 % H1: Mark a figure visible, set a standard name, and save it as .fig.
 %
@@ -2672,6 +2825,9 @@ end
 
 
 function maybe_export_png(fig_handle, fig_path, save_png)
+% maybe_export_png  Save MATLAB figures in the publication output format.
+% Inputs: fig_handle, fig_path, save_png
+% Outputs: none; performs side effects or updates the caller workflow.
 %MAYBE_EXPORT_PNG
 % H1: Optionally export a figure as a 300-dpi PNG beside its .fig.
 %

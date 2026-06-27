@@ -1,3 +1,5 @@
+"""Utilities for models / ppgn / predict_dcg / dcg / file_reader.py in the DCG benchmark codebase."""
+
 from typing import List, Union
 import re
 import numpy as np
@@ -5,7 +7,26 @@ import hdf5storage
 
 
 class FileReader():
+    """
+    Coordinate file reader responsibilities for the DCG PPGN workflow.
+
+
+    Role:
+        FileReader groups state and methods for this repository component.
+    """
     def __init__(self, subset, targets, inputs,directed = False):
+        """
+        Initialize the FileReader instance and store constructor configuration.
+
+        Args:
+            subset: Caller-supplied value used by this routine.
+            targets: Caller-supplied value used by this routine.
+            inputs: Caller-supplied value used by this routine.
+            directed: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.test_inds = None
         self.subset = subset
         self.num_graphs = None
@@ -24,6 +45,15 @@ class FileReader():
         self.directed = directed #<< ADDED BY RIYA SAMANTA
 
     def read_cells(self, file):
+        """
+        Read cell graph tensors and target arrays from the configured file.
+
+        Args:
+            file: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if isinstance(file, str):
             if file.endswith('.txt'):
                 with open(file, 'r') as infile:
@@ -39,6 +69,15 @@ class FileReader():
         return self._read_cells_txt(file)
 
     def _read_cells_txt(self, file):
+        """
+        Read cell graph tensors and target arrays from the configured file.
+
+        Args:
+            file: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         current_graph = None  # name of graph (str)
         current_index = -1  # index to insert into
         graph_num = -1  # currently on the ith graph of the file
@@ -163,6 +202,15 @@ class FileReader():
         return graphs, targets
 
     def _read_cells_mat(self, file):
+        """
+        Read cell graph tensors and target arrays from the configured file.
+
+        Args:
+            file: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         data = hdf5storage.loadmat(file)
         if 'Format' not in data or 'data' not in data:
             raise ValueError('Unable to parse matlab file')
@@ -170,6 +218,15 @@ class FileReader():
         return self._parse_binary(data)
 
     def _read_cells_npz(self, file):
+        """
+        Read cell graph tensors and target arrays from the configured file.
+
+        Args:
+            file: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         with np.load(file) as data:
             if 'Format' not in data or 'data' not in data:
                 raise ValueError('Unable to parse npz file')
@@ -177,6 +234,15 @@ class FileReader():
             return self._parse_binary(data)
 
     def _parse_binary(self, data):
+        """
+        Implement the parse binary step for models / ppgn / predict_dcg / dcg / file_reader.py.
+
+        Args:
+            data: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if isinstance(data['Format'], list):
             names = data['Format']
         elif isinstance(data['Format'], np.ndarray):
@@ -236,6 +302,15 @@ class FileReader():
         return data[:, graphs, ...], data[:, targets, ...]
 
     def parse_total_graphs(self, line):
+        """
+        Parse the total graph count from a benchmark file header.
+
+        Args:
+            line: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         match = re.search(r'^Total graphs: (?P<num_graphs>\d+)', line)
 
         if not match:
@@ -256,6 +331,15 @@ class FileReader():
             self.num_graphs = num_graphs
 
     def parse_cells(self, line):
+        """
+        Parse cell graph records from a benchmark file payload.
+
+        Args:
+            line: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         match = re.search(r'#cells: (?P<num_cells>\d+)', line)
         if not match:
             raise ValueError('Unable to parse graph metadata. Expected:\n'
@@ -271,6 +355,15 @@ class FileReader():
         self.num_edges = int(match.group('num_edges'))
 
     def check_symmetry(self, targets):
+        """
+        Validate that paired adjacency-style tensors are symmetric where required.
+
+        Args:
+            targets: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         for graph_i in range(targets.shape[0]):
             for target_i in range(targets[graph_i].shape[0]):
                 if np.any(targets[graph_i][target_i, :, :].T !=
@@ -278,7 +371,15 @@ class FileReader():
                     raise ValueError(f'Graph {graph_i+1} is not symmetric')
 
     def __eq__(self, obj):
-        '''test equality for testing equivalence of reading file types'''
+        '''
+        test equality for testing equivalence of reading file types
+
+        Args:
+            obj: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        '''
         return (isinstance(obj, FileReader) and
                 self.test_inds == obj.test_inds and
                 self.subset == obj.subset and
@@ -290,9 +391,26 @@ class FileReader():
 
 
 class CellParser():
+    """
+    Coordinate cell parser responsibilities for the DCG PPGN workflow.
+
+
+    Role:
+        CellParser groups state and methods for this repository component.
+    """
     def __init__(self,
                  requested_inputs: Union[None, List[str]],
                  requested_targets: Union[None, List[str]]):
+        """
+        Initialize the CellParser instance and store constructor configuration.
+
+        Args:
+            requested_inputs: Caller-supplied value used by this routine.
+            requested_targets: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.requested_inputs = requested_inputs
         self.requested_outputs = requested_targets
         self.input_edges = None
@@ -304,6 +422,12 @@ class CellParser():
     def update_format(self, format_str: str) -> None:
         '''
         Given the format string, update state to handle parsing from string
+
+        Args:
+            format_str: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
         '''
         if format_str.startswith('Format:'):  # edges
             tokens = remove_prefix(format_str, 'Format: ').split()
@@ -331,6 +455,16 @@ class CellParser():
         self.update_tokens(tokens[2:], edges=format_str.startswith('Format:'))
 
     def update_tokens(self, tokens, edges):
+        """
+        Update parser state from the current tokenized line.
+
+        Args:
+            tokens: Caller-supplied value used by this routine.
+            edges: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         tokens_no_prefix = [
             remove_prefix(remove_prefix(t, 'input_'), 'output_')
             for t in tokens]
@@ -390,6 +524,12 @@ class CellParser():
         '''
         Given a string, returns a dict with indices and values for the input
         and target matrices.  Indices are (property, node1, node2)
+
+        Args:
+            line: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
         '''
         i, j, *values = line.split()
         i = self.node_map[i]
@@ -443,31 +583,67 @@ class CellParser():
                 }}
 
     def initialized(self):
+        """
+        Report whether the parser has enough format information to parse rows.
+
+        Returns:
+            Computed value used by the caller.
+        """
         # returns true if at least one format spec is provided
         return self.input_edges is not None or self.input_nodes is not None
 
     @property
     def input_names(self):
+        """
+        Return names of configured input features.
+
+        Returns:
+            Computed value used by the caller.
+        """
         ed = self.input_edges.names if self.input_edges is not None else []
         no = self.input_nodes.names if self.input_nodes is not None else []
         return ed + no
 
     @property
     def output_names(self):
+        """
+        Return names of configured output features.
+
+        Returns:
+            Computed value used by the caller.
+        """
         ed = self.output_edges.names if self.output_edges is not None else []
         no = self.output_nodes.names if self.output_nodes is not None else []
         return ed + no
 
     @property
     def input_len(self):
+        """
+        Return the number of configured input features.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return len(self.input_names) + 1  # for adjacency
 
     @property
     def output_len(self):
+        """
+        Return the number of configured output features.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return len(self.output_names)
 
     @property
     def node_indices(self):
+        """
+        Return node-index columns parsed from the current graph format.
+
+        Returns:
+            Computed value used by the caller.
+        """
         # nodes are always the last indices of the matrices
         # report the first node index, can be last index in matrix
         in_edges = self.input_edges.toks if self.input_edges else 0
@@ -478,38 +654,98 @@ class CellParser():
 class NamedTokens():
     '''
     A collection of indices and names for tokens
+
+    Role:
+        NamedTokens groups state and methods for this repository component.
     '''
     def __init__(self, requested, present):
         '''
         Match the requested to present tokens
+
+        Args:
+            requested: Caller-supplied value used by this routine.
+            present: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
         '''
         self.tokens = [(i, n) for i, n in present
                        if requested is None or n in requested]
 
     def __repr__(self):
+        """
+        Return a compact printable representation for debugging.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self.tokens.__repr__()
 
     @property
     def inds(self):
+        """
+        Implement the inds step for models / ppgn / predict_dcg / dcg / file_reader.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return [t[0] for t in self.tokens]
 
     @property
     def names(self):
+        """
+        Implement the names step for models / ppgn / predict_dcg / dcg / file_reader.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return [t[1] for t in self.tokens]
 
     @property
     def toks(self):
+        """
+        Implement the toks step for models / ppgn / predict_dcg / dcg / file_reader.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return len(self.tokens)
 
 
 def remove_prefix(text, prefix):
+    """
+    Return tokens or names with the configured prefix removed.
+
+    Args:
+        text: Caller-supplied value used by this routine.
+        prefix: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
 
 
 class NodeMap(dict):
+    """
+    Provide the node map component used by models / ppgn / predict_dcg / dcg / file_reader.py.
+
+
+    Role:
+        NodeMap groups state and methods for this repository component.
+    """
     # map strings to range in order of appearance
     def __missing__(self, key):
+        """
+        Create and store a missing mapping entry on demand.
+
+        Args:
+            key: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         self[key] = len(self)
         return self[key]

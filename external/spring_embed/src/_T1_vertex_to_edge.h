@@ -3,6 +3,11 @@
 //****************************T1 TRANSITION***********************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * vert_edg_cells_vte: Compute or update cell-level topology/geometry information.
+ * Parameters: int i, int *vertices, int *edges, int *cells.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int vert_edg_cells_vte(int i, int *vertices, int *edges, int *cells)
 {
     //VERTICES
@@ -30,6 +35,11 @@ int vert_edg_cells_vte(int i, int *vertices, int *edges, int *cells)
     return countEdges;
 }
 //****************************************************************************
+/*
+ * direction_vector: Implement the direction vector operation for the C vertex-model code.
+ * Parameters: int i, int cID, double *cdir.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void direction_vector(int i, int cID, double *cdir)
 {
     double *dxdydz = new double[3];
@@ -59,6 +69,11 @@ void direction_vector(int i, int cID, double *cdir)
     delete [] centXYZ;
 }
 //****************************************************************************
+/*
+ * create_new_vertex: Implement the create new vertex operation for the C vertex-model code.
+ * Parameters: int i, int *cells, double fin_len.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int create_new_vertex(int i, int *cells, double fin_len){
 
     double *cdir; cdir=new double[3];
@@ -76,11 +91,21 @@ int create_new_vertex(int i, int *cells, double fin_len){
     return v2;
 }
 //****************************************************************************
+/*
+ * restitch_edges_vte: Compute or update edge-level topology/geometry information.
+ * Parameters: int *vertices, int *edges, int countEdges.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void restitch_edges_vte(int *vertices, int *edges, int countEdges)
 {
     for(int i=1; i<=countEdges; i++) remake_edge(edges[i],vertices[1],vertices[2]);
 }
 //****************************************************************************
+/*
+ * insertEdgeIntoCell: Compute or update edge-level topology/geometry information.
+ * Parameters: int i, int j, int el.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void insertEdgeIntoCell(int i, int j, int el)
 {
     c[i][0]++;
@@ -91,6 +116,11 @@ void insertEdgeIntoCell(int i, int j, int el)
     }
 }
 //****************************************************************************
+/*
+ * correct_cells: Compute or update cell-level topology/geometry information.
+ * Parameters: int cID, int newe.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void correct_cells(int cID, int newe)
 {
     int v1=e[newe][1]; int v2=e[newe][2];
@@ -114,6 +144,11 @@ void correct_cells(int cID, int newe)
     }
 }
 //****************************************************************************
+/*
+ * T1_VERTEX_TO_EDGE: Apply or convert a T1 transition in the vertex-model topology.
+ * Parameters: int i, double fin_len.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int T1_VERTEX_TO_EDGE(int i, double fin_len)
 {
 

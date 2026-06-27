@@ -3,6 +3,11 @@
 //***********************INITIAL STRUCTURE************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * read_simulation_block: Implement the read simulation block operation for the C vertex-model code.
+ * Parameters: const char *filename, const char *target_sim_id.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void read_simulation_block(const char *filename, const char *target_sim_id) {
     FILE *fp = fopen(filename, "r");
     if (!fp) {
@@ -64,6 +69,11 @@ void read_simulation_block(const char *filename, const char *target_sim_id) {
     fclose(fp);
 }
 //****************************************************************************
+/*
+ * set_initial_fromFile: Implement the set initial from file operation for the C vertex-model code.
+ * Parameters: const char *filename2, const char *filename, const char *target_sim_id.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void set_initial_fromFile(const char *filename2, const char *filename, const char *target_sim_id){
 
     int *sides; sides = new int[16];

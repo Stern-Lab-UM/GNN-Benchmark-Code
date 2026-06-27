@@ -1,4 +1,7 @@
 function [graph_names, graphs_from_Matej_before_prediction, file_header, graph_id, vals] = load_dataset(filename, consider_nodes)
+% load_dataset  Load dataset from disk or cache.
+% Inputs: filename, consider_nodes
+% Outputs: graph_names, graphs_from_Matej_before_prediction, file_header, graph_id, vals
 %LOAD_DATASET  Read a merged tissue-graph dataset file into structured arrays.
 %
 %   [GRAPH_NAMES, GRAPHS, FILE_HEADER, GRAPH_ID, VALS] = LOAD_DATASET(FILENAME)

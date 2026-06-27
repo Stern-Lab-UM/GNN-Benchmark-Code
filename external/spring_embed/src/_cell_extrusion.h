@@ -1,4 +1,9 @@
 //****************************************************************************
+/*
+ * reduce_edge_number: Compute or update edge-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int reduce_edge_number(int i)
 {
 
@@ -16,6 +21,11 @@ int reduce_edge_number(int i)
     return 0;
 }
 //****************************************************************************
+/*
+ * vert_edg_cells_ce: Compute or update cell-level topology/geometry information.
+ * Parameters: int i, int *vertices, int *edges, int *cells.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int vert_edg_cells_ce(int i, int *vertices, int *edges, int *cells)
 {
     //VERTICES
@@ -53,6 +63,11 @@ int vert_edg_cells_ce(int i, int *vertices, int *edges, int *cells)
     return 0;
 }
 //****************************************************************************
+/*
+ * collapseVertices: Implement the collapse vertices operation for the C vertex-model code.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int collapseVertices(int i)
 {
     double *dxdydz = new double[3];
@@ -87,6 +102,11 @@ int collapseVertices(int i)
     return 0;
 }
 //****************************************************************************
+/*
+ * CELL_EXTRUSION: Compute or update cell-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int CELL_EXTRUSION(int i)
 {
 

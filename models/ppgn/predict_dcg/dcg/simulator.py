@@ -1,9 +1,18 @@
+"""Utilities for models / ppgn / predict_dcg / dcg / simulator.py in the DCG benchmark codebase."""
+
 import numpy as np
 import pandas as pd
 import torch
 
 
 class Simulator:
+    """
+    Coordinate simulator responsibilities for the DCG PPGN workflow.
+
+
+    Role:
+        Simulator groups state and methods for this repository component.
+    """
 
     def __init__(self, adjacency, polygonality, kbT):
         '''
@@ -17,6 +26,14 @@ class Simulator:
         Polygonality is the polygonality value for each node,
             one value per line
         kbT is unitless boltzmann temperature
+
+        Args:
+            adjacency: Caller-supplied value used by this routine.
+            polygonality: Caller-supplied value used by this routine.
+            kbT: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
         '''
         adj = np.loadtxt(adjacency, dtype=int) - 1  # 1 to 0 based indexing
 
@@ -44,6 +61,15 @@ class Simulator:
         self.model = None
 
     def simulate(self, steps):
+        """
+        Run the simulator for the configured model and graph state.
+
+        Args:
+            steps: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         step_data = []
 
         try:
@@ -67,10 +93,22 @@ class Simulator:
         return step_data
 
     def order_parameter(self):
+        """
+        Compute the simulator order parameter for the current state.
+
+        Returns:
+            Computed value used by the caller.
+        """
         # fraction of cells with polygonality of 6
         return (self.polygonality == 6).mean()
 
     def predict_energy_barriers(self):
+        """
+        Run model inference and return or save predictions.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if self.model is None:
             raise ValueError('Unable to predict energy, set model first')
 
@@ -91,12 +129,27 @@ class Simulator:
                               self.edge_list[:, 1]].numpy()
 
     def set_edge_method(self, method='kramers'):
+        """
+        Configure how simulator edges are selected.
+
+        Args:
+            method: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if method == 'kramers':
             self.pick_edge = self.kramers
         if method == 'random':
             self.pick_edge = self.random_edge
 
     def kramers(self):
+        """
+        Convert energy barriers into Kramers-style transition rates.
+
+        Returns:
+            Computed value used by the caller.
+        """
         # converts predicted energy barriers to probabilities
         # for t1 and return the chosen edge
 
@@ -115,6 +168,12 @@ class Simulator:
         return np.random.choice(self.num_edges, p=e_P)
 
     def random_edge(self):
+        """
+        Sample a candidate edge according to the configured transition rates.
+
+        Returns:
+            Computed value used by the caller.
+        """
         p = np.ones(self.edge_list.shape[0])
         p[(self.edge_list[:, :, None] ==
            np.where(self.polygonality < 4)[0][None, None, :]
@@ -123,6 +182,15 @@ class Simulator:
         return np.random.choice(self.num_edges, p=p)
 
     def perform_T1(self, eID):
+        """
+        Apply one T1 transition to the simulator state.
+
+        Args:
+            eID: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         # performs t1 transition (change topology of graphs):
         #      \ c3/             \     /
         #      e1 e2             e1   e2

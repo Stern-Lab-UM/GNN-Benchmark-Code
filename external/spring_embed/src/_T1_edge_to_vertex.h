@@ -3,6 +3,11 @@
 //****************************T1 TRANSITION***********************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * vert_edg_cells_etv: Compute or update cell-level topology/geometry information.
+ * Parameters: int i, int *vertices, int *edges, int *cells.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int vert_edg_cells_etv(int i, int *vertices, int *edges, int *cells)
 {
     //VERTICES
@@ -30,11 +35,21 @@ int vert_edg_cells_etv(int i, int *vertices, int *edges, int *cells)
     return nrCells;
 }
 //****************************************************************************
+/*
+ * restitch_edges_etv: Compute or update edge-level topology/geometry information.
+ * Parameters: int *vertices, int *edges, int valv2.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void restitch_edges_etv(int *vertices, int *edges, int valv2)
 {
     for(int j=0; j<=valv2-2; j++) remake_edge(edges[edges[0]-j],vertices[2],vertices[1]);
 }
 //****************************************************************************
+/*
+ * merge_vertices: Implement the merge vertices operation for the C vertex-model code.
+ * Parameters: int *vertices.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void merge_vertices(int *vertices)
 {
     int v1=vertices[1];
@@ -48,6 +63,11 @@ void merge_vertices(int *vertices)
     torus_vertex(v1);
 }
 //****************************************************************************
+/*
+ * T1_EDGE_TO_VERTEX: Apply or convert a T1 transition in the vertex-model topology.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int T1_EDGE_TO_VERTEX(int i)
 {
 

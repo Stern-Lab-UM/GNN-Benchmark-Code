@@ -3,6 +3,11 @@
 //******************************DISSOLVE**************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * dissolve_vertex: Implement the dissolve vertex operation for the C vertex-model code.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void dissolve_vertex(int i){
 
     //ID
@@ -22,12 +27,22 @@ void dissolve_vertex(int i){
 
 }
 //****************************************************************************
+/*
+ * reset_edge_attributes: Compute or update edge-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void reset_edge_attributes(int i){
     e_g[i]=0;
     e_length[i]=0;
     e_dl[i]=0;
 }
 //****************************************************************************
+/*
+ * dissolve_edge: Compute or update edge-level topology/geometry information.
+ * Parameters: int i, int reserved.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int dissolve_edge(int i, int reserved){
 
     //ID
@@ -48,6 +63,11 @@ int dissolve_edge(int i, int reserved){
     return i;
 }
 //****************************************************************************
+/*
+ * dissolve_cell: Compute or update cell-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void dissolve_cell(int i){
 
     //EXTERNAL ATTRIBUTES
@@ -62,6 +82,11 @@ void dissolve_cell(int i){
 
 }
 //****************************************************************************
+/*
+ * delete_cell: Compute or update cell-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void delete_cell(int i){
 
     //ID

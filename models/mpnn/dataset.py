@@ -1,3 +1,5 @@
+"""Utilities for models / mpnn / dataset.py in the DCG benchmark codebase."""
+
 import os
 import os.path as osp
 from tqdm import tqdm
@@ -18,12 +20,33 @@ class CanonicalLapPESign:
     largest-magnitude entry is positive -- the same rule the MATLAB pipeline
     (DCG_pipeline_2D_*.m) applies to PPGN's eigenvectors, so the two families'
     PE signs align.
+
+    Role:
+        CanonicalLapPESign groups state and methods for this repository component.
     """
 
     def __init__(self, k: int):
+        """
+        Initialize the CanonicalLapPESign instance and store constructor configuration.
+
+        Args:
+            k: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.k = k
 
     def __call__(self, data):
+        """
+        Apply this callable transform to the supplied graph/data object.
+
+        Args:
+            data: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         pe = data.x[:, -self.k:]
         max_idx = pe.abs().argmax(dim=0)                       # row of max |entry| per column
         signs = torch.sign(pe[max_idx, torch.arange(self.k)])
@@ -33,8 +56,27 @@ class CanonicalLapPESign:
 
 
 class Nano(InMemoryDataset):
+    """
+    Provide the nano component used by models / mpnn / dataset.py.
+
+
+    Role:
+        Nano groups state and methods for this repository component.
+    """
 
     def __init__(self, root, is_weighted, use_node_feats=True, dim=None):
+        """
+        Initialize the Nano instance and store constructor configuration.
+
+        Args:
+            root: Caller-supplied value used by this routine.
+            is_weighted: Caller-supplied value used by this routine.
+            use_node_feats: Caller-supplied value used by this routine.
+            dim: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         # Optional node features:
         #  - True  => 5× LocalDegreeProfile + 30× Laplacian PE  (total 35 dims)
         #  - False => 1D constant feature per node (keeps the models working)
@@ -97,20 +139,63 @@ class Nano(InMemoryDataset):
         self.new_min, self.new_max = 0, 1
 
     def set_y_range(self, y_min, y_max):
+        """
+        Set y range state used by later calls.
+
+        Args:
+            y_min: Caller-supplied value used by this routine.
+            y_max: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.y_min = torch.as_tensor(y_min, dtype=self.data.y.dtype)
         self.y_max = torch.as_tensor(y_max, dtype=self.data.y.dtype)
 
     def set_deg_max(self, deg_max):
+        """
+        Set deg max state used by later calls.
+
+        Args:
+            deg_max: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.deg_max = torch.as_tensor(deg_max, dtype=self.data.x.dtype)
 
     def scale_y(self, y):
+        """
+        Map physical target values into the configured normalized interval.
+
+        Args:
+            y: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return (y - self.y_min) / (self.y_max - self.y_min) * (self.new_max - self.new_min) + self.new_min
 
     def inverse_scale_y(self, y):
+        """
+        Map physical target values into the configured normalized interval.
+
+        Args:
+            y: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return (y - self.new_min) / (self.new_max - self.new_min) * (self.y_max - self.y_min) + self.y_min
 
     @property
     def processed_dir(self) -> str:
+        """
+        Convert raw graph files into processed tensors for later loading.
+
+        Returns:
+            Computed value used by the caller.
+        """
         flag = 'weighted' if self.is_weighted else 'unweighted'
         nf = 'nodefeats_on' if getattr(self, 'use_node_feats', True) else 'nodefeats_off'
         if self.dim == '3D':
@@ -120,16 +205,40 @@ class Nano(InMemoryDataset):
 
     @property
     def raw_file_names(self):
+        """
+        Implement the raw file names step for models / mpnn / dataset.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return []
 
     @property
     def processed_file_names(self):
+        """
+        Convert raw graph files into processed tensors for later loading.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return [f'data.pt']
 
     def download(self):
+        """
+        Implement the download step for models / mpnn / dataset.py.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         pass
 
     def process(self):
+        """
+        Convert raw graph files into processed tensors for later loading.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         file_name = self.get_file_name()
         print(f'Processing {file_name}...')
         idx_split = self.get_idx_split()
@@ -166,6 +275,17 @@ class Nano(InMemoryDataset):
         torch.save((data, slices, idx_split, global_meta_data), self.processed_paths[0])
 
     def save_preds(self, y_pred, y_true, log_dir):
+        """
+        Write predictions back into the benchmark text-file format.
+
+        Args:
+            y_pred: Caller-supplied value used by this routine.
+            y_true: Caller-supplied value used by this routine.
+            log_dir: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         file_name = self.get_file_name()
         raw_file = open(osp.join(self.root, file_name), 'r').read().split('Simulation id: ')
 
@@ -198,6 +318,15 @@ class Nano(InMemoryDataset):
             f.write('\n\n'.join(new_file))
 
     def get_graph_data(self, graph):
+        """
+        Parse one raw graph block into PyTorch Geometric tensors.
+
+        Args:
+            graph: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         gid = graph[0]
         edge_index = []
         edge_attr = []
@@ -224,6 +353,12 @@ class Nano(InMemoryDataset):
         return Data(edge_index=edge_index, edge_attr=edge_attr, y=y, gid=gid)
 
     def get_idx_split(self):
+        """
+        Load train/validation/test split indices when split files are present.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if not osp.isfile(osp.join(self.root, 'train.inds')):
             print('No split file found.')
             return {'train': [], 'val': [], 'test': []}
@@ -234,6 +369,15 @@ class Nano(InMemoryDataset):
         return {'train': train_idx.tolist(), 'val': val_idx.tolist(), 'test': test_idx.tolist()}
 
     def get_global_meta_data(self, raw_meta_data):
+        """
+        Parse global metadata from a raw benchmark file header.
+
+        Args:
+            raw_meta_data: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         meta_data = []
         raw_meta_data = raw_meta_data.split('\n\n')
         meta_data.append(raw_meta_data[0].split(': '))
@@ -242,6 +386,12 @@ class Nano(InMemoryDataset):
         return {each[0]: eval(each[1]) for each in meta_data}
 
     def get_file_name(self):
+        """
+        Select the raw dataset text file used by this dataset object.
+
+        Returns:
+            Computed value used by the caller.
+        """
         all_file_names = os.listdir(self.root)
         if self.is_weighted is None:
             assert self.dim == '3D'
@@ -260,4 +410,13 @@ class Nano(InMemoryDataset):
                     return file_name
 
 def element_rstrip(a):
+    """
+    Implement the element rstrip step for models / mpnn / dataset.py.
+
+    Args:
+        a: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     return [each.rstrip() for each in a]

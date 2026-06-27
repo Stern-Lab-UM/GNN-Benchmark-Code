@@ -1,4 +1,7 @@
 function [X, objective, time] = parse_bayesopt_log(log_file, hp_names, ordinal_map)
+% parse_bayesopt_log  Implement parse bayesopt log for this MATLAB workflow.
+% Inputs: log_file, hp_names, ordinal_map
+% Outputs: X, objective, time
 %PARSE_BAYESOPT_LOG  Extract InitialX / InitialObjective from a bayesopt diary.
 %
 %   [X, OBJECTIVE, TIME] = PARSE_BAYESOPT_LOG(LOG_FILE, HP_NAMES, ORDINAL_MAP)

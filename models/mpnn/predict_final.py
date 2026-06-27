@@ -42,6 +42,15 @@ _CKPT_RE = re.compile(r"gnn_(.+?)_weighted_", re.IGNORECASE)
 
 
 def _parse_model_name(ckpt_path: str) -> str:
+    """
+    Implement the parse model name step for models / mpnn / predict_final.py.
+
+    Args:
+        ckpt_path: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     m = _CKPT_RE.search(osp.basename(ckpt_path))
     if not m:
         raise ValueError(f"Cannot parse model name from '{osp.basename(ckpt_path)}'.")
@@ -49,12 +58,30 @@ def _parse_model_name(ckpt_path: str) -> str:
 
 
 def _require_checkpoint(path: str) -> str:
+    """
+    Implement the require checkpoint step for models / mpnn / predict_final.py.
+
+    Args:
+        path: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     if osp.isfile(path) and path.endswith(".pth"):
         return osp.abspath(path)
     raise FileNotFoundError(f"Checkpoint must be an existing .pth file - got {path}")
 
 
 def _detect_weighted(data_file: str) -> Optional[bool]:
+    """
+    Implement the detect weighted step for models / mpnn / predict_final.py.
+
+    Args:
+        data_file: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     if data_file.endswith("_weighted.txt"):
         return True
     if data_file.endswith("_unweighted.txt"):
@@ -67,8 +94,22 @@ def _load_single_file_dataset(
     is_weighted: Optional[bool],
     use_node_feats: bool,
 ) -> Nano:
-    """Stage *data_file* into a temporary directory whose name contains '2D',
-    then load it with `Nano`, ensuring no other files are ingested."""
+    """Stage one graph file into an isolated temporary Nano dataset root.
+
+    The temporary folder name contains ``2D`` so the Nano loader infers the
+    dimensionality correctly, and only ``data_file`` is copied into it so no
+    neighboring datasets are accidentally processed during prediction.
+
+    Args:
+        data_file: Path to one Nano-format graph text file to predict.
+        is_weighted: Whether to parse weighted edge attributes; ``None`` keeps
+            the dataset loader's automatic handling.
+        use_node_feats: Whether to construct the full node-feature transform.
+
+    Returns:
+        Loaded ``Nano`` dataset whose temporary directory is kept alive by the
+        returned object.
+    """
     if not osp.isfile(data_file):
         raise FileNotFoundError(f"Data file '{data_file}' not found.")
 
@@ -95,6 +136,22 @@ def predict(
     head: Optional[str] = None,
     norm_mode: Optional[str] = None,
 ) -> str:
+    """
+    Run model inference and return or save predictions.
+
+    Args:
+        model_path: Caller-supplied value used by this routine.
+        data_file: Caller-supplied value used by this routine.
+        output_path: Caller-supplied value used by this routine.
+        batch_size: Caller-supplied value used by this routine.
+        cuda_id: Caller-supplied value used by this routine.
+        use_node_feats: Caller-supplied value used by this routine.
+        head: Caller-supplied value used by this routine.
+        norm_mode: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     ckpt_path = _require_checkpoint(model_path)
 
     print(f"[INFO] Using checkpoint: {ckpt_path}")
@@ -250,6 +307,12 @@ def predict(
 # -----------------------------------------------------------------------------
 
 def _cli_parser() -> argparse.ArgumentParser:
+    """
+    Implement the cli parser step for models / mpnn / predict_final.py.
+
+    Returns:
+        Computed value used by the caller.
+    """
     p = argparse.ArgumentParser(description="Single-file Nano inference script")
     p.add_argument("-m", "--model-path", required=True,
                    help="Path to the exact .pth checkpoint to load")
@@ -272,6 +335,12 @@ def _cli_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """
+    Parse command-line arguments and run this script entry point.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     args = _cli_parser().parse_args()
     predict(
         model_path=args.model_path,

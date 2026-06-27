@@ -2,8 +2,15 @@
 # Create an isolated Lighthouse/shared-HPC Python environment for this repo.
 # The environment is outside the git clone by default, keeping installed
 # packages, caches, checkpoints, and outputs away from publication source code.
+# Purpose: set up the DCG publication-code Python environments on a Lighthouse-style HPC login/session.
+# Inputs: command-line flags and environment variables documented by usage().
+# Outputs: conda environments, package installs, and printed activation instructions.
+
 set -euo pipefail
 
+# usage: helper function used by this setup script.
+# Inputs: shell variables and command-line state in the current process.
+# Outputs: printed messages, environment changes, or package-install side effects.
 usage() {
   cat <<'EOF'
 Usage: bash scripts/setup_lh_env.sh [options]
@@ -141,6 +148,9 @@ source "$env_dir/bin/activate"
 echo "[setup] active python: $(which python)"
 python -m pip --version
 
+# install_torch: helper function used by this setup script.
+# Inputs: shell variables and command-line state in the current process.
+# Outputs: printed messages, environment changes, or package-install side effects.
 install_torch() {
   case "$torch_mode" in
     cpu)

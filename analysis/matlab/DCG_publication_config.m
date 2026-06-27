@@ -1,4 +1,7 @@
 function cfg = DCG_publication_config(overrides)
+% DCG_publication_config  Implement dcg publication config for this MATLAB workflow.
+% Inputs: overrides
+% Outputs: cfg
 %DCG_PUBLICATION_CONFIG  User-local paths for the DCG analysis pipeline.
 %
 %   cfg = DCG_PUBLICATION_CONFIG() returns a struct containing paths used by
@@ -57,6 +60,9 @@ end
 
 
 function value = getenv_if_set(name, fallback)
+% getenv_if_set  Implement getenv if set for analysis/matlab/DCG_publication_config.m.
+% Inputs: name, fallback
+% Outputs: value
 value = getenv(name);
 if isempty(value)
     value = fallback;
@@ -65,6 +71,9 @@ end
 
 
 function out = merge_structs(base, extra)
+% merge_structs  Implement merge structs for analysis/matlab/DCG_publication_config.m.
+% Inputs: base, extra
+% Outputs: out
 out = base;
 if isempty(extra)
     return;

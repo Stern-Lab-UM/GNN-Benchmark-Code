@@ -59,9 +59,32 @@ _CURRENT_BATCH = {'node': None, 'edge': None}
 
 
 def _install_pergraph_norm_hooks(module, kind):
-    """Hook every InstanceNorm inside `module` so it is invoked with the
-    per-graph batch vector. `kind` is 'node' (backbone) or 'edge' (head)."""
+    """Attach per-graph InstanceNorm hooks to a model component.
+
+    PyTorch Geometric calls these normalization layers as ``norm(x)``. The
+    hook rewrites that call to ``norm(x, batch)`` when per-graph normalization
+    is requested, so normalization statistics are not pooled across graphs in a
+    minibatch.
+
+    Args:
+        module: Backbone or prediction-head module to scan recursively.
+        kind: Batch-vector namespace, either ``'node'`` for backbone features or
+            ``'edge'`` for head features.
+
+    Returns:
+        Number of ``InstanceNorm`` modules that received a hook.
+    """
     def _pre_hook(_mod, args):
+        """
+        Implement the pre hook step for models / mpnn / trainer_final.py.
+
+        Args:
+            _mod: Caller-supplied value used by this routine.
+            args: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         b = _CURRENT_BATCH[kind]
         if b is None:
             return None                 # pooled: leave norm(x) untouched
@@ -75,7 +98,16 @@ def _install_pergraph_norm_hooks(module, kind):
 
 
 def _set_current_batch(data, norm_mode):
-    """Stash the per-graph batch vectors that the InstanceNorm hooks read."""
+    """
+    Stash the per-graph batch vectors that the InstanceNorm hooks read.
+
+    Args:
+        data: Caller-supplied value used by this routine.
+        norm_mode: Caller-supplied value used by this routine.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     nb = getattr(data, 'batch', None)
     if norm_mode == 'per_graph' and nb is not None:
         _CURRENT_BATCH['node'] = nb
@@ -87,6 +119,22 @@ def _set_current_batch(data, norm_mode):
 
 @torch.no_grad()
 def eval_one_batch(gnn, head, data, criterion, optimizer, dataset, head_type, norm_mode):
+    """
+    Evaluate one mini-batch without gradient updates and return loss plus predictions.
+
+    Args:
+        gnn: Caller-supplied value used by this routine.
+        head: Caller-supplied value used by this routine.
+        data: Caller-supplied value used by this routine.
+        criterion: Caller-supplied value used by this routine.
+        optimizer: Caller-supplied value used by this routine.
+        dataset: Caller-supplied value used by this routine.
+        head_type: Caller-supplied value used by this routine.
+        norm_mode: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     gnn.eval()
     head.eval()
     _set_current_batch(data, norm_mode)
@@ -106,6 +154,22 @@ def eval_one_batch(gnn, head, data, criterion, optimizer, dataset, head_type, no
 
 
 def train_one_batch(gnn, head, data, criterion, optimizer, dataset, head_type, norm_mode):
+    """
+    Train on one mini-batch and return the physical-unit loss plus predictions.
+
+    Args:
+        gnn: Caller-supplied value used by this routine.
+        head: Caller-supplied value used by this routine.
+        data: Caller-supplied value used by this routine.
+        criterion: Caller-supplied value used by this routine.
+        optimizer: Caller-supplied value used by this routine.
+        dataset: Caller-supplied value used by this routine.
+        head_type: Caller-supplied value used by this routine.
+        norm_mode: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     gnn.train()
     head.train()
     _set_current_batch(data, norm_mode)
@@ -139,6 +203,27 @@ def train_one_batch(gnn, head, data, criterion, optimizer, dataset, head_type, n
 
 
 def run_one_epoch(gnn, head, data_loader, criterion, optimizer, device, seed, epoch, phase, dataset, writer, head_type, norm_mode):
+    """
+    Run one train/validation/test epoch over a data loader.
+
+    Args:
+        gnn: Caller-supplied value used by this routine.
+        head: Caller-supplied value used by this routine.
+        data_loader: Caller-supplied value used by this routine.
+        criterion: Caller-supplied value used by this routine.
+        optimizer: Caller-supplied value used by this routine.
+        device: Caller-supplied value used by this routine.
+        seed: Caller-supplied value used by this routine.
+        epoch: Caller-supplied value used by this routine.
+        phase: Caller-supplied value used by this routine.
+        dataset: Caller-supplied value used by this routine.
+        writer: Caller-supplied value used by this routine.
+        head_type: Caller-supplied value used by this routine.
+        norm_mode: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     loader_len = len(data_loader)
     run_one_batch = train_one_batch if phase == 'train' else eval_one_batch
 
@@ -162,11 +247,38 @@ def run_one_epoch(gnn, head, data_loader, criterion, optimizer, device, seed, ep
 
 
 def log_batch(seed, epoch, phase, batch_loss):
+    """
+    Format one mini-batch progress message.
+
+    Args:
+        seed: Caller-supplied value used by this routine.
+        epoch: Caller-supplied value used by this routine.
+        phase: Caller-supplied value used by this routine.
+        batch_loss: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     desc = f'[Seed {seed}, Epoch: {epoch}]: {phase}....., '
     desc += f'loss: {batch_loss:.4f}, '
     return desc
 
 def log_epoch(seed, epoch, phase, y_pred, y_true, criterion, writer):
+    """
+    Aggregate one epoch loss, write TensorBoard output, and format a status message.
+
+    Args:
+        seed: Caller-supplied value used by this routine.
+        epoch: Caller-supplied value used by this routine.
+        phase: Caller-supplied value used by this routine.
+        y_pred: Caller-supplied value used by this routine.
+        y_true: Caller-supplied value used by this routine.
+        criterion: Caller-supplied value used by this routine.
+        writer: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     loss = criterion(torch.cat(y_pred), torch.cat(y_true))
     desc = f'[Seed {seed}, Epoch: {epoch}]: {phase} done, '
     desc += f'loss: {loss:.4f}, '
@@ -177,6 +289,16 @@ def log_epoch(seed, epoch, phase, y_pred, y_true, criterion, writer):
 
 
 def get_model(model_name, train_loader):
+    """
+    Resolve a model name into the corresponding architecture class and optional degree histogram.
+
+    Args:
+        model_name: Caller-supplied value used by this routine.
+        train_loader: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     deg = None
     if model_name == 'GraphSAGE':
         Model = GraphSAGE
@@ -200,6 +322,16 @@ def build_head(head_type, hidden_channels, out_channels, dropout, edge_dim):
 
     head_type == 'sigmoid'   -> LinkPredictor  (original; ignores edge_attr)
     head_type == 'regressor' -> EdgeRegressor  (default; concatenates edge_attr)
+
+    Args:
+        head_type: Caller-supplied value used by this routine.
+        hidden_channels: Caller-supplied value used by this routine.
+        out_channels: Caller-supplied value used by this routine.
+        dropout: Caller-supplied value used by this routine.
+        edge_dim: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
     """
     if head_type == 'sigmoid':
         return LinkPredictor(hidden_channels, hidden_channels, out_channels, 2, dropout)
@@ -211,6 +343,12 @@ def build_head(head_type, hidden_channels, out_channels, dropout, edge_dim):
 
 
 def main():
+    """
+    Parse command-line arguments and run this script entry point.
+
+    Returns:
+        None; the function updates object state, files, logs, or external process state.
+    """
     parser = argparse.ArgumentParser(description='Train SAT')
     parser.add_argument('-d', '--dim', type=str, default='2D')
     parser.add_argument('--data_dir', type=str, required=True,

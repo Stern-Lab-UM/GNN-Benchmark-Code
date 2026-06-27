@@ -2,6 +2,11 @@
 //****************************************************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * edge_length: Compute or update edge-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double edge_length(int i){
     double ddx,ddy;
     double *dxdydz = new double[3]; dxdydz[1]=0; dxdydz[2]=0;
@@ -13,6 +18,11 @@ double edge_length(int i){
     return sqrt(ddx*ddx+ddy*ddy);
 }
 //****************************************************************************
+/*
+ * e_length_force: Compute force contributions for the current vertex-model state.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double e_length_force(int i){
 
     double eg=1.+e_g[i];
@@ -38,12 +48,22 @@ double e_length_force(int i){
     return eg*e_length[i];
 }
 //****************************************************************************
+/*
+ * cell_perimeter: Compute or update cell-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double cell_perimeter(int i){
     double _cperimeter=0.;
     for(int j = 1; j <= c[i][0]; ++j) _cperimeter += e_length[abs(c[i][j])];
     return _cperimeter;
 }
 //****************************************************************************
+/*
+ * e_perimeter_force: Compute force contributions for the current vertex-model state.
+ * Parameters: int i, double cperimeter.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void e_perimeter_force(int i, double cperimeter){
 
     double ddx,ddy;
@@ -66,6 +86,11 @@ void e_perimeter_force(int i, double cperimeter){
 
 }
 //****************************************************************************
+/*
+ * c_Perimeter_force: Compute force contributions for the current vertex-model state.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double c_Perimeter_force(int i){
     double _cperimeter=cell_perimeter(i);
     for(int j=1; j <= c[i][0]; j++) e_perimeter_force(abs(c[i][j]),_cperimeter);

@@ -3,6 +3,11 @@
 //******************************CREATE****************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * appendToArray: Implement the append to array operation for the C vertex-model code.
+ * Parameters: int **aRray, int i, int el.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int appendToArray(int **aRray, int i, int el){
 
     //CRITICAL ERRORS
@@ -19,11 +24,21 @@ int appendToArray(int **aRray, int i, int el){
     aRray[i][0]++; aRray[i][aRray[i][0]]=el; return 1;
 }
 //****************************************************************************
+/*
+ * appendToArrayDouble: Implement the append to array double operation for the C vertex-model code.
+ * Parameters: double **aRray, int i, double el.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int appendToArrayDouble(double **aRray, int i, double el){
     aRray[i][0]++; aRray[i][(int)aRray[i][0]]=el;
     return 1;
 }
 //****************************************************************************
+/*
+ * appendToList: Implement the append to list operation for the C vertex-model code.
+ * Parameters: int *lIst, int el.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int appendToList(int *lIst, int el){
 
     //CRITICAL ERRORS
@@ -39,6 +54,11 @@ int appendToList(int *lIst, int el){
     lIst[0]++; lIst[lIst[0]]=el; return 1;
 }
 //****************************************************************************
+/*
+ * isItin: Implement the is itin operation for the C vertex-model code.
+ * Parameters: int **aRray, int i, int el.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int isItin(int **aRray, int i, int el){
     for(int k=1; k<=aRray[i][0]; k++){
         if( aRray[i][k]==el )   return 1;
@@ -47,6 +67,11 @@ int isItin(int **aRray, int i, int el){
     return 0;
 }
 //****************************************************************************
+/*
+ * isItinList: Implement the is itin list operation for the C vertex-model code.
+ * Parameters: int *lIst, int el.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int isItinList(int *lIst, int el){
     for(int k=1; k<=lIst[0]; k++){
         if( lIst[k]==el )   return 1;
@@ -55,6 +80,11 @@ int isItinList(int *lIst, int el){
     return 0;
 }
 //****************************************************************************
+/*
+ * removeELEMENT: Implement the remove element operation for the C vertex-model code.
+ * Parameters: int **aRray, int i, int el.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int removeELEMENT(int **aRray, int i, int el){
 
     //CRITICAL ERRORS
@@ -71,18 +101,33 @@ int removeELEMENT(int **aRray, int i, int el){
     printf("%g| ERROR: element not found in the array!\n", Time);   exit(0);
 }
 //****************************************************************************
+/*
+ * printARRAY: Write vertex-model state or graph data to output files.
+ * Parameters: int **aRray, int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void printARRAY(int **aRray, int i){
     printf("%d  ||  ", aRray[i][0]);
     for(int j=1; j<=aRray[i][0]; j++) printf("%d  ", aRray[i][j]);
     printf("\n");
 }
 //****************************************************************************
+/*
+ * printLIST: Write vertex-model state or graph data to output files.
+ * Parameters: int *lIst.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void printLIST(int *lIst){
     printf("%d  ||  ", lIst[0]);
     for(int j=1; j<=lIst[0]; j++) printf("%d  ", lIst[j]);
     printf("\n");
 }
 //****************************************************************************
+/*
+ * status_vertices: Implement the status vertices operation for the C vertex-model code.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void status_vertices(){
     printf("VERTICES\n");
     printf("Nv=%d\n", Nv);
@@ -91,6 +136,11 @@ void status_vertices(){
     printf("Dissolved: %d\n", Nv-nrExist);
 }
 //****************************************************************************
+/*
+ * status_edges: Compute or update edge-level topology/geometry information.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void status_edges(){
     printf("\nEDGES\n");
     printf("Ne=%d\n", Ne);
@@ -99,6 +149,11 @@ void status_edges(){
     printf("Dissolved: %d\n", Ne-nrExist);
 }
 //****************************************************************************
+/*
+ * status_cells: Compute or update cell-level topology/geometry information.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void status_cells(){
     printf("\nCELLS\n");
     printf("Nc=%d\n", Nc);
@@ -107,6 +162,11 @@ void status_cells(){
     printf("Dissolved: %d\n", Nc-nrExist);
 }
 //****************************************************************************
+/*
+ * print_status: Write vertex-model state or graph data to output files.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void print_status(){
     printf("STATUS:\n\n");
     status_vertices();

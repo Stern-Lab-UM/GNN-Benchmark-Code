@@ -13,7 +13,28 @@ from torch_geometric.nn.models import MLP
 
 
 class EdgeRegressor(nn.Module):
+    """
+    Provide the edge regressor component used by models / mpnn / models / edge_regressor.py.
+
+
+    Role:
+        EdgeRegressor groups state and methods for this repository component.
+    """
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers, dropout, edge_dim=2):
+        """
+        Initialize the EdgeRegressor instance and store constructor configuration.
+
+        Args:
+            in_channels: Caller-supplied value used by this routine.
+            hidden_channels: Caller-supplied value used by this routine.
+            out_channels: Caller-supplied value used by this routine.
+            num_layers: Caller-supplied value used by this routine.
+            dropout: Caller-supplied value used by this routine.
+            edge_dim: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         super().__init__()
         self.edge_dim = int(edge_dim) if edge_dim is not None else 0
         mlp_in = 2 * in_channels + self.edge_dim
@@ -23,6 +44,17 @@ class EdgeRegressor(nn.Module):
                        plain_last=True)
 
     def forward(self, x, edge_index, edge_attr=None):
+        """
+        Run the neural-network forward pass for this module.
+
+        Args:
+            x: Caller-supplied value used by this routine.
+            edge_index: Caller-supplied value used by this routine.
+            edge_attr: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         x_i, x_j = x[edge_index[0]], x[edge_index[1]]
         if edge_attr is not None and self.edge_dim > 0:
             h = torch.cat([x_i, x_j, edge_attr], dim=-1)

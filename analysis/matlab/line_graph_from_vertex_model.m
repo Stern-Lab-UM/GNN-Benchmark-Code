@@ -1,4 +1,7 @@
 function LineG = line_graph_from_vertex_model(C, vertexCells)
+% line_graph_from_vertex_model  Build a line graph whose rows preserve source edge ordering.
+% Inputs: C, vertexCells
+% Outputs: LineG
 %LINE_GRAPH_FROM_VERTEX_MODEL Build the line graph of an epithelial vertex model.
 %
 %   LineG = line_graph_from_vertex_model(C)

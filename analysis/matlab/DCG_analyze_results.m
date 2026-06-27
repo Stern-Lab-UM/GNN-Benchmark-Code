@@ -1014,6 +1014,9 @@ save(results_summary_filename, 'S', 'all_models', 'tasks', 'data_sets', ...
 % (e.g. {'v1_1_32_W',...,'v1_2_1_W'} or {'rev_kA_1'}). The returned struct
 % mirrors the per-task layout used by `I.<model>` above.
 function MP = extract_MP_results(data_root, inds_root, mp_prefixes, tasks, model, is_new_interface_extra, seeds)
+% extract_MP_results  Extract mp results records from analysis structures.
+% Inputs: data_root, inds_root, mp_prefixes, tasks, model, is_new_interface_extra, seeds
+% Outputs: MP
 
 % Parallelized over (cohort, seed) file loads; falls back to serial if no
 % pool / no Parallel Computing Toolbox. 6 workers (per user request).
@@ -1223,6 +1226,9 @@ end
 % v1_2_16_W has 4/5). Missing files are logged and the slot is left empty;
 % section 6 NaN-fills them from PNA's template so downstream code is happy.
 function PPGN = extract_PPGN_results(data_root, inds_root, mp_prefixes, tasks, is_new_interface_extra, seeds)
+% extract_PPGN_results  Extract ppgn results records from analysis structures.
+% Inputs: data_root, inds_root, mp_prefixes, tasks, is_new_interface_extra, seeds
+% Outputs: PPGN
 
 % Reuse the existing pool if MP started one already.
 if isempty(gcp('nocreate'))
@@ -1392,6 +1398,9 @@ end
 % graph indices. The .inds files store 0-based indices; the +1 converts to
 % MATLAB indexing -- the same convention the legacy per-cohort loader used.
 function inds = read_dataset_inds(inds_root, prefix, data_root)
+% read_dataset_inds  Read dataset inds from disk.
+% Inputs: inds_root, prefix, data_root
+% Outputs: inds
 if nargin < 3, data_root = ''; end
 if ~isempty(data_root) && DCG_consolidated_paths('is_consolidated', data_root)
     % Consolidated snapshot: split is in splits\<key>\, chosen by _applies_to.
@@ -1420,6 +1429,9 @@ end
 
 
 function LineG = dcg_line_graph_preserve_rows(C, varargin)
+% dcg_line_graph_preserve_rows  Build a line graph whose rows preserve source edge ordering.
+% Inputs: C, varargin
+% Outputs: LineG
 %DCG_LINE_GRAPH_PRESERVE_ROWS
 % Build a row-preserving historical vertex-line interface graph.
 %
@@ -1522,6 +1534,9 @@ LineG = graph(spones(L));
 LineG.Nodes.Interface = C;
 
     function key = pair_key(a, b)
+% pair_key  Implement pair key for analysis/matlab/DCG_analyze_results.m.
+% Inputs: a, b
+% Outputs: key
         if a > b
             tmp = a;
             a = b;
@@ -1531,6 +1546,9 @@ LineG.Nodes.Interface = C;
     end
 
     function rows = rows_for_pair(a, b)
+% rows_for_pair  Implement rows for pair for analysis/matlab/DCG_analyze_results.m.
+% Inputs: a, b
+% Outputs: rows
         key = pair_key(a, b);
         if isKey(pairRows, key)
             rows = pairRows(key);
@@ -1540,6 +1558,9 @@ LineG.Nodes.Interface = C;
     end
 
     function connect_sets(rowsA, rowsB)
+% connect_sets  Implement connect sets for analysis/matlab/DCG_analyze_results.m.
+% Inputs: rowsA, rowsB
+% Outputs: none; performs side effects or updates the caller workflow.
         L(rowsA, rowsB) = 1;
         L(rowsB, rowsA) = 1;
     end
@@ -1547,6 +1568,9 @@ end
 
 
 function dcg_assert_root_rows_match_line_graph(line_G, original_edges, root_rows, context)
+% dcg_assert_root_rows_match_line_graph  Build a line graph whose rows preserve source edge ordering.
+% Inputs: line_G, original_edges, root_rows, context
+% Outputs: none; performs side effects or updates the caller workflow.
 %DCG_ASSERT_ROOT_ROWS_MATCH_LINE_GRAPH
 % Fail if line-graph node rows do not match original prediction rows.
 

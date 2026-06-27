@@ -1,3 +1,5 @@
+"""Utilities for models / ppgn / train_dcg / dcg / configuration.py in the DCG benchmark codebase."""
+
 import yaml
 import copy
 import torch
@@ -115,7 +117,25 @@ HELP_OPTIONS = {
 
 
 def parse_args(*parsers):
+    """
+    Return a parser/converter for structured configuration values.
+
+    Args:
+        *parsers: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     def parse(string):
+        """
+        Parse the supplied object or text into the structure expected by this module.
+
+        Args:
+            string: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         for parser in parsers:
             try:
                 value = parser(string)
@@ -127,7 +147,25 @@ def parse_args(*parsers):
 
 
 def list_or(other):
+    """
+    Implement the list or step for models / ppgn / train_dcg / dcg / configuration.py.
+
+    Args:
+        other: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     def parser(string):
+        """
+        Implement the parser step for models / ppgn / train_dcg / dcg / configuration.py.
+
+        Args:
+            string: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if ',' in string:
             return [other(s.strip()) for s in string.strip('[]').split(',')]
         else:
@@ -136,6 +174,15 @@ def list_or(other):
 
 
 def check_none(string):
+    """
+    Check none and report whether it is valid.
+
+    Args:
+        string: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     string = string.lower()
     if string == 'none' or string == 'null':
         return None
@@ -143,6 +190,15 @@ def check_none(string):
 
 
 def parse_bool(string):
+    """
+    Parse bool into structured values.
+
+    Args:
+        string: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
+    """
     s = string.strip().lower()
     if s in ('true', '1', 'yes'):
         return True
@@ -154,6 +210,12 @@ def parse_bool(string):
 def is_all(string: str) -> str:
     '''
     Normalizes the string to be 'all' or raises a value error
+
+    Args:
+        string: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
     '''
     if string.strip() == 'all':
         return 'all'
@@ -165,8 +227,23 @@ def dict_of(other):
     Handles dicts of the form [a:10, b:20]
     other is the type of the values
     returns dict {'a': 10, 'b': 20}
+
+    Args:
+        other: Caller-supplied value used by this routine.
+
+    Returns:
+        Computed value used by the caller.
     '''
     def parser(string):
+        """
+        Implement the parser step for models / ppgn / train_dcg / dcg / configuration.py.
+
+        Args:
+            string: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         string = string.strip('[]')
         result = {}
         for token in string.split(','):
@@ -213,7 +290,23 @@ TYPE_PARSERS = {
 
 
 class Configuration():
+    """
+    build model/training configuration
+
+
+    Role:
+        Configuration groups state and methods for this repository component.
+    """
     def __init__(self, yaml_file=None):
+        """
+        Initialize the Configuration instance and store constructor configuration.
+
+        Args:
+            yaml_file: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.config = copy.deepcopy(DEFAULT_OPTIONS)
         self.update_with_yaml(yaml_file)
 
@@ -222,6 +315,9 @@ class Configuration():
         '''
         Returns a string representation of a valid yaml file with defaults
         and help
+
+        Returns:
+            Computed value used by the caller.
         '''
         result = '---'
         for base_key, values in DEFAULT_OPTIONS.items():
@@ -239,17 +335,44 @@ class Configuration():
 
     @property
     def gpu(self):
+        """
+        Implement the gpu step for models / ppgn / train_dcg / dcg / configuration.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self.config['execution']['gpu']
 
     @property
     def epochs(self):
+        """
+        Implement the epochs step for models / ppgn / train_dcg / dcg / configuration.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self.config['hyperparameters']['epochs']
 
     @property
     def target_features(self):
+        """
+        Implement the target features step for models / ppgn / train_dcg / dcg / configuration.py.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self.config['training_info']['target_features']
 
     def update_with_yaml(self, yaml_file):
+        """
+        Merge YAML configuration values into the current configuration.
+
+        Args:
+            yaml_file: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if yaml_file is None:
             return
 
@@ -262,6 +385,15 @@ class Configuration():
                     self.config[base_key][key] = config[key]
 
     def update_with_args(self, arguments: str):
+        """
+        Merge command-line configuration overrides into the current configuration.
+
+        Args:
+            arguments: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if arguments is None:
             return
         for arg in arguments.split(';'):
@@ -277,11 +409,23 @@ class Configuration():
                 raise ValueError(f'Unable to match config key "{k}"')
 
     def build_loader(self):
+        """
+        Create the data loader requested by the configuration.
+
+        Returns:
+            Computed value used by the caller.
+        """
         loader = CellLoader()
         loader.apply_config(self.config)
         return loader
 
     def build_model(self):
+        """
+        Create the model requested by the configuration.
+
+        Returns:
+            Computed value used by the caller.
+        """
         model = BaseModel(
             len(self.config['training_info']['input_features']) + 1,
             len(self.config['training_info']['target_features']),
@@ -293,6 +437,16 @@ class Configuration():
         return model
 
     def build_trainer(self, model, loader):
+        """
+        Create the trainer object requested by the configuration.
+
+        Args:
+            model: Caller-supplied value used by this routine.
+            loader: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         penalties = self.config['training_info']['total_penalties']
         targets = self.config['training_info']['target_features']
         if penalties is not None:
@@ -306,9 +460,29 @@ class Configuration():
         return trainer
 
     def set_feature_names(self, inputs, outputs):
+        """
+        Resolve configured input and target feature names.
+
+        Args:
+            inputs: Caller-supplied value used by this routine.
+            outputs: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.config['training_info']['input_features'] = inputs
         self.config['training_info']['target_features'] = outputs
 
     def set_node_features(self, input_index, output_index):
+        """
+        Resolve configured node-feature names.
+
+        Args:
+            input_index: Caller-supplied value used by this routine.
+            output_index: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.config['training_info']['input_node'] = input_index
         self.config['training_info']['target_node'] = output_index

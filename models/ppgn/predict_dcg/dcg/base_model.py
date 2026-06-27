@@ -1,3 +1,5 @@
+"""Utilities for models / ppgn / predict_dcg / dcg / base_model.py in the DCG benchmark codebase."""
+
 import torch
 import torch.nn as nn
 from torch.utils import checkpoint
@@ -6,11 +8,27 @@ import numpy as np
 
 
 class BaseModel(nn.Module):
+    """
+    Coordinate base model responsibilities for the DCG PPGN workflow.
+
+
+    Role:
+        BaseModel groups state and methods for this repository component.
+    """
     def __init__(self, in_features, out_features,
                  block_features, depth_of_mlp):
         """
         Build the model computation graph, until scores/values
         are returned at the end
+
+        Args:
+            in_features: Caller-supplied value used by this routine.
+            out_features: Caller-supplied value used by this routine.
+            block_features: Caller-supplied value used by this routine.
+            depth_of_mlp: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
         """
         super().__init__()
 
@@ -46,10 +64,28 @@ class BaseModel(nn.Module):
         self.directed = False #<<< ADDED BY RIYA
 
     def set_directed(self, config):
+        """
+        Set directed state used by later calls.
+
+        Args:
+            config: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.directed = bool(config.config['training_info'].get('directed', False))
-        
+
 
     def forward(self, x):
+        """
+        Run the neural-network forward pass for this module.
+
+        Args:
+            x: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         # x of shape (B,X,N,N)
 #        adj = self.output_mask(x)
         #print(np.shape(adj))
@@ -79,21 +115,30 @@ class BaseModel(nn.Module):
         #tolerance2 = 1e-8
         #directed_mask = torch.any(diff > tolerance2)
         #if directed_mask.any():
-        #    print("Some graphs in the batch are directed")    
-        
+        #    print("Some graphs in the batch are directed")
+
         # symmetric constraint in undirected graph
         if self.directed is False: #<<< ADDED BY RIYA
             x = (x + torch.transpose(x, 2, 3))/2
-            
+
         # relu on non_negative indices, inplace
         for ind in self.non_negative:
             self.relu(x[:, ind])
 
         return x
-    
-    
-    
+
+
+
     def predict(self, x):
+        """
+        Run model inference and return or save predictions.
+
+        Args:
+            x: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         self.eval()
         with torch.no_grad():
             adj = self.output_mask(x)
@@ -120,9 +165,27 @@ class BaseModel(nn.Module):
             return x
 
     def output_mask(self, x):
+        """
+        Implement the output mask step for models / ppgn / predict_dcg / dcg / base_model.py.
+
+        Args:
+            x: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self._generate_mask(x, self.num_targets, self.out_nodes, bool)
 
     def input_mask(self, x):
+        """
+        Implement the input mask step for models / ppgn / predict_dcg / dcg / base_model.py.
+
+        Args:
+            x: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return self._generate_mask(x, x.shape[1], self.in_nodes, torch.float)
 
     def _generate_mask(self, x, total, nodes, dtype):
@@ -130,6 +193,15 @@ class BaseModel(nn.Module):
         True where value should be retained, false where value should be
         zeroed
         edge_only is applied only to output masks (dtype == bool)
+
+        Args:
+            x: Caller-supplied value used by this routine.
+            total: Caller-supplied value used by this routine.
+            nodes: Caller-supplied value used by this routine.
+            dtype: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
         '''
         # assume x[:,0] is adjacency
         adj = x[:, [0], :, :].to(dtype).repeat(1, total, 1, 1)
@@ -147,6 +219,17 @@ class BaseModel(nn.Module):
         return adj
 
     def set_norm_factors(self, norm_factors, config, device):
+        """
+        Set norm factors state used by later calls.
+
+        Args:
+            norm_factors: Caller-supplied value used by this routine.
+            config: Caller-supplied value used by this routine.
+            device: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         names = config.config['training_info']['target_features']
         self.out_means = torch.from_numpy(
             norm_factors.loc[names, 'mean'].values).to(torch.float).to(device)
@@ -163,12 +246,30 @@ class BaseModel(nn.Module):
             self.in_stds).to(torch.float).to(device)
 
     def set_indices(self, config):
+        """
+        Set indices state used by later calls.
+
+        Args:
+            config: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if 'input_node' in config.config['training_info']:
             self.in_nodes = config.config['training_info']['input_node']
         if 'target_node' in config.config['training_info']:
             self.out_nodes = config.config['training_info']['target_node']
 
     def set_non_negative(self, config):
+        """
+        Set non negative state used by later calls.
+
+        Args:
+            config: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if 'non_negative' in config.config['training_info']:
             non_neg = config.config['training_info']['non_negative']
             targets = config.config['training_info']['target_features']
@@ -176,6 +277,15 @@ class BaseModel(nn.Module):
             self.non_negative = self._find_in_targets(non_neg, targets)
 
     def set_edge_only(self, config):
+        """
+        Set edge only state used by later calls.
+
+        Args:
+            config: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if 'edge_only' in config.config['training_info']:
             edge_only = config.config['training_info']['edge_only']
             targets = config.config['training_info']['target_features']
@@ -183,6 +293,16 @@ class BaseModel(nn.Module):
             self.edge_only = self._find_in_targets(edge_only, targets)
 
     def _find_in_targets(self, args, targets):
+        """
+        Implement the find in targets step for models / ppgn / predict_dcg / dcg / base_model.py.
+
+        Args:
+            args: Caller-supplied value used by this routine.
+            targets: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         if args is None:
             return []
         if args == 'all':
@@ -190,6 +310,15 @@ class BaseModel(nn.Module):
         return [targets.index(n) for n in args if n in targets]
 
     def initialize_from(self, other):
+        """
+        Implement the initialize from step for models / ppgn / predict_dcg / dcg / base_model.py.
+
+        Args:
+            other: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         if len(self.reg_blocks) != len(other.reg_blocks):
             raise ValueError('Unable to initialize model from previous, '
                              'different number of layers')

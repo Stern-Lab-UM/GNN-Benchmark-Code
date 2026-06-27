@@ -3,6 +3,11 @@
 //******************************ALLOCATE**************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * reset_arrays: Implement the reset arrays operation for the C vertex-model code.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void reset_arrays(){
 
     Nv = 0; Ne = 0; Nc = 0;
@@ -49,6 +54,11 @@ void reset_arrays(){
     }
 }
 //****************************************************************************
+/*
+ * allocate: Allocate arrays used by the vertex-model state.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void allocate(){
 
     //ids
@@ -119,6 +129,11 @@ void allocate(){
     return ;
 }
 //****************************************************************************
+/*
+ * deallocate: Allocate arrays used by the vertex-model state.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void deallocate(){
 
     //ids

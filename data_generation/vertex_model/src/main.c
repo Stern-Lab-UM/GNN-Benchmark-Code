@@ -24,6 +24,11 @@ double dGmax=0;
 #include "_functions.h"
 
 //********************MAIN********************************
+/*
+ * main: Run the command-line entry point for this C executable.
+ * Parameters: int argc, char *argv[].
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int main(int argc, char *argv[]){
 
 

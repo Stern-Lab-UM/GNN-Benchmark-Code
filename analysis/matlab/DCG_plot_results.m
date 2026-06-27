@@ -900,6 +900,9 @@ end
 
 
 function A = force_baseline_reference_to_zero(A, tasks, baseline_idx)
+% force_baseline_reference_to_zero  Implement force baseline reference to zero for this MATLAB workflow.
+% Inputs: A, tasks, baseline_idx
+% Outputs: A
 % force_baseline_reference_to_zero  Zero out the Baseline column in normalized data.
 %
 % PURPOSE
@@ -949,6 +952,9 @@ end
 
 
 function dcg_savefig_visible(varargin)
+% dcg_savefig_visible  Save MATLAB figures in the publication output format.
+% Inputs: varargin
+% Outputs: none; performs side effects or updates the caller workflow.
 % dcg_savefig_visible  Save a figure as .fig with a dataset-tagged window name.
 %
 % PURPOSE
@@ -997,6 +1003,9 @@ end
 
 
 function S = keep_summary_size_bins(S, tasks, size_bins_to_keep)
+% keep_summary_size_bins  Implement keep summary size bins for this MATLAB workflow.
+% Inputs: S, tasks, size_bins_to_keep
+% Outputs: S
 % keep_summary_size_bins  Restrict a summary S to a chosen set of size bins.
 %
 % PURPOSE
@@ -1039,6 +1048,9 @@ end
 
 
 function C = keep_cell_columns(C, size_bins_to_keep)
+% keep_cell_columns  Implement keep cell columns for this MATLAB workflow.
+% Inputs: C, size_bins_to_keep
+% Outputs: C
 % keep_cell_columns  Blank all columns of a 2-D cell array except the kept ones.
 %
 % PURPOSE
@@ -1074,6 +1086,9 @@ end
 
 
 function C = keep_cell_entries(C, size_bins_to_keep)
+% keep_cell_entries  Implement keep cell entries for this MATLAB workflow.
+% Inputs: C, size_bins_to_keep
+% Outputs: C
 % keep_cell_entries  Blank all entries of a 1-D cell array except the kept ones.
 %
 % PURPOSE
@@ -1107,6 +1122,9 @@ end
 
 
 function remove_stale_plot_file(figures_output_dir, filename)
+% remove_stale_plot_file  Remove stale stale plot file artifacts before regenerating outputs.
+% Inputs: figures_output_dir, filename
+% Outputs: none; performs side effects or updates the caller workflow.
 % remove_stale_plot_file  Delete one named output file if it exists.
 %
 % PURPOSE
@@ -1133,6 +1151,9 @@ end
 
 
 function remove_stale_scatter_example_files(figures_output_dir)
+% remove_stale_scatter_example_files  Remove stale stale scatter example files artifacts before regenerating outputs.
+% Inputs: figures_output_dir
+% Outputs: none; performs side effects or updates the caller workflow.
 % remove_stale_scatter_example_files  Delete old scatter-example .fig files.
 %
 % PURPOSE
@@ -1158,6 +1179,9 @@ end
 end
 
 function remove_stale_fallback_outputs(figures_output_dir)
+% remove_stale_fallback_outputs  Remove stale stale fallback outputs artifacts before regenerating outputs.
+% Inputs: figures_output_dir
+% Outputs: none; performs side effects or updates the caller workflow.
 % remove_stale_fallback_outputs  Delete old fallback-analysis figures/tables.
 %
 % PURPOSE
@@ -1196,6 +1220,9 @@ end
 end
 
 function remove_stale_non_hex_outputs_from_hex_folder(figures_output_dir)
+% remove_stale_non_hex_outputs_from_hex_folder  Remove stale stale non hex outputs from hex folder artifacts before regenerating outputs.
+% Inputs: figures_output_dir
+% Outputs: none; performs side effects or updates the caller workflow.
 % remove_stale_non_hex_outputs_from_hex_folder  Prune non-manuscript files in hex dir.
 %
 % PURPOSE
@@ -1235,6 +1262,9 @@ end
 end
 
 function colors = paper_model_colors(model_names)
+% paper_model_colors  Implement paper model colors for this MATLAB workflow.
+% Inputs: model_names
+% Outputs: colors
 % paper_model_colors  Map model names to fixed manuscript RGB colors.
 %
 % PURPOSE
@@ -1277,6 +1307,9 @@ end
 end
 
 function ordered_idx = paper_model_plot_order(model_names, baseline_first)
+% paper_model_plot_order  Implement paper model plot order for this MATLAB workflow.
+% Inputs: model_names, baseline_first
+% Outputs: ordered_idx
 % paper_model_plot_order  Indices that reorder models into manuscript order.
 %
 % PURPOSE
@@ -1319,6 +1352,9 @@ ordered_idx = [ordered_idx, extra_idx];
 end
 
 function ordered_names = order_models_for_paper(model_names, include_baseline)
+% order_models_for_paper  Implement order models for paper for this MATLAB workflow.
+% Inputs: model_names, include_baseline
+% Outputs: ordered_names
 % order_models_for_paper  Reorder model NAMES into manuscript order.
 %
 % PURPOSE
@@ -1362,6 +1398,9 @@ end
 
 
 function write_normalization_assumptions(figures_output_dir, dataset_to_analyze)
+% write_normalization_assumptions  Write normalization assumptions to disk.
+% Inputs: figures_output_dir, dataset_to_analyze
+% Outputs: none; performs side effects or updates the caller workflow.
 % write_normalization_assumptions  Write the normalization_assumptions.txt side-car.
 %
 % PURPOSE
@@ -1405,6 +1444,9 @@ end
 
 
 function [S, all_models, colors] = drop_models_from_summary(S, all_models, colors, models_to_exclude, tasks, dataset_to_analyze)
+% drop_models_from_summary  Implement drop models from summary for this MATLAB workflow.
+% Inputs: S, all_models, colors, models_to_exclude, tasks, dataset_to_analyze
+% Outputs: S, all_models, colors
 % drop_models_from_summary  Remove model columns from S and the model list.
 %
 % PURPOSE
@@ -1487,6 +1529,9 @@ end
 
 
 function plot_PPGN_fallback(all_models, S, dataset_to_analyze, ratio_threshold_identity_function, figures_output_dir, focus_model, figure_panel_size, scatter_marker_size)
+% plot_PPGN_fallback  Render the plot ppgn fallback panel or plotting primitive.
+% Inputs: all_models, S, dataset_to_analyze, ratio_threshold_identity_function, figures_output_dir, focus_model, figure_panel_size, scatter_marker_size
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_PPGN_fallback  Detect/quantify "identity fallback" per graph and plot examples.
 %
 % PURPOSE
@@ -1871,6 +1916,9 @@ end
 
 
 function [vals_by_hop, log_ratio] = fallback_graph_values(S, dataset_to_analyze, r, siz, g, model_idx, baseline_idx)
+% fallback_graph_values  Implement fallback graph values for this MATLAB workflow.
+% Inputs: S, dataset_to_analyze, r, siz, g, model_idx, baseline_idx
+% Outputs: vals_by_hop, log_ratio
 % fallback_graph_values  Per-hop FB(h) log-ratio and stacked values for one graph.
 %
 % PURPOSE
@@ -1943,6 +1991,9 @@ end
 
 
 function S = calculate_normalization_factors(S, dataset_to_analyze, h_bins_for_quality_analysis, max_cell_dist)
+% calculate_normalization_factors  Compute calculate normalization factors summary values.
+% Inputs: S, dataset_to_analyze, h_bins_for_quality_analysis, max_cell_dist
+% Outputs: S
 % calculate_normalization_factors  Graph-weighted Baseline MAE denominators.
 %
 % PURPOSE
@@ -2088,6 +2139,9 @@ end
 
 
 function out = sanitize_normalization_scalar(x)
+% sanitize_normalization_scalar  Implement sanitize normalization scalar for this MATLAB workflow.
+% Inputs: x
+% Outputs: out
 % sanitize_normalization_scalar  Guard a scalar normalization denominator.
 %
 % PURPOSE
@@ -2114,6 +2168,9 @@ end
 
 
 function out = sanitize_normalization_vector(x)
+% sanitize_normalization_vector  Implement sanitize normalization vector for this MATLAB workflow.
+% Inputs: x
+% Outputs: out
 % sanitize_normalization_vector  Element-wise guard for a normalization vector.
 %
 % PURPOSE
@@ -2137,6 +2194,9 @@ end
 
 
 function calc_total_number_of_graphs(all_models, tasks, S, dataset_to_analyze, n_edges_per_graph)
+% calc_total_number_of_graphs  Compute calc total number of graphs summary values.
+% Inputs: all_models, tasks, S, dataset_to_analyze, n_edges_per_graph
+% Outputs: none; performs side effects or updates the caller workflow.
 % calc_total_number_of_graphs  Print per-model graph (and edge) counts.
 %
 % PURPOSE
@@ -2200,6 +2260,9 @@ end
 
 
 function plot_hexagonality_distribution(S, h_bins_for_initial_histogram, figures_output_dir, dataset_to_analyze)
+% plot_hexagonality_distribution  Render the plot hexagonality distribution panel or plotting primitive.
+% Inputs: S, h_bins_for_initial_histogram, figures_output_dir, dataset_to_analyze
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_hexagonality_distribution  Histogram of per-graph hexagonality. [DEAD/UNUSED]
 %
 % *** DEAD / UNUSED ***
@@ -2240,6 +2303,9 @@ end
 
 
 function plot_manuscript_hexagonality_panels_from_cache(analyses_filename, figures_output_dir, colors, hex_bins, uncertainty_mode, n_cells, split_name, save_separate_panels, left_panel_cfg, models_to_exclude)
+% plot_manuscript_hexagonality_panels_from_cache  Render the plot manuscript hexagonality panels from cache panel or plotting primitive.
+% Inputs: analyses_filename, figures_output_dir, colors, hex_bins, uncertainty_mode, n_cells, split_name, save_separate_panels, left_panel_cfg, models_to_exclude
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_manuscript_hexagonality_panels_from_cache  Two-panel hex figure from an analyses cache.
 %
 % PURPOSE
@@ -2399,6 +2465,9 @@ end
 
 
 function graph_indices = hex_cache_split_indices(I, model_field, task, subset_idx, split_name)
+% hex_cache_split_indices  Compute or plot hexagonality-related hex cache split indices values.
+% Inputs: I, model_field, task, subset_idx, split_name
+% Outputs: graph_indices
 % hex_cache_split_indices  Fetch the cached test-split graph indices.
 %
 % PURPOSE
@@ -2433,6 +2502,9 @@ end
 
 
 function remove_manuscript_hex_separate_panel_files(figures_output_dir)
+% remove_manuscript_hex_separate_panel_files  Remove stale manuscript hex separate panel files artifacts before regenerating outputs.
+% Inputs: figures_output_dir
+% Outputs: none; performs side effects or updates the caller workflow.
 % remove_manuscript_hex_separate_panel_files  Delete the separate hex panel files.
 %
 % PURPOSE
@@ -2467,6 +2539,9 @@ end
 
 
 function [active_noise, graph_hexagonality, meta] = hex_left_panel_graph_quality(left_panel_cfg, n_cells)
+% hex_left_panel_graph_quality  Compute or plot hexagonality-related hex left panel graph quality values.
+% Inputs: left_panel_cfg, n_cells
+% Outputs: active_noise, graph_hexagonality, meta
 % hex_left_panel_graph_quality  Per-graph active noise + hexagonality for panel a.
 %
 % PURPOSE
@@ -2566,6 +2641,9 @@ end
 
 
 function [active_noise, graph_hexagonality] = hex_cache_graph_quality(I, model_field, task, subset_idx, graph_indices, n_cells)
+% hex_cache_graph_quality  Compute or plot hexagonality-related hex cache graph quality values.
+% Inputs: I, model_field, task, subset_idx, graph_indices, n_cells
+% Outputs: active_noise, graph_hexagonality
 % hex_cache_graph_quality  Active noise + hexagonality for a given index set.
 %
 % PURPOSE
@@ -2610,6 +2688,9 @@ end
 
 
 function [x, y, e, n] = summarize_by_x(x_raw, y_raw, uncertainty_mode)
+% summarize_by_x  Compute summarize by x summary values.
+% Inputs: x_raw, y_raw, uncertainty_mode
+% Outputs: x, y, e, n
 % summarize_by_x  Group y by unique x and return mean, spread, and count.
 %
 % PURPOSE
@@ -2650,6 +2731,9 @@ end
 
 
 function [x, y, e, n] = hex_cache_identity_normalized_error(I, model_fields, task, subset_idx, graph_indices, graph_hexagonality, hex_bins, uncertainty_mode)
+% hex_cache_identity_normalized_error  Compute or plot hexagonality-related hex cache identity normalized error values.
+% Inputs: I, model_fields, task, subset_idx, graph_indices, graph_hexagonality, hex_bins, uncertainty_mode
+% Outputs: x, y, e, n
 % hex_cache_identity_normalized_error  nMAE_Id vs hexagonality from a cache (panel b).
 %
 % PURPOSE
@@ -2743,6 +2827,9 @@ end
 
 
 function plot_manuscript_hexagonality_panels(S, all_models, dataset_to_analyze, figures_output_dir, colors, hex_bins, active_noise_bins, size_bin, uncertainty_mode, save_separate_panels)
+% plot_manuscript_hexagonality_panels  Render the plot manuscript hexagonality panels panel or plotting primitive.
+% Inputs: S, all_models, dataset_to_analyze, figures_output_dir, colors, hex_bins, active_noise_bins, size_bin, uncertainty_mode, save_separate_panels
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_manuscript_hexagonality_panels  Two-panel hex figure computed from S.
 %
 % PURPOSE
@@ -2868,6 +2955,9 @@ end
 
 
 function size_bin = select_hex_paper_size_bin(S, all_models, dataset_to_analyze)
+% select_hex_paper_size_bin  Select hex paper size bin for the current analysis.
+% Inputs: S, all_models, dataset_to_analyze
+% Outputs: size_bin
 % select_hex_paper_size_bin  Pick the largest size bin with all models present.
 %
 % PURPOSE
@@ -2923,6 +3013,9 @@ end
 
 
 function [x, y, e, n] = manuscript_hex_noise_curve(S, dataset_to_analyze, size_bin, active_noise_bins, uncertainty_mode)
+% manuscript_hex_noise_curve  Implement manuscript hex noise curve for this MATLAB workflow.
+% Inputs: S, dataset_to_analyze, size_bin, active_noise_bins, uncertainty_mode
+% Outputs: x, y, e, n
 % manuscript_hex_noise_curve  Hexagonality vs active noise (panel a) from S.
 %
 % PURPOSE
@@ -3025,6 +3118,9 @@ end
 
 
 function [x, y, e, n] = manuscript_hex_error_curve(S, all_models, dataset_to_analyze, size_bin, hex_bins, uncertainty_mode)
+% manuscript_hex_error_curve  Implement manuscript hex error curve for this MATLAB workflow.
+% Inputs: S, all_models, dataset_to_analyze, size_bin, hex_bins, uncertainty_mode
+% Outputs: x, y, e, n
 % manuscript_hex_error_curve  nMAE_Id vs hexagonality (panel b) from S.
 %
 % PURPOSE
@@ -3130,6 +3226,9 @@ end
 
 
 function draw_manuscript_hex_noise(ax, x, y, e)
+% draw_manuscript_hex_noise  Render the draw manuscript hex noise panel or plotting primitive.
+% Inputs: ax, x, y, e
+% Outputs: none; performs side effects or updates the caller workflow.
 % draw_manuscript_hex_noise  Render panel a (hexagonality vs active noise).
 %
 % PURPOSE
@@ -3160,6 +3259,9 @@ end
 
 
 function draw_manuscript_hex_error(ax, x, y, e, colors, all_models)
+% draw_manuscript_hex_error  Render the draw manuscript hex error panel or plotting primitive.
+% Inputs: ax, x, y, e, colors, all_models
+% Outputs: none; performs side effects or updates the caller workflow.
 % draw_manuscript_hex_error  Render panel b (nMAE_Id vs hexagonality, all models).
 %
 % PURPOSE
@@ -3213,6 +3315,9 @@ end
 
 
 function h_line = plot_shaded_line(ax, x, y, e, color, line_style)
+% plot_shaded_line  Render the plot shaded line panel or plotting primitive.
+% Inputs: ax, x, y, e, color, line_style
+% Outputs: h_line
 % plot_shaded_line  Line plot with a translucent +/- e shaded band.
 %
 % PURPOSE
@@ -3256,6 +3361,9 @@ end
 
 
 function e = uncertainty_from_values(vals, uncertainty_mode)
+% uncertainty_from_values  Implement uncertainty from values for this MATLAB workflow.
+% Inputs: vals, uncertainty_mode
+% Outputs: e
 % uncertainty_from_values  SD or SEM of a sample vector (ignoring NaNs).
 %
 % PURPOSE
@@ -3293,6 +3401,9 @@ end
 
 
 function plot_scatter_plot_examples(scores_to_show, tasks, MAE_individuals, S, figures_output_dir, all_models, dataset_to_analyze, figure_panel_size, scatter_marker_size)
+% plot_scatter_plot_examples  Render the plot scatter plot examples panel or plotting primitive.
+% Inputs: scores_to_show, tasks, MAE_individuals, S, figures_output_dir, all_models, dataset_to_analyze, figure_panel_size, scatter_marker_size
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_scatter_plot_examples  Predicted-vs-true scatter examples at chosen percentiles.
 %
 % PURPOSE
@@ -3471,6 +3582,9 @@ end
 
 
 function val = scatter_graph_metadata_value(S, field_name, dataset_to_analyze, r, siz, g)
+% scatter_graph_metadata_value  Implement scatter graph metadata value for this MATLAB workflow.
+% Inputs: S, field_name, dataset_to_analyze, r, siz, g
+% Outputs: val
 % scatter_graph_metadata_value  Safely fetch one per-graph metadata scalar from S.
 %
 % PURPOSE
@@ -3525,6 +3639,9 @@ end
 
 function [MAE_individuals, MAE_size_avg, MAE_size_sd, MAE_hexagonality_avg, MAE_hexagonality_sd, MAE_dists_avg, MAE_dists_sd, S] = ...
     extract_MAEs(tasks, S, all_models, dataset_to_analyze, max_cell_dist, h_bins_for_quality_analysis, use_log, normalized)
+% extract_MAEs  Extract maes records from analysis structures.
+% Inputs: tasks, S, all_models, dataset_to_analyze, max_cell_dist, h_bins_for_quality_analysis, use_log, normalized
+% Outputs: MAE_individuals, MAE_size_avg, MAE_size_sd, MAE_hexagonality_avg, MAE_hexagonality_sd, MAE_dists_avg, MAE_dists_sd, S
 % extract_MAEs  Reduce per-edge errors in S into all the MAE summaries to plot.
 %
 % PURPOSE
@@ -3795,6 +3912,9 @@ end
 
 function [MAE_size_avg, MAE_size_sd, MAE_dists_avg, MAE_dists_sd, MAE_individuals, MAE_hexagonality_avg, MAE_hexagonality_sd] = ...
     perform_MAE_normalization(MAE_size_avg, MAE_size_sd, MAE_dists_avg, MAE_dists_sd, MAE_individuals, MAE_hexagonality_avg, MAE_hexagonality_sd, S, tasks, dataset_to_analyze)
+% perform_MAE_normalization  Implement perform mae normalization for this MATLAB workflow.
+% Inputs: MAE_size_avg, MAE_size_sd, MAE_dists_avg, MAE_dists_sd, MAE_individuals, MAE_hexagonality_avg, MAE_hexagonality_sd, S, tasks, dataset_to_analyze
+% Outputs: MAE_size_avg, MAE_size_sd, MAE_dists_avg, MAE_dists_sd, MAE_individuals, MAE_hexagonality_avg, MAE_hexagonality_sd
 % perform_MAE_normalization  Divide every MAE summary by its baseline. [DEAD/UNUSED]
 %
 % *** DEAD / UNUSED ***
@@ -3870,6 +3990,9 @@ end
 
 
 function [y_min, y_max] = padded_axis_limits(y_min, y_max, prefer_zero_for_positive_raw)
+% padded_axis_limits  Implement padded axis limits for this MATLAB workflow.
+% Inputs: y_min, y_max, prefer_zero_for_positive_raw
+% Outputs: y_min, y_max
 % padded_axis_limits  Pad a [min,max] range; optionally snap the floor to 0.
 %
 % PURPOSE
@@ -3920,6 +4043,9 @@ end
 
 
 function plot_MAE_vs_dataset_size(MAE_size_avg, MAE_size_sd, figures_output_dir, tasks, use_log, colors, all_models, y_label, figure_panel_size)
+% plot_MAE_vs_dataset_size  Render the plot mae vs dataset size panel or plotting primitive.
+% Inputs: MAE_size_avg, MAE_size_sd, figures_output_dir, tasks, use_log, colors, all_models, y_label, figure_panel_size
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_MAE_vs_dataset_size  Plot MAE vs number of training cohorts, per task.
 %
 % PURPOSE
@@ -4009,6 +4135,9 @@ end
 
 
 function plot_MAE_vs_dist(MAE_dists_avg, MAE_dists_sd, figures_output_dir, tasks, use_log, colors, all_models, y_label, figure_panel_size)
+% plot_MAE_vs_dist  Render the plot mae vs dist panel or plotting primitive.
+% Inputs: MAE_dists_avg, MAE_dists_sd, figures_output_dir, tasks, use_log, colors, all_models, y_label, figure_panel_size
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_MAE_vs_dist  Plot MAE vs hop distance from the T1 interface.
 %
 % PURPOSE
@@ -4137,6 +4266,9 @@ end
 
 
 function finite_hops = hop_rows_with_real_model_data(y, baseline_idx)
+% hop_rows_with_real_model_data  Implement hop rows with real model data for this MATLAB workflow.
+% Inputs: y, baseline_idx
+% Outputs: finite_hops
 % hop_rows_with_real_model_data  Mask of hop rows where some non-baseline model is finite.
 %
 % PURPOSE
@@ -4174,6 +4306,9 @@ end
 
 
 function plot_MAE_vs_hexagonality(MAE_hexagonality_avg, figures_output_dir, tasks, use_log, colors, all_models, h_bins_for_quality_analysis, y_label)
+% plot_MAE_vs_hexagonality  Render the plot mae vs hexagonality panel or plotting primitive.
+% Inputs: MAE_hexagonality_avg, figures_output_dir, tasks, use_log, colors, all_models, h_bins_for_quality_analysis, y_label
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_MAE_vs_hexagonality  Plot MAE vs hexagonality per size bin. [DEAD/UNUSED]
 %
 % *** DEAD / UNUSED ***
@@ -4297,6 +4432,9 @@ end
 % the wrong graph if the file<->S index mapping ever drifts.
 % ============================================================================
 function plot_embedding_examples(scores_to_show, tasks, MAE_individuals, S, figures_output_dir, all_models, dataset_to_analyze, dataset, data_root, DCG_CONFIG)
+% plot_embedding_examples  Render the plot embedding examples panel or plotting primitive.
+% Inputs: scores_to_show, tasks, MAE_individuals, S, figures_output_dir, all_models, dataset_to_analyze, dataset, data_root, DCG_CONFIG
+% Outputs: none; performs side effects or updates the caller workflow.
 % plot_embedding_examples  2D spring-embedding example panels (Fig A overlay, Fig B per-edge).
 %
 % PURPOSE
@@ -4739,6 +4877,9 @@ end
 
 % ----------------------- embedding: small helpers -----------------------------
 function m = emb_mean_finite(x)
+% emb_mean_finite  Handle embedding-example mean finite logic.
+% Inputs: x
+% Outputs: m
 % emb_mean_finite  Mean over finite entries only, NaN if none exist.
 %
 % PURPOSE
@@ -4752,6 +4893,9 @@ if isempty(x), m = nan; else, m = mean(x); end
 end
 
 function s = emb_fmt_mae(x)
+% emb_fmt_mae  Handle embedding-example fmt mae logic.
+% Inputs: x
+% Outputs: s
 % emb_fmt_mae  Format overlay-title MAEs without hiding tiny nonzero values.
 %
 % PURPOSE
@@ -4770,6 +4914,9 @@ end
 end
 
 function v = emb_getcfg(C, f, d)
+% emb_getcfg  Handle embedding-example getcfg logic.
+% Inputs: C, f, d
+% Outputs: v
 % emb_getcfg  Read config field f from struct C, else default d.
 %
 % PURPOSE
@@ -4791,6 +4938,9 @@ end
 end
 
 function tok = emb_sizetok(siz)
+% emb_sizetok  Handle embedding-example sizetok logic.
+% Inputs: siz
+% Outputs: tok
 % emb_sizetok  Map a v1 size index to its flat-layout size token.
 %
 % PURPOSE
@@ -4817,6 +4967,9 @@ end
 end
 
 function pfx = emb_dataset_prefix(dataset, siz, wstr)
+% emb_dataset_prefix  Handle embedding-example dataset prefix logic.
+% Inputs: dataset, siz, wstr
+% Outputs: pfx
 % emb_dataset_prefix  Build the flat-layout file prefix for a dataset/size/weighting.
 %
 % PURPOSE
@@ -4850,6 +5003,9 @@ end
 end
 
 function lambda = emb_shear_lambda(dataset)
+% emb_shear_lambda  Handle embedding-example shear lambda logic.
+% Inputs: dataset
+% Outputs: lambda
 % emb_shear_lambda  Area-preserving rectangular stretch used by shear datasets.
 %
 % PURPOSE
@@ -4875,6 +5031,9 @@ end
 end
 
 function [vt2d_out, msg] = emb_prepare_shear_vt2d(vt2d_in, workdir, dataset)
+% emb_prepare_shear_vt2d  Handle embedding-example prepare shear vt2d logic.
+% Inputs: vt2d_in, workdir, dataset
+% Outputs: vt2d_out, msg
 % emb_prepare_shear_vt2d  Materialize a shear-aware vt2d for spring embedding.
 %
 % PURPOSE
@@ -4943,6 +5102,9 @@ end
 end
 
 function [Lx, Ly] = emb_vt2d_box(vt2d_file)
+% emb_vt2d_box  Handle embedding-example vt2d box logic.
+% Inputs: vt2d_file
+% Outputs: Lx, Ly
 % emb_vt2d_box  Read the periodic-box dimensions from a vt2d file.
 %
 % The vt2d files used here begin with a count/header line followed by a box
@@ -4973,6 +5135,9 @@ Ly = numericLines{2}(2);
 end
 
 function emb_write_affine_shear_vt2d(src, dst, lambda)
+% emb_write_affine_shear_vt2d  Handle embedding-example write affine shear vt2d logic.
+% Inputs: src, dst, lambda
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_write_affine_shear_vt2d  Write vt2d copy with x*lambda and y/lambda.
 %
 % PURPOSE
@@ -5026,11 +5191,17 @@ fprintf(fid, '%s', strjoin(lines, newline));
 end
 
 function line = emb_format_numeric_line(vals)
+% emb_format_numeric_line  Handle embedding-example format numeric line logic.
+% Inputs: vals
+% Outputs: line
 % emb_format_numeric_line  Stable compact numeric formatting for vt2d rows.
 line = strtrim(sprintf('%.12g ', vals));
 end
 
 function s = emb_blank(pct)
+% emb_blank  Handle embedding-example blank logic.
+% Inputs: pct
+% Outputs: s
 % emb_blank  Construct an empty per-example selection struct.
 %
 % PURPOSE
@@ -5051,6 +5222,9 @@ s = struct('ok',false, 'pct',pct, 'model','', 'subset_size',1, 'best_r',0, ...
 end
 
 function v = emb_sMAE(S, task, ds, r, siz, g, m)
+% emb_sMAE  Handle embedding-example s mae logic.
+% Inputs: S, task, ds, r, siz, g, m
+% Outputs: v
 % emb_sMAE  S-side mean |prediction - ground truth| for one graph/model.
 %
 % PURPOSE
@@ -5094,6 +5268,9 @@ v = mean(abs(cp - cg), 'omitnan');
 end
 
 function p = emb_resolve_vt2d(sim_id, stdRoot, revRoot, dataset)
+% emb_resolve_vt2d  Handle embedding-example resolve vt2d logic.
+% Inputs: sim_id, stdRoot, revRoot, dataset
+% Outputs: p
 % emb_resolve_vt2d  Locate the .vt2d periodic-box file for a simulation id.
 %
 % PURPOSE
@@ -5155,24 +5332,27 @@ if exist(revRoot,'dir') == 7
 end
 end
 
-function k = emb_pairkey(a,b), k = sprintf('%d_%d', min(a,b), max(a,b)); end
-% emb_pairkey  Order-independent string key for an unordered cell pair (a,b).
-%
+function k = emb_pairkey(a,b)
+% emb_pairkey  Build an order-independent string key for an unordered cell pair.
+% Inputs: a, b
+% Outputs: k
 % PURPOSE
-%   Build a canonical map key for an interface between two cells, independent of
-%   which cell is listed first, used to look up flip states.
+%   Return the canonical map key for an interface between two cells,
+%   independent of which cell is listed first. The embedding code uses this
+%   key to look up flip states.
 %
 % INPUTS
 %   a, b : the two cell indices.
 %
 % OUTPUT
 %   k : 'min_max' string, e.g. emb_pairkey(7,3) -> '3_7'.
-%
-% NOTE
-%   The entire function body is on the signature line above; this block is
-%   documentation only and adds no executable statements.
+k = sprintf('%d_%d', min(a,b), max(a,b));
+end
 
 function [flipMap, flipPairs] = emb_flip(wpredfile, sim_id)
+% emb_flip  Handle embedding-example flip logic.
+% Inputs: wpredfile, sim_id
+% Outputs: flipMap, flipPairs
 % emb_flip  Read the T1 flip state per interface from a (W) prediction file.
 %
 % PURPOSE
@@ -5209,6 +5389,9 @@ flipPairs = unique(flipPairs, 'rows');
 end
 
 function rows = emb_read_block(file, sim)
+% emb_read_block  Handle embedding-example read block logic.
+% Inputs: file, sim
+% Outputs: rows
 % emb_read_block  Extract the 6-token rows of one "Simulation id:" block.
 %
 % PURPOSE
@@ -5255,6 +5438,9 @@ end
 end
 
 function emb_write_pred(tmp, sim_id, predfile, srccol, flipMap)
+% emb_write_pred  Handle embedding-example write pred logic.
+% Inputs: tmp, sim_id, predfile, srccol, flipMap
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_write_pred  Write a temp 6-col prediction file for the embedding engine.
 %
 % PURPOSE
@@ -5336,6 +5522,9 @@ end
 end
 
 function emb_run_engine(exe, vt2d, predtmp, sim_id, rundir)
+% emb_run_engine  Handle embedding-example run engine logic.
+% Inputs: exe, vt2d, predtmp, sim_id, rundir
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_run_engine  Invoke the external spring-embedding engine for one variant.
 %
 % PURPOSE
@@ -5366,6 +5555,9 @@ try system(cmd); catch, end
 end
 
 function perio = emb_read_perio(vt2d)
+% emb_read_perio  Handle embedding-example read perio logic.
+% Inputs: vt2d
+% Outputs: perio
 % emb_read_perio  Read the periodic box size [Lx Ly] from a .vt2d file.
 %
 % PURPOSE
@@ -5401,6 +5593,9 @@ if numel(perio) ~= 2 || any(perio <= 0), error('bad perio in %s', vt2d); end
 end
 
 function cells = emb_read_polys(rundir, stage)
+% emb_read_polys  Handle embedding-example read polys logic.
+% Inputs: rundir, stage
+% Outputs: cells
 % emb_read_polys  Read per-cell polygon vertices from engine X_/Y_ outputs.
 %
 % PURPOSE
@@ -5428,6 +5623,9 @@ end
 end
 
 function M = emb_read_out(rundir, sim_id)
+% emb_read_out  Handle embedding-example read out logic.
+% Inputs: rundir, sim_id
+% Outputs: M
 % emb_read_out  Read the engine per-edge out_ table (first 5 columns).
 %
 % PURPOSE
@@ -5446,6 +5644,9 @@ M = M(:,1:5);
 end
 
 function [adj, cellG] = emb_topology(cells, perio)
+% emb_topology  Handle embedding-example topology logic.
+% Inputs: cells, perio
+% Outputs: adj, cellG
 % emb_topology  Recover shared-vertex ids and a cell adjacency from polygons.
 %
 % PURPOSE
@@ -5476,6 +5677,9 @@ adj = emb_adjacency_from(cellG, numel(cells));
 end
 
 function adj = emb_adjacency_from(cellG, Nc)
+% emb_adjacency_from  Handle embedding-example adjacency from logic.
+% Inputs: cellG, Nc
+% Outputs: adj
 % emb_adjacency_from  Cell adjacency from per-cell global vertex ids.
 %
 % PURPOSE
@@ -5513,6 +5717,9 @@ adj = cnt >= 2;
 end
 
 function placed = emb_unwrap_cells(cells, cellG, adj, perio, seed)
+% emb_unwrap_cells  Handle embedding-example unwrap cells logic.
+% Inputs: cells, cellG, adj, perio, seed
+% Outputs: placed
 % emb_unwrap_cells  Unwrap periodic cell polygons into one contiguous tiling.
 %
 % PURPOSE
@@ -5553,6 +5760,9 @@ for i = 1 : Nc, if ~done(i), placed{i} = cells{i}; end, end
 end
 
 function [Xa, rmsd] = emb_align_to(X, P)
+% emb_align_to  Handle embedding-example align to logic.
+% Inputs: X, P
+% Outputs: Xa, rmsd
 % emb_align_to  Kabsch rigid alignment of point set X onto reference P.
 %
 % PURPOSE
@@ -5584,6 +5794,9 @@ Qa = Q*Rot.' + tvec; rmsd = sqrt(mean(sum((Qa-R).^2,2)));
 end
 
 function [Xs, nsnap] = emb_snap_frame(X, G, perio)
+% emb_snap_frame  Handle embedding-example snap frame logic.
+% Inputs: X, G, perio
+% Outputs: Xs, nsnap
 % emb_snap_frame  Put each cell of X in the same periodic image as G's cell.
 %
 % PURPOSE
@@ -5610,6 +5823,9 @@ end
 end
 
 function segs = emb_edge_segs(placed, cellG, pairs)
+% emb_edge_segs  Handle embedding-example edge segs logic.
+% Inputs: placed, cellG, pairs
+% Outputs: segs
 % emb_edge_segs  Build drawable line segments for given cell-cell interfaces.
 %
 % PURPOSE
@@ -5644,6 +5860,9 @@ end
 end
 
 function [segs, vals, lens] = emb_edge_segs_error_de_novo(placed, cellG, pairs, targets)
+% emb_edge_segs_error_de_novo  Handle embedding-example edge segs error de novo logic.
+% Inputs: placed, cellG, pairs, targets
+% Outputs: segs, vals, lens
 % emb_edge_segs_error_de_novo  Recompute Fig-B edge errors from drawn geometry.
 %
 % PURPOSE
@@ -5677,6 +5896,9 @@ end
 end
 
 function emb_draw_overlay(ax, REFu, REFseg, Xu, Xseg, cR, cX, cRhop, cXhop, lwCell, lwHop, xl, yl)
+% emb_draw_overlay  Handle embedding-example draw overlay logic.
+% Inputs: ax, REFu, REFseg, Xu, Xseg, cR, cX, cRhop, cXhop, lwCell, lwHop, xl, yl
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_draw_overlay  Overlay a reference and a candidate embedding (Fig A).
 %
 % PURPOSE
@@ -5706,6 +5928,9 @@ axis(ax,'equal'); axis(ax,'off'); xlim(ax,xl); ylim(ax,yl);
 end
 
 function emb_draw_cells(ax, cells, c, lw)
+% emb_draw_cells  Handle embedding-example draw cells logic.
+% Inputs: ax, cells, c, lw
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_draw_cells  Draw closed cell-polygon outlines.
 %
 % PURPOSE
@@ -5727,6 +5952,9 @@ end
 end
 
 function emb_draw_hops(ax, segs, c, lw)
+% emb_draw_hops  Handle embedding-example draw hops logic.
+% Inputs: ax, segs, c, lw
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_draw_hops  Draw interface (new-T1) segments with endpoint dots.
 %
 % PURPOSE
@@ -5749,6 +5977,9 @@ end
 end
 
 function emb_configure_embedding_colorbar(cb, lo, hi, use_log)
+% emb_configure_embedding_colorbar  Handle embedding-example configure embedding colorbar logic.
+% Inputs: cb, lo, hi, use_log
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_configure_embedding_colorbar  Stable, readable ticks for Fig B colorbars.
 %
 % MATLAB's automatic log-colorbar ticks can be sparse (for example only one
@@ -5772,6 +6003,9 @@ cb.TickLabels = arrayfun(@emb_color_tick_label, ticks, 'UniformOutput', false);
 end
 
 function label = emb_color_tick_label(v)
+% emb_color_tick_label  Handle embedding-example color tick label logic.
+% Inputs: v
+% Outputs: label
 % emb_color_tick_label  Compact numeric tick labels for embedding error bars.
 if ~isfinite(v)
     label = '';
@@ -5785,6 +6019,9 @@ end
 end
 
 function [lo, hi] = emb_color_limits(vals, use_log, colorPct)
+% emb_color_limits  Handle embedding-example color limits logic.
+% Inputs: vals, use_log, colorPct
+% Outputs: lo, hi
 % emb_color_limits  Percentile-clipped color limits for Fig B.
 vals = vals(:);
 vals = vals(isfinite(vals));
@@ -5813,6 +6050,9 @@ end
 end
 
 function [lo, hi] = emb_percentile_limits(vals, colorPct)
+% emb_percentile_limits  Handle embedding-example percentile limits logic.
+% Inputs: vals, colorPct
+% Outputs: lo, hi
 vals = sort(vals(:));
 vals = vals(isfinite(vals));
 if isempty(vals)
@@ -5836,6 +6076,9 @@ hi = emb_percentile_value(vals, p(2));
 end
 
 function v = emb_percentile_value(sortedVals, pct)
+% emb_percentile_value  Handle embedding-example percentile value logic.
+% Inputs: sortedVals, pct
+% Outputs: v
 n = numel(sortedVals);
 if n == 1
     v = sortedVals(1);
@@ -5853,6 +6096,9 @@ end
 end
 
 function emb_draw_colored(ax, segs, vals, lo, hi, lw, use_log)
+% emb_draw_colored  Handle embedding-example draw colored logic.
+% Inputs: ax, segs, vals, lo, hi, lw, use_log
+% Outputs: none; performs side effects or updates the caller workflow.
 % emb_draw_colored  Draw edge segments colored by a scalar value (Fig B).
 %
 % PURPOSE
@@ -5898,6 +6144,9 @@ end
 end
 
 function output_paths = DCG_make_extreme_task_composites_internal(data_root, cache_dir, figures_root, dataset_to_analyze, h_bins_for_quality_analysis, DCG_CONFIG)
+% DCG_make_extreme_task_composites_internal  Implement dcg make extreme task composites internal for this MATLAB workflow.
+% Inputs: data_root, cache_dir, figures_root, dataset_to_analyze, h_bins_for_quality_analysis, DCG_CONFIG
+% Outputs: output_paths
 % DCG_make_extreme_task_composites_internal  Temporary 5x3 revision composites.
 %
 % This helper builds four requested figures without changing the
@@ -5978,6 +6227,9 @@ end
 
 
 function v = extreme_cfg(cfg, name, default_value)
+% extreme_cfg  Handle cross-condition revision-figure cfg logic.
+% Inputs: cfg, name, default_value
+% Outputs: v
 if isstruct(cfg) && isfield(cfg, name) && ~isempty(cfg.(name))
     v = cfg.(name);
 else
@@ -5987,6 +6239,9 @@ end
 
 
 function keys = extreme_unique(keys_in)
+% extreme_unique  Handle cross-condition revision-figure unique logic.
+% Inputs: keys_in
+% Outputs: keys
 keys = {};
 for i = 1 : numel(keys_in)
     if isempty(keys_in{i}), continue; end
@@ -5998,6 +6253,9 @@ end
 
 
 function families = extreme_task_families()
+% extreme_task_families  Handle cross-condition revision-figure task families logic.
+% Inputs: none.
+% Outputs: families
 rgb = {[1 0 0], [0 0.62 0], [0 0 1]};
 families = repmat(struct('name','', 'title','', 'datasets',{{}}, 'labels',{{}}, 'colors',{rgb}), 1, 3);
 families(1).name = 'kA';
@@ -6016,6 +6274,9 @@ end
 
 
 function bundle = extreme_load_dataset_bundle(dataset_key, data_root, cache_dir, dataset_to_analyze, h_bins_for_quality_analysis)
+% extreme_load_dataset_bundle  Handle cross-condition revision-figure load dataset bundle logic.
+% Inputs: dataset_key, data_root, cache_dir, dataset_to_analyze, h_bins_for_quality_analysis
+% Outputs: bundle
 meta = extreme_dataset_meta(dataset_key);
 summary_file = fullfile(cache_dir, [meta.summary_dataset, ' - results_summary.mat']);
 if exist(summary_file, 'file') ~= 2
@@ -6108,6 +6369,9 @@ end
 
 
 function prediction_errors = extreme_normalize_prediction_errors_by_size(prediction_errors, norm_struct, tasks, dataset_to_analyze)
+% extreme_normalize_prediction_errors_by_size  Handle cross-condition revision-figure normalize prediction errors by size logic.
+% Inputs: prediction_errors, norm_struct, tasks, dataset_to_analyze
+% Outputs: prediction_errors
 for t = 1 : numel(tasks)
     task = tasks{t};
     for s = 1 : size(prediction_errors.(task), 1)
@@ -6135,6 +6399,9 @@ end
 
 
 function meta = extreme_dataset_meta(dataset_key)
+% extreme_dataset_meta  Handle cross-condition revision-figure dataset meta logic.
+% Inputs: dataset_key
+% Outputs: meta
 meta = struct('summary_dataset', dataset_key, 'tasks', {{'lengths_to_lengths'}}, ...
     'size_bins_to_keep', [], 'max_cell_dist', 24);
 switch dataset_key
@@ -6158,6 +6425,9 @@ end
 
 
 function prediction_errors = extreme_normalize_prediction_errors_by_dist(prediction_errors, norm_struct, tasks, dataset_to_analyze)
+% extreme_normalize_prediction_errors_by_dist  Handle cross-condition revision-figure normalize prediction errors by dist logic.
+% Inputs: prediction_errors, norm_struct, tasks, dataset_to_analyze
+% Outputs: prediction_errors
 for t = 1 : numel(tasks)
     task = tasks{t};
     for s = 1 : size(prediction_errors.(task), 1)
@@ -6182,6 +6452,9 @@ end
 
 
 function out_path = extreme_plot_family_curve_grid(families, model_rows, bundles, metric_name, y_label, output_dir, save_png)
+% extreme_plot_family_curve_grid  Handle cross-condition revision-figure plot family curve grid logic.
+% Inputs: families, model_rows, bundles, metric_name, y_label, output_dir, save_png
+% Outputs: out_path
 fig = figure('Position', [60 60 1180 1540], 'Color', 'w', 'NumberTitle', 'off', ...
     'Name', ['Extreme task families - ', metric_name]);
 tl = tiledlayout(fig, numel(model_rows), numel(families), 'TileSpacing', 'compact', 'Padding', 'compact');
@@ -6280,6 +6553,9 @@ end
 
 
 function [x, y, e] = extreme_curve_for_model(bundle, metric_name, model_name)
+% extreme_curve_for_model  Handle cross-condition revision-figure curve for model logic.
+% Inputs: bundle, metric_name, model_name
+% Outputs: x, y, e
 x = []; y = []; e = [];
 model_idx = find(strcmpi(bundle.all_models, model_name), 1);
 if isempty(model_idx), return; end
@@ -6302,6 +6578,9 @@ end
 
 
 function out_path = extreme_plot_family_condition_grid(families, model_rows, bundles, metric_name, y_label, output_dir, save_png)
+% extreme_plot_family_condition_grid  Handle cross-condition revision-figure plot family condition grid logic.
+% Inputs: families, model_rows, bundles, metric_name, y_label, output_dir, save_png
+% Outputs: out_path
 fig = figure('Position', [80 80 1180 1540], 'Color', 'w', 'NumberTitle', 'off', ...
     'Name', ['Extreme task-family condition summary - ', metric_name]);
 tl = tiledlayout(fig, numel(model_rows), numel(families), 'TileSpacing', 'compact', 'Padding', 'compact');
@@ -6404,6 +6683,9 @@ end
 
 
 function [y, e] = extreme_condition_value_for_model(bundle, metric_name, model_name)
+% extreme_condition_value_for_model  Handle cross-condition revision-figure condition value for model logic.
+% Inputs: bundle, metric_name, model_name
+% Outputs: y, e
 y = NaN; e = NaN;
 model_idx = find(strcmpi(bundle.all_models, model_name), 1);
 if isempty(model_idx), return; end
@@ -6430,6 +6712,9 @@ end
 
 
 function extreme_draw_curve(ax, x, y, e, color, display_name)
+% extreme_draw_curve  Handle cross-condition revision-figure draw curve logic.
+% Inputs: ax, x, y, e, color, display_name
+% Outputs: none; performs side effects or updates the caller workflow.
 x = x(:); y = y(:); e = e(:);
 if isempty(x), return; end
 h = shadedErrorBar(x, y, e, 'lineprops', {'-', 'Color', color}, 'transparent', true);
@@ -6440,6 +6725,9 @@ end
 
 
 function extreme_draw_baseline_curve(ax, x, y, e)
+% extreme_draw_baseline_curve  Handle cross-condition revision-figure draw baseline curve logic.
+% Inputs: ax, x, y, e
+% Outputs: none; performs side effects or updates the caller workflow.
 x = x(:); y = y(:); e = e(:);
 if isempty(x), return; end
 h = shadedErrorBar(x, y, e, 'lineprops', {'-', 'Color', [0 0 0]}, 'transparent', true);
@@ -6458,6 +6746,9 @@ end
 
 
 function lims = extreme_padded_limits(ymin, ymax, clamp_zero)
+% extreme_padded_limits  Handle cross-condition revision-figure padded limits logic.
+% Inputs: ymin, ymax, clamp_zero
+% Outputs: lims
 if ~isfinite(ymin) || ~isfinite(ymax)
     lims = [0, 1];
     return;
@@ -6475,6 +6766,9 @@ end
 
 
 function [overlay_path, per_edge_path] = extreme_plot_embedding_grids(model_rows, bundles, data_root, dataset_to_analyze, output_dir, save_png, DCG_CONFIG)
+% extreme_plot_embedding_grids  Handle cross-condition revision-figure plot embedding grids logic.
+% Inputs: model_rows, bundles, data_root, dataset_to_analyze, output_dir, save_png, DCG_CONFIG
+% Outputs: overlay_path, per_edge_path
 extreme_datasets = {'kA_1', 'Shear_1_5', 'Tissue_784'};
 extreme_titles = {'kA = 1', 'Shear 1.5', 'Tissue 784'};
 [sel_grid, geom_grid] = extreme_collect_embedding_geometry(model_rows, extreme_datasets, bundles, ...
@@ -6541,6 +6835,9 @@ end
 
 
 function [sel_grid, geom_grid] = extreme_collect_embedding_geometry(model_rows, dataset_keys, bundles, data_root, dataset_to_analyze, DCG_CONFIG)
+% extreme_collect_embedding_geometry  Handle cross-condition revision-figure collect embedding geometry logic.
+% Inputs: model_rows, dataset_keys, bundles, data_root, dataset_to_analyze, DCG_CONFIG
+% Outputs: sel_grid, geom_grid
 blank_sel = extreme_blank_selection('not selected');
 blank_geom = extreme_blank_geometry();
 sel_grid = repmat(blank_sel, numel(model_rows), numel(dataset_keys));
@@ -6644,6 +6941,9 @@ end
 
 
 function sel = extreme_select_embedding_example(bundle, model_name, pct, predRoot, indsRoot, emb_consolidated, dataset_to_analyze, shearVt2d)
+% extreme_select_embedding_example  Handle cross-condition revision-figure select embedding example logic.
+% Inputs: bundle, model_name, pct, predRoot, indsRoot, emb_consolidated, dataset_to_analyze, shearVt2d
+% Outputs: sel
 sel = extreme_blank_selection('not selected');
 sel.pct = pct;
 sel.model = model_name;
@@ -6743,6 +7043,9 @@ end
 
 
 function sel = extreme_blank_selection(reason)
+% extreme_blank_selection  Handle cross-condition revision-figure blank selection logic.
+% Inputs: reason
+% Outputs: sel
 sel = struct('ok', false, 'reason', reason, 'pct', 50, 'dataset', '', 'model', '', ...
     'subset_size', 1, 'best_r', 0, 'seedrow', 1, 'model_idx', NaN, 'sMAE', NaN, ...
     'sim_id', '', 'pred_file', '', 'wpred_file', '', 'cfgkey', '', 'vt2d', '', ...
@@ -6751,12 +7054,18 @@ end
 
 
 function geom = extreme_blank_geometry()
+% extreme_blank_geometry  Handle cross-condition revision-figure blank geometry logic.
+% Inputs: none.
+% Outputs: geom
 geom = struct('ok', false, 'GTu', {{}}, 'PRu', {{}}, 'GTseg', {{}}, 'PRseg', {{}}, ...
     'segsB', {{}}, 'valsB', [], 'maePT', NaN, 'maePG', NaN, 'xl', [0 1], 'yl', [0 1]);
 end
 
 
 function geom = extreme_load_embedding_geometry(sel)
+% extreme_load_embedding_geometry  Handle cross-condition revision-figure load embedding geometry logic.
+% Inputs: sel
+% Outputs: geom
 geom = extreme_blank_geometry();
 try
     if exist(fullfile(sel.rundir.gt, 'output', ['out_', sel.sim_id]), 'file') ~= 2 || ...
@@ -6813,6 +7122,9 @@ end
 
 
 function extreme_save_figure(fig, fig_path, save_png, resolution)
+% extreme_save_figure  Handle cross-condition revision-figure save figure logic.
+% Inputs: fig, fig_path, save_png, resolution
+% Outputs: none; performs side effects or updates the caller workflow.
 if nargin < 4 || isempty(resolution), resolution = 300; end
 set(fig, 'Visible', 'on');
 savefig(fig, fig_path);
@@ -6825,6 +7137,9 @@ end
 
 
 function extreme_write_assumptions(output_dir, families, model_rows, output_paths)
+% extreme_write_assumptions  Handle cross-condition revision-figure write assumptions logic.
+% Inputs: output_dir, families, model_rows, output_paths
+% Outputs: none; performs side effects or updates the caller workflow.
 fid = fopen(fullfile(output_dir, 'extreme_task_composites_assumptions.txt'), 'w');
 if fid < 0, return; end
 cleanupObj = onCleanup(@() fclose(fid)); %#ok<NASGU>

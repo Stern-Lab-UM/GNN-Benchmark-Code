@@ -1,3 +1,5 @@
+"""Utilities for models / ppgn / train_dcg / dcg / trainer.py in the DCG benchmark codebase."""
+
 from typing import Dict
 import copy
 import torch
@@ -10,7 +12,26 @@ import click
 
 
 class Trainer(object):
+    """
+    train and evaluate PPGN models
+
+
+    Role:
+        Trainer groups state and methods for this repository component.
+    """
     def __init__(self, model, dataloader, config, device):
+        """
+        Initialize the Trainer instance and store constructor configuration.
+
+        Args:
+            model: Caller-supplied value used by this routine.
+            dataloader: Caller-supplied value used by this routine.
+            config: Caller-supplied value used by this routine.
+            device: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.best_epoch = -1
         self.cur_epoch = 0
         self.device = device
@@ -86,10 +107,17 @@ class Trainer(object):
                 self.loss_fns = self._build_pos_weighted_losses()
 
     def _build_pos_weighted_losses(self):
-        """Iterate the training set once to count pos/neg per target over the
-        same edges that loss_and_results will mask to (candidate edges if
-        candidate_mask_on, otherwise the model's full output_mask), then
-        return one BCEWithLogitsLoss(pos_weight=N_neg/N_pos) per target."""
+        """Build target-wise positive-class weights for BCE training.
+
+        The training set is scanned once over exactly the edges that
+        ``loss_and_results`` will evaluate: candidate edges when candidate
+        masking is enabled, otherwise the full structural output mask. For each
+        target channel, positives and negatives are counted and converted to
+        ``pos_weight = N_neg / N_pos``.
+
+        Returns:
+            List of ``BCEWithLogitsLoss`` instances, one per target feature.
+        """
         n_t = len(self.target_features)
         pos = torch.zeros(n_t, dtype=torch.float64)
         neg = torch.zeros(n_t, dtype=torch.float64)
@@ -123,6 +151,12 @@ class Trainer(object):
     def train(self, epochs):
         """
         Trains for the num of epochs.
+
+        Args:
+            epochs: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
         """
         best_loss = float('inf')
         best_dists = None
@@ -205,6 +239,12 @@ class Trainer(object):
                                          epoch, best_loss=best_loss)
 
     def load_best_model(self):
+        """
+        Restore the best checkpointed model state.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         self.model = self.best_model
         self.cur_epoch = self.best_epoch
 
@@ -220,6 +260,19 @@ class Trainer(object):
 
     def evaluate_batches(self, dataset, name, epoch,
                          optimize=False, best_loss=None):
+        """
+        Evaluate all batches in a split and aggregate metrics.
+
+        Args:
+            dataset: Caller-supplied value used by this routine.
+            name: Caller-supplied value used by this routine.
+            epoch: Caller-supplied value used by this routine.
+            optimize: Caller-supplied value used by this routine.
+            best_loss: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         start_time = datetime.now()
 
         if optimize:
@@ -317,14 +370,43 @@ class Trainer(object):
         '''
         Set the penalty attribute of the trainer
         Used to scale the loss of features differently
+
+        Args:
+            penalties: Caller-supplied value used by this routine.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
         '''
         self.penalties = penalties
 
 
 class RMSLELoss(nn.Module):
+    """
+    Provide the rmsleloss component used by models / ppgn / train_dcg / dcg / trainer.py.
+
+
+    Role:
+        RMSLELoss groups state and methods for this repository component.
+    """
     def __init__(self):
+        """
+        Initialize the RMSLELoss instance and store constructor configuration.
+
+        Returns:
+            None; the function updates object state, files, logs, or external process state.
+        """
         super().__init__()
         self.mse = nn.MSELoss()
-        
+
     def forward(self, pred, actual):
+        """
+        Run the neural-network forward pass for this module.
+
+        Args:
+            pred: Caller-supplied value used by this routine.
+            actual: Caller-supplied value used by this routine.
+
+        Returns:
+            Computed value used by the caller.
+        """
         return torch.sqrt(self.mse(torch.log(pred + 1), torch.log(actual + 1)))

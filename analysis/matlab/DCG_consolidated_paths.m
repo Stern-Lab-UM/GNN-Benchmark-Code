@@ -1,4 +1,7 @@
 function out = DCG_consolidated_paths(action, data_root, varargin)
+% DCG_consolidated_paths  Implement dcg consolidated paths for this MATLAB workflow.
+% Inputs: action, data_root, varargin
+% Outputs: out
 %DCG_CONSOLIDATED_PATHS  Path bridge for the consolidated snapshot.
 %
 %   The 2026 revision predictions/models/splits were gathered into a single
@@ -52,6 +55,9 @@ end
 
 
 function [task, wuw, sz] = i_prefix_parts(prefix)
+% i_prefix_parts  Implement i prefix parts for this MATLAB workflow.
+% Inputs: prefix
+% Outputs: task, wuw, sz
 %I_PREFIX_PARTS  Decode a flat analyzer prefix into snapshot path tokens.
 %
 %   PURPOSE  Translate a flat prefix into the (task, weighting, size) tokens
@@ -102,6 +108,9 @@ end
 
 
 function d = i_inds_dir(data_root, prefix)
+% i_inds_dir  Implement i inds dir for this MATLAB workflow.
+% Inputs: data_root, prefix
+% Outputs: d
 %I_INDS_DIR  Locate the dedup'd split folder that serves a given prefix.
 %
 %   PURPOSE  Split index files live under <data_root>/splits/ and are

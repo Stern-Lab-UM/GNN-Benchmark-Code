@@ -3,6 +3,11 @@
 //****************************T1 TRANSITION***********************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * division_plane: Implement the division plane operation for the C vertex-model code.
+ * Parameters: int i, double *Px, double *Py, double *dirX, double *dirY.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void division_plane(int i, double *Px, double *Py, double *dirX, double *dirY){
     //CALCULATE CELL CENTER
     double *dxdydz = new double[3];
@@ -29,6 +34,11 @@ void division_plane(int i, double *Px, double *Py, double *dirX, double *dirY){
     *dirY=sin(phi);
 }
 //****************************************************************************
+/*
+ * intersection_vertices: Implement the intersection vertices operation for the C vertex-model code.
+ * Parameters: int i, int **newVertices.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int intersection_vertices(int i, int **newVertices){
 
     //DIVISION PLANE
@@ -88,6 +98,11 @@ int intersection_vertices(int i, int **newVertices){
     return nrIntrsct;
 }
 //****************************************************************************
+/*
+ * edg_cells_div: Compute or update cell-level topology/geometry information.
+ * Parameters: int i, int nrIntrsct, int **newVertices, int *edges, int *cells.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int edg_cells_div(int i, int nrIntrsct, int **newVertices, int *edges, int *cells)
 {
     //EDGES
@@ -110,6 +125,11 @@ int edg_cells_div(int i, int nrIntrsct, int **newVertices, int *edges, int *cell
     return 0;
 }
 //****************************************************************************
+/*
+ * restitch_edge_div: Compute or update edge-level topology/geometry information.
+ * Parameters: int j, int **newVertices, int *edges.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int restitch_edge_div(int j, int **newVertices, int *edges){
     int eID=newVertices[j][1];
     int v1=e[eID][1];
@@ -128,6 +148,11 @@ int restitch_edge_div(int j, int **newVertices, int *edges){
     return eNEW;
 }
 //****************************************************************************
+/*
+ * check_corrected_cells_div: Compute or update cell-level topology/geometry information.
+ * Parameters: int cID.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int check_corrected_cells_div(int cID){
     int vinit, vprev, v1, v2, eID;
     for(int j=1; j<=c[cID][0]; j++){
@@ -155,6 +180,11 @@ int check_corrected_cells_div(int cID){
     return 1;
 }
 //****************************************************************************
+/*
+ * correct_cells_div: Compute or update cell-level topology/geometry information.
+ * Parameters: int *cells, int nrIntrsct, int **newVertices.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void correct_cells_div(int *cells, int nrIntrsct, int **newVertices){
     for(int j=1; j<=cells[0]; j++){
         int cID=cells[j];
@@ -177,6 +207,11 @@ void correct_cells_div(int *cells, int nrIntrsct, int **newVertices){
     }
 }
 //****************************************************************************
+/*
+ * correct_intersected_polygon_div: Implement the correct intersected polygon div operation for the C vertex-model code.
+ * Parameters: int i, int newe, int *cells.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int correct_intersected_polygon_div(int i, int newe, int *cells){
     //ALLOCATE
     int *p1; p1 = new int[26]; p1[0]=0;
@@ -231,6 +266,11 @@ int correct_intersected_polygon_div(int i, int newe, int *cells){
     return newPoly;
 }
 //****************************************************************************
+/*
+ * CELL_DIVISION: Compute or update cell-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int CELL_DIVISION(int i)
 {
 

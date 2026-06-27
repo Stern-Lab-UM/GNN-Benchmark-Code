@@ -3,6 +3,11 @@
 //***********************INITIAL STRUCTURE************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * set_initial_regHex: Implement the set initial reg hex operation for the C vertex-model code.
+ * Parameters: int _Nx.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void set_initial_regHex(int _Nx){
 
     int *sides; sides = new int[13];
@@ -193,6 +198,11 @@ void set_initial_regHex(int _Nx){
     expand_box(sqrt(Nc*1.),sqrt(Nc*1.));
 }
 //****************************************************************************
+/*
+ * set_initial_fromFile: Implement the set initial from file operation for the C vertex-model code.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void set_initial_fromFile(){
 
     int *sides; sides = new int[16];

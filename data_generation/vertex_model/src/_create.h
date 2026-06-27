@@ -3,6 +3,11 @@
 //******************************CREATE****************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * make_vertex: Implement the make vertex operation for the C vertex-model code.
+ * Parameters: double x, double y.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int make_vertex(double x, double y){
 
     //ID
@@ -23,6 +28,11 @@ int make_vertex(double x, double y){
     return i;
 }
 //****************************************************************************
+/*
+ * make_edge: Compute or update edge-level topology/geometry information.
+ * Parameters: int v1, int v2, int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int make_edge(int v1, int v2, int i){
 
     //ID
@@ -43,6 +53,11 @@ int make_edge(int v1, int v2, int i){
     return i;
 }
 //****************************************************************************
+/*
+ * remake_edge: Compute or update edge-level topology/geometry information.
+ * Parameters: int i, int vPrev, int vNew.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void remake_edge(int i, int vPrev, int vNew)
 {
     int vv1=e[i][1]; if(vv1==vPrev) vv1=vNew;
@@ -52,6 +67,11 @@ void remake_edge(int i, int vPrev, int vNew)
     make_edge(vv1,vv2,i);
 }
 //****************************************************************************
+/*
+ * cell_sides: Compute or update cell-level topology/geometry information.
+ * Parameters: int nrSides, int *sides, int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 int cell_sides(int nrSides, int *sides, int i){
 
     //ID
@@ -63,6 +83,11 @@ int cell_sides(int nrSides, int *sides, int i){
     return i;
 }
 //****************************************************************************
+/*
+ * make_cell: Compute or update cell-level topology/geometry information.
+ * Parameters: int i.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void make_cell(int i){
 
     //CREATE

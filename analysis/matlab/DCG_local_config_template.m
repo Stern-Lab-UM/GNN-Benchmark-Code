@@ -1,4 +1,7 @@
 function cfg = DCG_local_config_template(cfg)
+% DCG_local_config_template  Implement dcg local config template for this MATLAB workflow.
+% Inputs: cfg
+% Outputs: cfg
 %DCG_LOCAL_CONFIG_TEMPLATE  Template for machine-specific DCG paths.
 %
 %   Copy this file to DCG_local_config.m, edit the paths for your machine,

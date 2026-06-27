@@ -1,4 +1,7 @@
 function results = run_or_resume_bayesopt(fun, optVars, partial_filename, n_trials, bo_args, initial_x)
+% run_or_resume_bayesopt  Implement run or resume bayesopt for this MATLAB workflow.
+% Inputs: fun, optVars, partial_filename, n_trials, bo_args, initial_x
+% Outputs: results
 %RUN_OR_RESUME_BAYESOPT  Fresh bayesopt, or resume from a partial checkpoint.
 %
 %   If PARTIAL_FILENAME exists and contains a BayesianOptimization object

@@ -5,6 +5,11 @@
 //****************************************************************************
 //****************************************************************************
 //****************************************************************************
+/*
+ * out_polygons: Write vertex-model state or graph data to output files.
+ * Parameters: int fcount.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 double out_polygons(int fcount){
 
 
@@ -52,10 +57,20 @@ double out_polygons(int fcount){
     return 0;
 }
 //****************************************************************************
+/*
+ * out_tissue: Write vertex-model state or graph data to output files.
+ * Parameters: int fcount.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void out_tissue(int fcount){
     out_polygons(fcount);
 }
 //****************************************************************************
+/*
+ * outGraph: Write vertex-model state or graph data to output files.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void outGraph(){
 
     char filename1[100];
@@ -75,6 +90,11 @@ void outGraph(){
 
 }
 //****************************************************************************
+/*
+ * out_Vertissue2D: Write vertex-model state or graph data to output files.
+ * Parameters: none.
+ * Returns: see the C signature; most routines update global vertex-model state.
+ */
 void out_Vertissue2D(){
 
     char filename2[100];

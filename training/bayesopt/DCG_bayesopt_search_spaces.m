@@ -1,4 +1,7 @@
 function spaces = DCG_bayesopt_search_spaces()
+% DCG_bayesopt_search_spaces  Implement dcg bayesopt search spaces for this MATLAB workflow.
+% Inputs: none.
+% Outputs: spaces
 %DCG_BAYESOPT_SEARCH_SPACES  Final hyperparameter spaces used for BO.
 %
 %   SPACES = DCG_BAYESOPT_SEARCH_SPACES() returns structs that can be passed
