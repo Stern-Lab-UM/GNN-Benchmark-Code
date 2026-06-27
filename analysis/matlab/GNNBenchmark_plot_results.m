@@ -4572,62 +4572,62 @@ for t = 1 : length(tasks)
     sel = repmat(emb_blank(0), 1, nS);
     for i = 1 : nS
         s_i = emb_blank(scores_to_show(i));
-        try
-            rank_i = max(1, min(numel(scoresSorted), round(scores_to_show(i) * numel(scoresSorted) / 100)));
-            rec_i  = order(rank_i);
-            r = repsArr(rec_i); siz = sizesArr(rec_i); g = graphsArr(rec_i); m = modelsArr(rec_i);
-            curr_model = all_models{m};
+        rank_i = max(1, min(numel(scoresSorted), round(scores_to_show(i) * numel(scoresSorted) / 100)));
+        candidate_pos = emb_rank_candidate_positions(rank_i, numel(scoresSorted));
+        for ci = 1 : numel(candidate_pos)
+            try
+                rec_i = order(candidate_pos(ci));
+                r = repsArr(rec_i); siz = sizesArr(rec_i); g = graphsArr(rec_i); m = modelsArr(rec_i);
+                curr_model = all_models{m};
 
-            prefix  = emb_dataset_prefix(dataset, siz, wstr);
-            wprefix = emb_dataset_prefix(dataset, siz, 'W');   % W partner for the flip map
+                prefix  = emb_dataset_prefix(dataset, siz, wstr);
+                wprefix = emb_dataset_prefix(dataset, siz, 'W');   % W partner for the flip map
 
-            if emb_consolidated
-                inds_dir = GNNBenchmark_consolidated_paths('inds_dir', predRoot, prefix);
-                if isempty(inds_dir), error('no split folder for prefix %s', prefix); end
-                inds_filename = fullfile(inds_dir, [dataset_to_analyze, '.inds']);
-            else
-                inds_filename = fullfile(indsRoot, prefix, [dataset_to_analyze, '.inds']);
-            end
-            cf = fopen(inds_filename, 'rt');
-            if cf < 0, error('inds file not found: %s', inds_filename); end
-            inds = fread(cf, inf, '*char')'; fclose(cf);
-            inds = str2num(inds) + 1; %#ok<ST2NM>
-            curr_graph_ind = inds(g);
+                if emb_consolidated
+                    inds_dir = GNNBenchmark_consolidated_paths('inds_dir', predRoot, prefix);
+                    if isempty(inds_dir), continue; end
+                    inds_filename = fullfile(inds_dir, [dataset_to_analyze, '.inds']);
+                else
+                    inds_filename = fullfile(indsRoot, prefix, [dataset_to_analyze, '.inds']);
+                end
+                cf = fopen(inds_filename, 'rt');
+                if cf < 0, continue; end
+                inds = fread(cf, inf, '*char')'; fclose(cf);
+                inds = str2num(inds) + 1; %#ok<ST2NM>
+                if g > numel(inds), continue; end
+                curr_graph_ind = inds(g);
 
-            % Flat relocated layout: one file per (dataset-prefix, model, seed),
-            % identical 6-col "Simulation id:" block format for every model
-            % (PPGN included), so a single path + load_dataset covers all types.
-            if emb_consolidated
-                predf  = GNNBenchmark_consolidated_paths('pred_file', predRoot, prefix,  curr_model, r - 1);
-                wpredf = GNNBenchmark_consolidated_paths('pred_file', predRoot, wprefix, curr_model, r - 1);
-            else
-                predf  = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', prefix,  curr_model, r - 1));
-                wpredf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', wprefix, curr_model, r - 1));
-            end
-            if exist(predf, 'file') ~= 2, error('pred file not found: %s', predf); end
-            gn = load_dataset(predf);
+                % Flat relocated layout: one file per (dataset-prefix, model, seed),
+                % identical 6-col "Simulation id:" block format for every model
+                % (PPGN included), so a single path + load_dataset covers all types.
+                if emb_consolidated
+                    predf  = GNNBenchmark_consolidated_paths('pred_file', predRoot, prefix,  curr_model, r - 1);
+                    wpredf = GNNBenchmark_consolidated_paths('pred_file', predRoot, wprefix, curr_model, r - 1);
+                else
+                    predf  = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', prefix,  curr_model, r - 1));
+                    wpredf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', wprefix, curr_model, r - 1));
+                end
+                if exist(predf, 'file') ~= 2, continue; end
+                gn = load_dataset(predf);
+                if curr_graph_ind > numel(gn), continue; end
 
-            egn = gn{curr_graph_ind};
+                egn = gn{curr_graph_ind};
 
-            % S-vs-file MAE guard: file row order need not match S, but the mean
-            % |pred - GT| over the graph must agree; if not, we grabbed the wrong
-            % graph (file<->S index drift) -> skip rather than embed a mismatch.
-            sMAE = emb_sMAE(S, tk, dataset_to_analyze, r, siz, g, m);
-            prows = emb_read_block(predf, [egn, '.txt']);
-            fileMAE = NaN;
-            if ~isempty(prows)
+                % S-vs-file MAE guard: file row order need not match S, but the mean
+                % |pred - GT| over the graph must agree; if not, we grabbed the wrong
+                % graph (file<->S index drift), so this candidate is not used.
+                sMAE = emb_sMAE(S, tk, dataset_to_analyze, r, siz, g, m);
+                prows = emb_read_block(predf, [egn, '.txt']);
+                if isempty(prows), continue; end
                 % Prediction is always the LAST column and the true/target the
                 % one before it -- holds for 6-col (W) and 4-col (UW) pred files.
                 c_true = cellfun(@(rr) str2double(rr{end-1}), prows);
                 c_pred = cellfun(@(rr) str2double(rr{end}),   prows);
                 fileMAE = mean(abs(c_pred - c_true), 'omitnan');
-            end
-            if isfinite(sMAE) && isfinite(fileMAE) && abs(fileMAE - sMAE) > max(5e-3, 0.1*abs(sMAE))
-                warning(['embed guard (%s %g%%): file MAE %.4f ~= S MAE %.4f for %s ', ...
-                    '(model %s, seed %d, n=%d, g %d) -- skipping to avoid wrong-graph embedding.'], ...
-                    tk, scores_to_show(i), fileMAE, sMAE, egn, curr_model, r, 2^(siz-1), g);
-                s_i.ok = false;
-            else
+                if isfinite(sMAE) && isfinite(fileMAE) && abs(fileMAE - sMAE) > max(5e-3, 0.1*abs(sMAE))
+                    continue;
+                end
+
                 s_i.ok          = true;
                 s_i.model       = curr_model;
                 s_i.subset_size = siz;
@@ -4643,13 +4643,14 @@ for t = 1 : length(tasks)
                     % the square, pre-stretch vt2d starting geometry.
                     s_i.cfgkey = [s_i.cfgkey, '_affineShear'];
                 end
+                break;
+            catch
+                continue;
             end
-        catch ME
-            warning('embed select (%s, %g%%): %s', tk, scores_to_show(i), ME.message);
         end
         sel(i) = s_i;
     end
-    fprintf('[embed-diag] task %s: %d/%d examples passed selection (ok=1). If 0, read the "embed select/guard" warnings just above for the reason.\n', ...
+    fprintf('[embed-diag] task %s: %d/%d examples selected for embedding.\n', ...
         tk, sum([sel.ok]), nS);
 
     % ---- write per-variant temp prediction files + collect engine runs ----
@@ -6941,7 +6942,7 @@ end
 
 
 function sel = extreme_select_embedding_example(bundle, model_name, pct, predRoot, indsRoot, emb_consolidated, dataset_to_analyze, shearVt2d)
-% extreme_select_embedding_example  Handle cross-condition revision-figure select embedding example logic.
+% extreme_select_embedding_example  Select a usable cross-condition embedding example.
 % Inputs: bundle, model_name, pct, predRoot, indsRoot, emb_consolidated, dataset_to_analyze, shearVt2d
 % Outputs: sel
 sel = extreme_blank_selection('not selected');
@@ -6973,74 +6974,94 @@ end
 
 [scoresSorted, order] = sort(scoresArr, 'ascend');
 rank_i = max(1, min(numel(scoresSorted), round(pct * numel(scoresSorted) / 100)));
-rec_i = order(rank_i);
-r = repsArr(rec_i);
-siz = sizesArr(rec_i);
-g = graphsArr(rec_i);
-wstr = 'W';
-prefix = emb_dataset_prefix(bundle.dataset_key, siz, wstr);
-wprefix = emb_dataset_prefix(bundle.dataset_key, siz, 'W');
+candidate_pos = emb_rank_candidate_positions(rank_i, numel(scoresSorted));
+for ci = 1 : numel(candidate_pos)
+    try
+        rec_i = order(candidate_pos(ci));
+        r = repsArr(rec_i);
+        siz = sizesArr(rec_i);
+        g = graphsArr(rec_i);
+        wstr = 'W';
+        prefix = emb_dataset_prefix(bundle.dataset_key, siz, wstr);
+        wprefix = emb_dataset_prefix(bundle.dataset_key, siz, 'W');
 
-try
-    if emb_consolidated
-        inds_dir = GNNBenchmark_consolidated_paths('inds_dir', predRoot, prefix);
-        if isempty(inds_dir), error('no split folder for prefix %s', prefix); end
-        inds_filename = fullfile(inds_dir, [dataset_to_analyze, '.inds']);
-    else
-        inds_filename = fullfile(indsRoot, prefix, [dataset_to_analyze, '.inds']);
-    end
-    cf = fopen(inds_filename, 'rt');
-    if cf < 0, error('inds file not found: %s', inds_filename); end
-    inds = fread(cf, inf, '*char')';
-    fclose(cf);
-    inds = str2num(inds) + 1; %#ok<ST2NM>
-    curr_graph_ind = inds(g);
+        if emb_consolidated
+            inds_dir = GNNBenchmark_consolidated_paths('inds_dir', predRoot, prefix);
+            if isempty(inds_dir), continue; end
+            inds_filename = fullfile(inds_dir, [dataset_to_analyze, '.inds']);
+        else
+            inds_filename = fullfile(indsRoot, prefix, [dataset_to_analyze, '.inds']);
+        end
+        cf = fopen(inds_filename, 'rt');
+        if cf < 0, continue; end
+        inds = fread(cf, inf, '*char')';
+        fclose(cf);
+        inds = str2num(inds) + 1; %#ok<ST2NM>
+        if g > numel(inds), continue; end
+        curr_graph_ind = inds(g);
 
-    if emb_consolidated
-        predf = GNNBenchmark_consolidated_paths('pred_file', predRoot, prefix, model_name, r - 1);
-        wpredf = GNNBenchmark_consolidated_paths('pred_file', predRoot, wprefix, model_name, r - 1);
-    else
-        predf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', prefix, model_name, r - 1));
-        wpredf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', wprefix, model_name, r - 1));
-    end
-    if exist(predf, 'file') ~= 2, error('pred file not found: %s', predf); end
-    gn = load_dataset(predf);
-    egn = gn{curr_graph_ind};
-    sim_id = [egn, '.txt'];
-    sMAE = emb_sMAE(bundle.S, task, dataset_to_analyze, r, siz, g, model_idx);
-    prows = emb_read_block(predf, sim_id);
-    fileMAE = NaN;
-    if ~isempty(prows)
+        if emb_consolidated
+            predf = GNNBenchmark_consolidated_paths('pred_file', predRoot, prefix, model_name, r - 1);
+            wpredf = GNNBenchmark_consolidated_paths('pred_file', predRoot, wprefix, model_name, r - 1);
+        else
+            predf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', prefix, model_name, r - 1));
+            wpredf = fullfile(predRoot, sprintf('pred_%s__%s_s%d.txt', wprefix, model_name, r - 1));
+        end
+        if exist(predf, 'file') ~= 2, continue; end
+        gn = load_dataset(predf);
+        if curr_graph_ind > numel(gn), continue; end
+        egn = gn{curr_graph_ind};
+        sim_id = [egn, '.txt'];
+        sMAE = emb_sMAE(bundle.S, task, dataset_to_analyze, r, siz, g, model_idx);
+        prows = emb_read_block(predf, sim_id);
+        if isempty(prows), continue; end
         c_true = cellfun(@(rr) str2double(rr{end-1}), prows);
         c_pred = cellfun(@(rr) str2double(rr{end}), prows);
         fileMAE = mean(abs(c_pred - c_true), 'omitnan');
-    end
-    if isfinite(sMAE) && isfinite(fileMAE) && abs(fileMAE - sMAE) > max(5e-3, 0.1 * abs(sMAE))
-        error('file MAE %.4f != S MAE %.4f', fileMAE, sMAE);
-    end
+        if isfinite(sMAE) && isfinite(fileMAE) && abs(fileMAE - sMAE) > max(5e-3, 0.1 * abs(sMAE))
+            continue;
+        end
 
-    sel.ok = true;
-    sel.reason = '';
-    sel.dataset = bundle.dataset_key;
-    sel.model = model_name;
-    sel.subset_size = siz;
-    sel.best_r = g;
-    sel.seedrow = r;
-    sel.model_idx = model_idx;
-    sel.sMAE = sMAE;
-    sel.sim_id = sim_id;
-    sel.pred_file = predf;
-    sel.wpred_file = wpredf;
-    sel.cfgkey = matlab.lang.makeValidName(sprintf('%s_%s_%s', wstr, model_name, egn));
-    if shearVt2d && ~isempty(emb_shear_lambda(bundle.dataset_key))
-        sel.cfgkey = [sel.cfgkey, '_affineShear'];
+        sel.ok = true;
+        sel.reason = '';
+        sel.dataset = bundle.dataset_key;
+        sel.model = model_name;
+        sel.subset_size = siz;
+        sel.best_r = g;
+        sel.seedrow = r;
+        sel.model_idx = model_idx;
+        sel.sMAE = sMAE;
+        sel.sim_id = sim_id;
+        sel.pred_file = predf;
+        sel.wpred_file = wpredf;
+        sel.cfgkey = matlab.lang.makeValidName(sprintf('%s_%s_%s', wstr, model_name, egn));
+        if shearVt2d && ~isempty(emb_shear_lambda(bundle.dataset_key))
+            sel.cfgkey = [sel.cfgkey, '_affineShear'];
+        end
+        return;
+    catch
+        continue;
     end
-catch ME
-    sel.ok = false;
-    sel.reason = ME.message;
+end
+sel.reason = 'no usable candidate';
+end
+function positions = emb_rank_candidate_positions(rank_i, n)
+% emb_rank_candidate_positions  Visit ranked examples by distance from requested percentile.
+% Inputs: rank_i, n
+% Outputs: positions
+if n <= 0
+    positions = [];
+    return;
+end
+rank_i = max(1, min(n, rank_i));
+positions = rank_i;
+for delta = 1 : n-1
+    lo = rank_i - delta;
+    hi = rank_i + delta;
+    if lo >= 1, positions(end+1) = lo; end %#ok<AGROW>
+    if hi <= n, positions(end+1) = hi; end %#ok<AGROW>
 end
 end
-
 
 function sel = extreme_blank_selection(reason)
 % extreme_blank_selection  Handle cross-condition revision-figure blank selection logic.

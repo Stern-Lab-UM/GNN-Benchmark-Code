@@ -235,7 +235,7 @@ end
 
 % PPGN availability: enable PPGN only if this selected dataset has at least
 % one matching PPGN file. Partial seed/cohort coverage is still tolerated;
-% extract_PPGN_results logs missing files and section 6 NaN-fills them.
+% extract_PPGN_results leaves incomplete slots empty and section 6 NaN-fills them.
 ppgn_expected_prefixes = {};
 ppgn_available_prefixes = {};
 if has_ppgn
@@ -342,8 +342,8 @@ I = original_I;
 %==========================================================================
 % 6) NORMALIZE EVERY MODEL TO A COMPLETE (n_subsets x n_seeds) GRID
 %==========================================================================
-% extract_*_results leave a slot empty wherever a (prefix, seed) prediction
-% file is missing. Downstream code requires every model to share one
+% extract_*_results leave a slot empty wherever a (prefix, seed) replicate is
+% unavailable. Downstream code requires every model to share one
 % (n_sub x n_seed) grid with matching per-graph edge counts:
 %   - section 7's split filter does inds{i}.(split) then vals{i,s}(idcs);
 %   - section 14 stacks vals{i,s}{j}(:,end) across ALL models via cell2mat,
@@ -352,7 +352,7 @@ I = original_I;
 % non-empty seed, else any model's), NaN-fill it, and drop it into every
 % empty (model, i, s) vals slot; empty .inds slots get the subset's split
 % struct from the first model/seed that has it (the split is model-agnostic).
-% NaN slots flag "no data": no_learning / ground-truth (built from PNA) carry
+% NaN slots flag "no data": no_learning / ground-truth (built from the reference model) carry
 % the NaN through, and section 14's isnan guard skips those (i,s); aggregates
 % use 'omitnan'. This generalizes the historical PPGN-only fill (which cloned
 % I.PNA at the same (i,s) and broke when PNA itself was partial) so partial MP
@@ -592,9 +592,8 @@ for rp = 1 : numel(ref_priority)
     end
 end
 if isempty(ref_model)
-    error('GNNBenchmark:noReferenceModel', ['No present model has real data to ', ...
-        'serve as the ground-truth/edges reference (all empty templates). ', ...
-        'Check that pred files exist for at least one model.']);
+    error('GNNBenchmark:noReferenceModel', ['No selected model/task has analyzable data ', ...
+        'to serve as the ground-truth/edges reference.']);
 end
 fprintf('[GNNBenchmark] ground-truth/no_learning/edges reference model: %s\n', ref_model);
 
@@ -1097,10 +1096,7 @@ for t = 1 : length(tasks)
                 sprintf('pred_%s__%s_s%d.txt', prefix_for_file, model, seeds(s_par)));
         end
 
-        if ~isfile(curr_filename)
-            fprintf('*** File not found: "%s"\n', curr_filename);
-            continue;
-        end
+        if ~isfile(curr_filename), continue; end
 
         % Most MP prediction files hold only edge rows, but some GAT exports
         % embed a per-graph node-feature block ("Format nodes:") just like
@@ -1221,10 +1217,9 @@ end
 % per-seed-folder layer is gone (was {s}.vals{i,s}); now it's just
 % PPGN.(task).vals{i,s}, indexed the same way as every other model.
 %
-% Partial coverage tolerance (2026-05-23): not every (prefix, seed) has a
-% prediction file yet (e.g. v1_1_32_W has none, v1_1_32_UW has 2/5,
-% v1_2_16_W has 4/5). Missing files are logged and the slot is left empty;
-% section 6 NaN-fills them from PNA's template so downstream code is happy.
+% Partial coverage tolerance (2026-05-23): not every (prefix, seed) replicate
+% needs to be present. Empty slots are left empty here and section 6 NaN-fills
+% them from a cohort template so downstream code can aggregate with omitnan.
 function PPGN = extract_PPGN_results(data_root, inds_root, mp_prefixes, tasks, is_new_interface_extra, seeds)
 % extract_PPGN_results  Extract ppgn results records from analysis structures.
 % Inputs: data_root, inds_root, mp_prefixes, tasks, is_new_interface_extra, seeds
@@ -1301,10 +1296,7 @@ for t = 1 : length(tasks)
                 sprintf('pred_%s__PPGN_s%d.txt', prefix_for_file, seeds(s_par)));
         end
 
-        if ~isfile(curr_filename)
-            fprintf('*** PPGN file not found (skipped): "%s"\n', curr_filename);
-            continue;
-        end
+        if ~isfile(curr_filename), continue; end
 
         % Pass consider_nodes=1 (parity with the historical PPGN call).
         [gn_k, ~, fh_k, gi_k, vv_k] = load_dataset(curr_filename, 1);

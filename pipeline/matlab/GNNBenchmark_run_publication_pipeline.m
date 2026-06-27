@@ -709,7 +709,7 @@ end
 
 function out = mini_analysis(paths)
 files = dir(fullfile(paths.pred_raw_root, '*.pred.txt'));
-if isempty(files), error('GNNBenchmark:pipeline:noPredictions', 'No predictions in %s', paths.pred_raw_root); end
+if isempty(files), error('GNNBenchmark:pipeline:noPredictionRecords', 'No analyzable prediction records under %s', paths.pred_raw_root); end
 job_id = strings(numel(files), 1);
 mae = nan(numel(files), 1);
 n_edges = zeros(numel(files), 1);

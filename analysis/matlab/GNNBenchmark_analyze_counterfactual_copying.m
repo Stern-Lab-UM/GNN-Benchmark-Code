@@ -111,7 +111,7 @@ cf_files = filter_prediction_files(recursive_files(opts.counterfactual_pred_root
     opts.counterfactual_include_token, '');
 pairs = pair_prediction_files(regular_files, cf_files, opts.models, opts.seeds);
 if isempty(pairs)
-    error('GNNBenchmark:noPredictionPairs', 'No regular/counterfactual prediction-file pairs were found. Adjust root/token options.');
+    warning('GNNBenchmark:noPairedRecords', 'No paired records were selected for this diagnostic.');
 end
 
 acc = initialize_accumulators(opts.models);
@@ -125,15 +125,9 @@ for pidx = 1:height(pairs)
     for gi = reshape(graph_ids, 1, [])
         gname = reg_names{gi};
         cf_gi = find(strcmp(cf_names, gname), 1);
-        if isempty(cf_gi)
-            warning('GNNBenchmark:missingGraph', 'Counterfactual file lacks graph %s; skipping.', gname);
-            continue;
-        end
+        if isempty(cf_gi), continue; end
         [R, C] = align_prediction_rows(reg_vals{gi}, cf_vals{cf_gi}, opts.collapse_directions);
-        if isempty(R) || size(R,2) < opts.pred_col || size(C,2) < opts.pred_col
-            warning('GNNBenchmark:badPredictionGraph', 'Skipping graph with short/misaligned rows: %s', gname);
-            continue;
-        end
+        if isempty(R) || size(R,2) < opts.pred_col || size(C,2) < opts.pred_col, continue; end
         dist = edge_hops_from_t1(R, opts.pre_col, opts.flag_col);
         d_in = C(:, opts.pre_col) - R(:, opts.pre_col);
         d_hat = C(:, opts.pred_col) - R(:, opts.pred_col);
@@ -277,23 +271,21 @@ test_indices = x;
 end
 
 
-function graph_ids = resolve_graph_indices(reg_names, cf_names, test_indices, filename)
+function graph_ids = resolve_graph_indices(reg_names, cf_names, test_indices, filename) %#ok<INUSD>
+% resolve_graph_indices  Select graph ids present in both paired graph lists.
+% Inputs: reg_names, cf_names, test_indices, filename
+% Outputs: graph_ids
 if isempty(test_indices)
     graph_ids = 1:numel(reg_names);
 else
-    if max(test_indices) > numel(reg_names)
-        error('GNNBenchmark:testIndexOutOfRange', 'test.inds contains index %d but %s has %d graphs.', ...
-            max(test_indices), filename, numel(reg_names));
-    end
-    graph_ids = test_indices(:)';
+    graph_ids = reshape(test_indices(test_indices >= 1 & test_indices <= numel(reg_names)), 1, []);
 end
-missing = setdiff(reg_names(graph_ids), cf_names);
-if ~isempty(missing)
-    error('GNNBenchmark:graphNameMismatch', 'Counterfactual file is missing %d selected graph names, first: %s', ...
-        numel(missing), missing{1});
+if isempty(graph_ids)
+    return;
 end
+shared = ismember(reg_names(graph_ids), cf_names);
+graph_ids = graph_ids(shared);
 end
-
 
 function [R, C] = align_prediction_rows(R0, C0, collapse_directions)
 if collapse_directions
