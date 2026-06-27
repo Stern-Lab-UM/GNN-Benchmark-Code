@@ -302,7 +302,9 @@ else
     statuses = zeros(numel(commands), 1);
     outputs = cell(numel(commands), 1);
     for i = 1:numel(commands)
+        fprintf('[vertex-model] %s command %d/%d started.\n', label, i, numel(commands));
         [statuses(i), outputs{i}] = system(commands{i});
+        fprintf('[vertex-model] %s command %d/%d finished with status %d.\n', label, i, numel(commands), statuses(i));
     end
 end
 
