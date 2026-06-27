@@ -134,6 +134,28 @@ bash scripts/setup_lh_env.sh --component all --torch skip
 
 Exact GPU reproduction may require installing the specific PyTorch/CUDA build appropriate for the cluster before running the checker.
 
+
+## Bayesian Optimization
+
+The MATLAB BO drivers live under `training/bayesopt/`. Add them to MATLAB's path:
+
+```matlab
+addpath(genpath('/path/to/GNN-Benchmark-Code/training/bayesopt'))
+spaces = DCG_bayesopt_search_spaces();
+```
+
+Before launching trials, activate or point to the intended Python environment.
+For example:
+
+```bash
+export DCG_MPNN_MODULE_PREFIX='source /path/to/mpnn_env/bin/activate; '
+export DCG_PPGN_MODULE_PREFIX='source /path/to/ppgn_env/bin/activate; '
+```
+
+`optimize_MPNN.m` defaults to this repository's `models/mpnn/trainer_final.py`;
+pass `trainer_py` or set `DCG_MPNN_TRAINER` to use another trainer snapshot.
+See `training/bayesopt/README.md` for full examples.
+
 ## Vertex-Model Generator
 
 The manuscript tissue graphs can be regenerated from the vertex-model simulator

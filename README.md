@@ -13,9 +13,14 @@ screenshots, and cluster-specific scratch logs.
 - `external/spring_embed/` - source for the spring-relaxation executable used by MATLAB embedding example figures.
 - `models/mpnn/` - source snapshot used for the GraphSAGE, GAT, GIN, and PNA training and prediction runs.
 - `models/ppgn/` - source snapshots used for PPGN, kept split into training, prediction, and GL tail packages to preserve provenance.
+- `training/bayesopt/` - MATLAB Bayesian-optimization drivers and final search-space definitions.
 - `manuscript_analyses/` - focused scripts used to compute manuscript-specific numerical checks, fallback diagnostics, embedding summaries, and tables.
 - `remote_examples/` - small example launch scripts for reproducibility.
 - `docs/` - installation notes, provenance records, and analysis-pipeline documentation.
+
+## Bayesian Optimization
+
+The MATLAB BayesOpt drivers are under `training/bayesopt/`. They launch the curated MPNN or PPGN training code once per trial, checkpoint partial `bayesopt` results, and store the final V1 search spaces in `DCG_bayesopt_search_spaces.m`. See `training/bayesopt/README.md`.
 
 ## MATLAB Analysis
 

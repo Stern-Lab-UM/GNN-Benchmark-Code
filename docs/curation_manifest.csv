@@ -32,3 +32,10 @@
 "include","data_generation","data_generation/vertex_model/manifests","Graph-order and split-index manifests; no raw generated tissues."
 "include","data_generation","data_generation/vertex_model/README.md","Vertex-model generation documentation."
 "include","data_generation","data_generation/vertex_model/source_manifest_sha256.csv","SHA256 hash records for vertex-model simulator source."
+
+"include","bayesopt","training/bayesopt/optimize_MPNN.m","MATLAB BayesOpt driver for GraphSAGE, GAT, GIN, and PNA."
+"include","bayesopt","training/bayesopt/optimize_PPGN.m","MATLAB BayesOpt driver for PPGN."
+"include","bayesopt","training/bayesopt/run_or_resume_bayesopt.m","BayesOpt partial checkpoint resume helper."
+"include","bayesopt","training/bayesopt/parse_bayesopt_log.m","BayesOpt diary log parser for warm-start recovery."
+"include","bayesopt","training/bayesopt/DCG_bayesopt_search_spaces.m","Final V1 BayesOpt search-space definitions."
+"include","bayesopt","training/bayesopt/README.md","BayesOpt usage documentation."
