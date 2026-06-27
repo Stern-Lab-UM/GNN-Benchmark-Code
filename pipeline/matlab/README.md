@@ -32,6 +32,8 @@ manifest = GNNBenchmark_run_publication_pipeline( ...
 
 ``mini_simulation_times`` rescales the three C-simulator relaxation windows used only for mini smoke tests. Leave it empty, or run publication mode, to use the publication defaults compiled in the simulator.
 
+Mini mode still exercises Bayesian optimization, but it caps the PPGN learning-rate search range with `mini_ppgn_max_learning_rate` (default `1.1e-5`). This prevents a one-trial smoke test from drawing a high PPGN learning rate that diverges before the pipeline can validate the rest of the workflow. Publication mode uses the full manuscript search space. Mini analysis also fails loudly if any prediction file produces a non-finite or implausibly large MAE above `mini_max_prediction_mae` (default `10`).
+
 For a CPU-only smoke test, set `'cuda', -1` and optionally restrict models:
 
 ```matlab

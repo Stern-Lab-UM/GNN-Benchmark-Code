@@ -26,6 +26,12 @@ function manifest = GNNBenchmark_run_publication_pipeline(varargin)
 %                      make a fast train/val/test subset from publication order
 %     n_trials, bo_max_epochs, final_epochs
 %                      shrink or expand runtime without changing code paths
+%     mini_ppgn_max_learning_rate
+%                      mini-mode-only cap that prevents one-trial PPGN BO smoke
+%                      tests from drawing unstable learning rates
+%     mini_max_prediction_mae
+%                      mini-mode sanity threshold; larger/non-finite MAE values
+%                      are treated as failed predictions, not valid outputs
 %
 %   Outputs are kept outside source directories:
 %     generated_data/vertex_model, bo_runs, best_hps, staged_inputs,
@@ -130,6 +136,8 @@ p.addParameter('n_trials', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) &
 p.addParameter('num_seed_points', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('bo_max_epochs', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('final_epochs', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
+p.addParameter('mini_ppgn_max_learning_rate', 1.1e-5, @(x) isnumeric(x) && isscalar(x) && x > 0);
+p.addParameter('mini_max_prediction_mae', 10, @(x) isnumeric(x) && isscalar(x) && x > 0);
 p.addParameter('run_bayesopt', true, @(x) islogical(x) && isscalar(x));
 p.addParameter('reuse_best_hps', true, @(x) islogical(x) && isscalar(x));
 p.addParameter('overwrite_generation', false, @(x) islogical(x) && isscalar(x));
@@ -326,6 +334,7 @@ for j = 1:numel(jobs)
         end
     else
         search = apply_runtime_overrides(spaces.ppgn_v1, opts);
+        search = apply_mini_ppgn_stability_overrides(search, opts);
         ppgn = stage_ppgn_dataset(job, paths, 'train_gnn_benchmark');
         if opts.run_bayesopt
             results = optimize_PPGN(ppgn.dataset_file, job.split_dir, search.hp_ranges, search.n_trials, ...
@@ -352,6 +361,26 @@ function search = apply_runtime_overrides(search, opts)
 if ~isnan(opts.n_trials), search.n_trials = opts.n_trials; end
 if ~isnan(opts.num_seed_points), search.num_seed_points = opts.num_seed_points; end
 if ~isnan(opts.bo_max_epochs), search.max_epochs = opts.bo_max_epochs; end
+end
+
+function search = apply_mini_ppgn_stability_overrides(search, opts)
+% Mini mode intentionally uses very few BO trials and epochs. The full PPGN
+% search space is retained for publication-scale runs, but a single mini trial
+% can otherwise draw a learning rate that is useful to test instability but not
+% useful to test the end-to-end pipeline. Cap only the mini smoke-test range.
+if ~strcmp(opts.mode, 'mini')
+    return
+end
+if isfield(search, 'hp_ranges') && isfield(search.hp_ranges, 'learning_rate')
+    old_range = search.hp_ranges.learning_rate;
+    if isnumeric(old_range) && numel(old_range) == 2
+        new_upper = min(old_range(2), opts.mini_ppgn_max_learning_rate);
+        search.hp_ranges.learning_rate = [old_range(1), new_upper];
+        if new_upper < old_range(2)
+            fprintf('[bayesopt] mini PPGN learning-rate range capped at [%g, %g]\n', old_range(1), new_upper);
+        end
+    end
+end
 end
 
 function out = stage_final_training(opts, paths, reuse_cache)
@@ -653,7 +682,7 @@ end
 function out = stage_analysis(opts, paths)
 ensure_dir(paths.analysis_tables);
 if strcmp(opts.mode, 'mini')
-    out = mini_analysis(paths);
+    out = mini_analysis(paths, opts);
 else
     data_root = ternary(isempty(opts.data_root_for_figures), paths.pred_consolidated_root, opts.data_root_for_figures);
     assignin('base', 'data_root', data_root);
@@ -668,7 +697,7 @@ function out = stage_figures(opts, paths)
 ensure_dir(paths.figures);
 if strcmp(opts.mode, 'mini')
     table_file = fullfile(paths.analysis_tables, 'mini_prediction_mae.csv');
-    if ~isfile(table_file), mini_analysis(paths); end
+    if ~isfile(table_file), mini_analysis(paths, opts); end
     C = readcell(table_file, 'Delimiter', ',');
     if size(C, 1) < 2, error('GNNBenchmark:pipeline:miniFigureSchema', 'Mini MAE table is empty.'); end
     header = string(C(1, :));
@@ -942,7 +971,7 @@ function family = model_family(model)
 family = ternary(strcmp(model, 'PPGN'), 'PPGN', 'MPNN');
 end
 
-function out = mini_analysis(paths)
+function out = mini_analysis(paths, opts)
 files = dir(fullfile(paths.pred_raw_root, '*.pred.txt'));
 if isempty(files), error('GNNBenchmark:pipeline:noPredictionRecords', 'No analyzable prediction records under %s', paths.pred_raw_root); end
 job_id = strings(numel(files), 1);
@@ -952,6 +981,16 @@ for i = 1:numel(files)
     f = fullfile(files(i).folder, files(i).name);
     [mae(i), n_edges(i)] = mae_file(f);
     job_id(i) = erase(files(i).name, '.pred.txt');
+end
+bad = ~isfinite(mae) | mae > opts.mini_max_prediction_mae;
+if any(bad)
+    bad_ids = strjoin(cellstr(job_id(bad)), ', ');
+    bad_values = strjoin(cellstr(string(mae(bad))), ', ');
+    error('GNNBenchmark:pipeline:miniPredictionDiverged', ...
+        ['Mini prediction MAE failed the sanity check. Offending jobs: %s. ' ...
+         'MAE values: %s. Threshold: %.6g. This usually indicates unstable mini training, ' ...
+         'invalid prediction files, or an unsuitable smoke-test hyperparameter draw.'], ...
+        bad_ids, bad_values, opts.mini_max_prediction_mae);
 end
 T = table(job_id, mae, n_edges);
 out_file = fullfile(paths.analysis_tables, 'mini_prediction_mae.csv');
