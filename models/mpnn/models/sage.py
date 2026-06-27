@@ -11,6 +11,7 @@ from torch_geometric.nn import SAGEConv as BaseSAGEConv
 from torch_geometric.nn.models import GraphSAGE as BaseGraphSAGE
 from torch_geometric.nn.aggr import Aggregation
 from torch_geometric.nn.conv  import MessagePassing
+from torch_geometric.utils import scatter
 
 
 class GraphSAGE(BaseGraphSAGE):
@@ -220,8 +221,12 @@ class SAGEConv(BaseSAGEConv):
         if self.project and hasattr(self, 'lin'):
             x = (self.lin(x[0]).relu(), x[1])
 
-        # propagate_type: (x: OptPairTensor)
-        out = self.propagate(edge_index, x=x, size=size, edge_attr=edge_attr)
+        row, col = edge_index
+        msg = x[0][row]
+        if edge_attr is not None:
+            msg = (msg + edge_attr).relu()
+        dim_size = x[1].size(0) if x[1] is not None else None
+        out = scatter(msg, col, dim=0, dim_size=dim_size, reduce='mean')
         out = self.lin_l(out)
 
         x_r = x[1]
