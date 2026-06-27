@@ -121,8 +121,8 @@ provided in `CITATION.cff`.
 Code credits are listed in `CREDITS.md`. In brief, Siqi Miao and Pan Li provided
 the MPNN code used for GraphSAGE, GAT, GIN, and PNA; Troy Comi provided the PPGN
 code; Tomer Stern adapted the GNN code for the updated manuscript and ablation
-analyses; and Matej Krajnc provided the tissue-simulation and spring-embedding
-code.
+analyses; Matej Krajnc provided the tissue-simulation and spring-embedding code;
+and Adnan Hafeez supported code installation and computing-environment setup.
 
 ## Installation Instructions
 
