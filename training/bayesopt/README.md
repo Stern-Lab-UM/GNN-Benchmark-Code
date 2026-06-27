@@ -22,6 +22,33 @@ checkpoints, or cluster logs.
 - `DCG_bayesopt_search_spaces.m` returns the final V1 search spaces used for the
   revision runs.
 
+## Search Spaces
+
+The final V1 Bayesian-optimization setup matches the manuscript Methods. All
+models used 20 objective evaluations with 6 initial seed points, training seed
+0, a 120-epoch BO cap, early stopping patience of 40 epochs, scheduler patience
+of 20 epochs, and early-stopping `min_delta = 1e-4`.
+
+For GraphSAGE, GAT, GIN, and PNA, Bayesian optimization searched:
+
+- learning rate: log-uniform over `[1e-4, 1e-2]`
+- hidden-channel width: `{64, 128}`
+- dropout: `{0, 0.1, 0.2}`
+- batch size: `{1, 2, 4}`
+
+The MPNN depth was fixed at 16 layers, scheduler factor at 0.75, and weight
+decay at 0.
+
+For PPGN, Bayesian optimization searched:
+
+- learning rate: log-uniform over `[1e-5, 1e-2]`
+- batch size: `{2, 4, 8, 16, 32}`
+- scheduler factor: `{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8}`
+- gradient clipping: `{0.001, 0.01, 0.1, 1}`
+
+The PPGN architecture was fixed at `block_features = [400, 400, 400]` and
+`depth_of_mlp = 2`.
+
 ## Environment Configuration
 
 `optimize_MPNN.m` defaults to the trainer in this repository:
@@ -62,6 +89,8 @@ results = optimize_MPNN( ...
     'GIN', hp, spaces.mpnn_v1_l16.n_trials, ...
     'max_epochs', spaces.mpnn_v1_l16.max_epochs, ...
     'patience', spaces.mpnn_v1_l16.patience, ...
+    'early_stop_patience', spaces.mpnn_v1_l16.early_stop_patience, ...
+    'early_stop_min_delta', spaces.mpnn_v1_l16.early_stop_min_delta, ...
     'num_seed_points', spaces.mpnn_v1_l16.num_seed_points, ...
     'module_prefix', getenv('DCG_MPNN_MODULE_PREFIX'));
 ```
@@ -79,6 +108,7 @@ results = optimize_PPGN( ...
     'max_epochs', spaces.ppgn_v1.max_epochs, ...
     'early_stop', spaces.ppgn_v1.early_stop, ...
     'patience', spaces.ppgn_v1.patience, ...
+    'threshold', spaces.ppgn_v1.threshold, ...
     'num_seed_points', spaces.ppgn_v1.num_seed_points, ...
     'block_features', spaces.ppgn_v1.fixed.block_features, ...
     'depth_of_mlp', spaces.ppgn_v1.fixed.depth_of_mlp, ...

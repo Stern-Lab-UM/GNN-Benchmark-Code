@@ -24,12 +24,11 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
 %   HP_RANGES        : struct. Each field specifies one trainer.py
 %                      hyper-parameter to sweep. Field names must match
 %                      trainer.py CLI flag names, e.g.
-%                        hp_ranges.hidden_channels = {'128','256','512'};
-%                        hp_ranges.num_layers      = {'4','8','12','16'};
-%                        hp_ranges.dropout         = {'0.25','0.5','0.75'};
-%                        hp_ranges.lr              = [1e-6, 1e-2];
-%                        hp_ranges.batch_size      = {'4','8','16','32'};
-%                        hp_ranges.factor          = {'0.6','0.75','0.9'};
+%                        hp_ranges.hidden_channels = {'64','128'};
+%                        hp_ranges.dropout         = {'0','0.1','0.2'};
+%                        hp_ranges.lr              = [1e-4, 1e-2];
+%                        hp_ranges.batch_size      = {'1','2','4'};
+%                        hp_ranges.factor          = {'0.75'};  % fixed final setting
 %                      Values:
 %                        * cell array of char/string - categorical var.
 %                        * 2-element numeric [lo hi]  - real var.
@@ -44,15 +43,19 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
 %   Optional name/value pairs
 %   -------------------------
 %   'cuda'            : GPU id for trainer.py (default 0; -1 = CPU).
-%   'max_epochs'      : --epochs passed to every trial (default 300).
+%   'max_epochs'      : --epochs passed to every trial (default 120).
 %   'patience'        : --patience passed to every trial (default 20).
+%   'early_stop_patience' : --early_stop_patience passed to every trial
+%                       (default 40).
+%   'early_stop_min_delta': --early_stop_min_delta passed to every trial
+%                       (default 1e-4).
 %   'seed'            : --seed passed to every trial (default 0). A
 %                       single seed per trial means HP-vs-noise isn't
 %                       disentangled; the paper-final training should
 %                       average over several seeds outside this script.
 %   'use_node_feats'  : 'True'|'False' for the 35-dim node features
 %                       (default 'True').
-%   'num_seed_points' : BAYESOPT NumSeedPoints (default 20).
+%   'num_seed_points' : BAYESOPT NumSeedPoints (default 6).
 %   'acquisition_fn'  : BAYESOPT AcquisitionFunctionName
 %                       (default 'expected-improvement-plus').
 %   'output_dirname'  : Where to save the BAYESOPT .mat result.
@@ -103,11 +106,13 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
     addRequired(p, 'hp_ranges',        @isstruct);
     addRequired(p, 'n_trials',         @(x) isnumeric(x) && isscalar(x) && x > 0);
     addParameter(p, 'cuda',            0,                           @(x) isnumeric(x) && isscalar(x));
-    addParameter(p, 'max_epochs',      300,                         @(x) isnumeric(x) && isscalar(x) && x > 0);
+    addParameter(p, 'max_epochs',      120,                         @(x) isnumeric(x) && isscalar(x) && x > 0);
     addParameter(p, 'patience',        20,                          @(x) isnumeric(x) && isscalar(x) && x > 0);
+    addParameter(p, 'early_stop_patience', 40,                      @(x) isnumeric(x) && isscalar(x) && x > 0);
+    addParameter(p, 'early_stop_min_delta', 1e-4,                   @(x) isnumeric(x) && isscalar(x) && x >= 0);
     addParameter(p, 'seed',            0,                           @(x) isnumeric(x) && isscalar(x));
     addParameter(p, 'use_node_feats',  'True',                      @(x) any(strcmpi(char(x), {'True','False'})));
-    addParameter(p, 'num_seed_points', 20,                          @(x) isnumeric(x) && isscalar(x) && x > 0);
+    addParameter(p, 'num_seed_points', 6,                          @(x) isnumeric(x) && isscalar(x) && x > 0);
     addParameter(p, 'acquisition_fn',  'expected-improvement-plus', @(x) ischar(x) || isstring(x));
     addParameter(p, 'output_dirname',  '',                          @(x) ischar(x) || isstring(x));
     addParameter(p, 'skip_existing',   false,                       @(x) islogical(x) && isscalar(x));
@@ -293,6 +298,8 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
     fprintf('num_seed_points : %d\n', opts.num_seed_points);
     fprintf('max_epochs      : %d\n', opts.max_epochs);
     fprintf('patience        : %d\n', opts.patience);
+    fprintf('early_stop_pat  : %d\n', opts.early_stop_patience);
+    fprintf('early_stop_delta: %.6g\n', opts.early_stop_min_delta);
     fprintf('cuda            : %d\n', opts.cuda);
     fprintf('acquisition_fn  : %s\n', char(opts.acquisition_fn));
     fprintf('hp_ranges       :\n');
@@ -400,6 +407,8 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, work_dirname, we
         ' --seed ',           num2str(opts.seed), ...
         ' --epochs ',         num2str(opts.max_epochs), ...
         ' --patience ',       num2str(opts.patience), ...
+        ' --early_stop_patience ', num2str(opts.early_stop_patience), ...
+        ' --early_stop_min_delta ', num2str(opts.early_stop_min_delta, '%g'), ...
         cli_block, ...
         ' --data_dir "',      work_dirname, '"'];
 

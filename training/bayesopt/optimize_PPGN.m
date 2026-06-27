@@ -21,10 +21,9 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %                      keys that appear in the `--args` string that
 %                      generate_training_scripts_PPGN builds, e.g.
 %                        hp_ranges.learning_rate    = [1e-5, 1e-2];
-%                        hp_ranges.batch_size       = {'4','8','16','32'};
-%                        hp_ranges.depth_of_mlp     = {'2','3'};
-%                        hp_ranges.factor           = {'0.6','0.75','0.8','0.9'};
-%                        hp_ranges.gradient_clipping= {'0.05','0.1','0.2'};
+%                        hp_ranges.batch_size       = {'2','4','8','16','32'};
+%                        hp_ranges.factor           = {'0.1','0.2','0.3','0.4','0.5','0.6','0.7','0.8'};
+%                        hp_ranges.gradient_clipping= {'0.001','0.01','0.1','1'};
 %                      Categorical: cell array of chars.
 %                      Real:        2-element increasing numeric vector.
 %                                   Log-scale is auto-applied to
@@ -36,14 +35,14 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %     'cuda'           : GPU id (default 0; -1 = CPU). Not a `dcg train`
 %                        flag -- exported as CUDA_VISIBLE_DEVICES before
 %                        each trial so PyTorch picks the right device.
-%     'max_epochs'     : --args epochs=<val> (default 500 for BO).
+%     'max_epochs'     : --args epochs=<val> (default 120 for BO).
 %     'patience'       : fixed --args patience (default 20).
-%     'early_stop'     : fixed --args early_stop (default 60).
+%     'early_stop'     : fixed --args early_stop (default 40).
 %     'threshold'      : fixed --args threshold (default 1e-4).
 %     'laplacian_k'    : number of Laplacian PE columns baked into the
 %                        feature strings (default 30 -- matches the paper).
 %     'block_features' : fixed PPGN block widths (default '[400,400,400]').
-%     'num_seed_points': BAYESOPT NumSeedPoints (default 5).
+%     'num_seed_points': BAYESOPT NumSeedPoints (default 6).
 %     'acquisition_fn' : BAYESOPT AcquisitionFunctionName
 %                        (default 'expected-improvement-plus').
 %     'output_dirname' : Where BO results + per-trial out-dirs live.
@@ -102,14 +101,14 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     %            less surrogate-informed -- a small sample-efficiency hit
     %            offset by the wall-clock speedup.
     addParameter(p, 'n_parallel',      1);
-    addParameter(p, 'max_epochs',      500);
-    addParameter(p, 'patience',        10);
-    addParameter(p, 'early_stop',      30);
+    addParameter(p, 'max_epochs',      120);
+    addParameter(p, 'patience',        20);
+    addParameter(p, 'early_stop',      40);
     addParameter(p, 'threshold',       1e-4);
     addParameter(p, 'laplacian_k',     30);
     addParameter(p, 'block_features',  '[400,400,400]');
     addParameter(p, 'depth_of_mlp',    2);   % fixed in paper (Table S1); not optimised
-    addParameter(p, 'num_seed_points', 5);
+    addParameter(p, 'num_seed_points', 6);
     addParameter(p, 'acquisition_fn',  'expected-improvement-plus');
     addParameter(p, 'output_dirname',  '');
     addParameter(p, 'skip_existing',   false);
