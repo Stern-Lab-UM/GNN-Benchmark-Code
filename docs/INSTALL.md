@@ -15,17 +15,17 @@ Use Python 3.10 or newer; Python 3.10 or 3.11 is preferred. The PPGN run package
 These source snapshots were copied from the code used for the manuscript revision runs:
 
 - MPNN/PNA source: `models/mpnn/`
-- PPGN training source: `models/ppgn/train_dcg/`
-- PPGN prediction source: `models/ppgn/predict_dcg/`
+- PPGN training source: `models/ppgn/train_gnn_benchmark/`
+- PPGN prediction source: `models/ppgn/predict_gnn_benchmark/`
 - PPGN GL tail source: `models/ppgn/gl_tail_fixed_pkg/`
 
-The late PPGN GL tail run was documented as using Python 3.10, PyTorch 2.11.0+cu128, CUDA 12.8, and the fixed `dcg` package hash `39490c43`. External users do not need that exact GPU stack to inspect or import the code, but exact GPU retraining reproducibility may depend on the machine and PyTorch stack.
+The late PPGN GL tail run was documented as using Python 3.10, PyTorch 2.11.0+cu128, CUDA 12.8, and the fixed `gnn_benchmark_ppgn` package hash `39490c43`. External users do not need that exact GPU stack to inspect or import the code, but exact GPU retraining reproducibility may depend on the machine and PyTorch stack.
 
 ## Option A: Conda/Mamba Starting Point
 
 ```bash
 conda env create -f environment.yml
-conda activate dcg-gnn
+conda activate gnn-benchmark
 python scripts/check_install.py --component all
 ```
 
@@ -87,23 +87,23 @@ bash scripts/setup_lh_env.sh --component all
 The setup helper creates an isolated virtual environment under `$SCRATCH` by default, installs the relevant requirements, and runs `scripts/check_install.py`. By default it installs CPU-only PyTorch to avoid accidentally downloading a large CUDA stack on no-GPU login or CPU sessions. Advanced users can choose a different environment directory:
 
 ```bash
-bash scripts/setup_lh_env.sh --component mpnn --env-dir "$SCRATCH/dcg_gnn_envs/mpnn_publication"
+bash scripts/setup_lh_env.sh --component mpnn --env-dir "$SCRATCH/gnn_benchmark_envs/mpnn_publication"
 ```
 
 If using conda/mamba on a shared system, prefer an explicit environment prefix rather than a generic named environment:
 
 ```bash
-mamba env create --prefix "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310" -f environment.yml
-conda activate "$SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310"
+mamba env create --prefix "$SCRATCH/gnn_benchmark_envs/gnn_benchmark_code_py310" -f environment.yml
+conda activate "$SCRATCH/gnn_benchmark_envs/gnn_benchmark_code_py310"
 python scripts/check_install.py --component all
 ```
 
-This avoids collisions with older environments named `dcg-gnn` or with other versions already present under the same account.
+This avoids collisions with older environments named `gnn-benchmark` or with other versions already present under the same account.
 
 Important collision points:
 
 - Do not permanently export this repository, an older repository, or old run folders in `PYTHONPATH` from `.bashrc` or `.bash_profile`.
-- Do not install multiple editable versions of packages named `dcg` into the same environment. PPGN uses the Python package name `dcg`, so only one PPGN snapshot should be active on `PYTHONPATH` at a time.
+- Do not install multiple editable versions of packages named `gnn_benchmark_ppgn` into the same environment. PPGN uses the Python package name `gnn_benchmark_ppgn`, so only one PPGN snapshot should be active on `PYTHONPATH` at a time.
 - The MPNN scripts use local top-level module names such as `dataset`, `models`, `trainer_final`, and `predict_final`. Run them from this repository/source tree or use explicit paths so Python does not import an older local file with the same name.
 - Activate the intended environment before installing or running anything, and prefer `python -m pip ...` over plain `pip ...`.
 - Before long runs, check `which python`, `python -m pip --version`, and `python scripts/check_install.py --component all`.
@@ -141,19 +141,19 @@ The MATLAB BO drivers live under `training/bayesopt/`. Add them to MATLAB's path
 
 ```matlab
 addpath(genpath('/path/to/GNN-Benchmark-Code/training/bayesopt'))
-spaces = DCG_bayesopt_search_spaces();
+spaces = GNNBenchmark_bayesopt_search_spaces();
 ```
 
 Before launching trials, activate or point to the intended Python environment.
 For example:
 
 ```bash
-export DCG_MPNN_MODULE_PREFIX='source /path/to/mpnn_env/bin/activate; '
-export DCG_PPGN_MODULE_PREFIX='source /path/to/ppgn_env/bin/activate; '
+export GNN_BENCHMARK_MPNN_MODULE_PREFIX='source /path/to/mpnn_env/bin/activate; '
+export GNN_BENCHMARK_PPGN_MODULE_PREFIX='source /path/to/ppgn_env/bin/activate; '
 ```
 
 `optimize_MPNN.m` defaults to this repository's `models/mpnn/trainer_final.py`;
-pass `trainer_py` or set `DCG_MPNN_TRAINER` to use another trainer snapshot.
+pass `trainer_py` or set `GNN_BENCHMARK_MPNN_TRAINER` to use another trainer snapshot.
 See `training/bayesopt/README.md` for full examples.
 
 ## Vertex-Model Generator
@@ -167,15 +167,15 @@ On Linux or Lighthouse:
 
 ```matlab
 addpath(genpath('/path/to/GNN-Benchmark-Code/data_generation/vertex_model'))
-DCG_generate_vertex_model_datasets('mode', 'minimal', 'workers', 1)
-DCG_generate_vertex_model_datasets('mode', 'minimal', 'datasets', {'kA_10'}, 'workers', 1)
+GNNBenchmark_generate_vertex_model_datasets('mode', 'minimal', 'workers', 1)
+GNNBenchmark_generate_vertex_model_datasets('mode', 'minimal', 'datasets', {'kA_10'}, 'workers', 1)
 ```
 
 For the full publication manifests, run from a compute node and write outputs to
 scratch or project storage rather than to the git clone:
 
 ```matlab
-DCG_generate_vertex_model_datasets( ...
+GNNBenchmark_generate_vertex_model_datasets( ...
     'mode', 'publication', ...
     'output_root', '/path/to/generated_data/vertex_model', ...
     'workers', 20)
@@ -209,7 +209,7 @@ external/spring_embed/build/spring_embed
 Then point MATLAB to it:
 
 ```matlab
-setenv('DCG_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/spring_embed/build/spring_embed')
+setenv('GNN_BENCHMARK_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/spring_embed/build/spring_embed')
 ```
 
 The same directory also contains a `CMakeLists.txt` for users who prefer CMake:
@@ -223,7 +223,7 @@ If the engine or `.vt2d` geometry folders are not available, disable embedding
 example panels with:
 
 ```matlab
-DCG_CONFIG.embed_examples = false;
+GNNBenchmark_CONFIG.embed_examples = false;
 ```
 
 ## What The Checker Does

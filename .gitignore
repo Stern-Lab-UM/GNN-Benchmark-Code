@@ -59,7 +59,7 @@ results/
 authorized_keys*
 .env
 *.reg
-analysis/matlab/DCG_local_config.m
+analysis/matlab/GNNBenchmark_local_config.m
 
 *.bak_*
 

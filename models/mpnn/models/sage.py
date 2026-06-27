@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / models / sage.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / models / sage.py in the GNN Benchmark codebase."""
 
 from torch import Tensor
 from torch_geometric.typing import Adj, OptPairTensor, OptTensor, Size

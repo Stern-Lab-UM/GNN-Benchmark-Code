@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / dataset.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / dataset.py in the GNN Benchmark codebase."""
 
 import os
 import os.path as osp
@@ -18,7 +18,7 @@ class CanonicalLapPESign:
     inconsistent with PPGN. This transform runs straight after it and re-fixes
     the sign of each of the last ``k`` columns of ``data.x`` so the
     largest-magnitude entry is positive -- the same rule the MATLAB pipeline
-    (DCG_pipeline_2D_*.m) applies to PPGN's eigenvectors, so the two families'
+    (gnn_benchmark_pipeline_2D_*.m) applies to PPGN's eigenvectors, so the two families'
     PE signs align.
 
     Role:

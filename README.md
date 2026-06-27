@@ -1,6 +1,6 @@
-# DCG GNN Publication Code
+# GNN Benchmark Publication Code
 
-This repository contains code for the DCG/GNN manuscript revision.
+This repository contains code for the GNN Benchmark manuscript revision.
 
 The goal is to keep publication-relevant code in one clean repository while
 excluding raw data, trained checkpoints, generated figures, large caches, local
@@ -19,14 +19,14 @@ screenshots, and cluster-specific scratch logs.
 
 ## Bayesian Optimization
 
-The MATLAB BayesOpt drivers are under `training/bayesopt/`. They launch the curated MPNN or PPGN training code once per trial, checkpoint partial `bayesopt` results, and store the final V1 search spaces in `DCG_bayesopt_search_spaces.m`. See `training/bayesopt/README.md`.
+The MATLAB BayesOpt drivers are under `training/bayesopt/`. They launch the curated MPNN or PPGN training code once per trial, checkpoint partial `bayesopt` results, and store the final V1 search spaces in `GNNBenchmark_bayesopt_search_spaces.m`. See `training/bayesopt/README.md`.
 
 ## End-To-End MATLAB Pipeline
 
 The MATLAB conductor under `pipeline/matlab/` can run either a small trainable mini workflow or a publication-scale workflow from one entry point:
 
 ```matlab
-manifest = DCG_run_publication_pipeline('mode', 'mini')
+manifest = GNNBenchmark_run_publication_pipeline('mode', 'mini')
 ```
 
 Use `mode='publication'` for full-scale regeneration, BO, final training, prediction, analysis, and figure generation. See `pipeline/matlab/README.md`.
@@ -44,7 +44,7 @@ See `data_generation/vertex_model/README.md`.
 
 Embedding example figures additionally require compiling the spring engine under
 `external/spring_embed/` and pointing MATLAB to the resulting executable through
-`DCG_EMBED_ENGINE` or `DCG_local_config.m`.
+`GNN_BENCHMARK_EMBED_ENGINE` or `GNNBenchmark_local_config.m`.
 
 ## Data Policy
 

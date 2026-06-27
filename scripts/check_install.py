@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Check whether the curated DCG/GNN code can import in this environment.
+"""Check whether the curated GNN Benchmark code can import in this environment.
 
 This script is intentionally lightweight: it does not train a model, load a
 checkpoint, or require manuscript data. It verifies Python/package availability
@@ -156,17 +156,17 @@ def check_ppgn_snapshot(snapshot: str) -> bool:
 
     ok = True
     with _prepended_path(src):
-        _clear_modules("dcg")
+        _clear_modules("gnn_benchmark_ppgn")
         for module_name in (
-            "dcg.base_model",
-            "dcg.cell_loader",
-            "dcg.configuration",
-            "dcg.file_reader",
-            "dcg.main",
-            "dcg.modules",
-            "dcg.recorder",
-            "dcg.simulator",
-            "dcg.trainer",
+            "gnn_benchmark_ppgn.base_model",
+            "gnn_benchmark_ppgn.cell_loader",
+            "gnn_benchmark_ppgn.configuration",
+            "gnn_benchmark_ppgn.file_reader",
+            "gnn_benchmark_ppgn.main",
+            "gnn_benchmark_ppgn.modules",
+            "gnn_benchmark_ppgn.recorder",
+            "gnn_benchmark_ppgn.simulator",
+            "gnn_benchmark_ppgn.trainer",
         ):
             try:
                 module = importlib.import_module(module_name)
@@ -174,7 +174,7 @@ def check_ppgn_snapshot(snapshot: str) -> bool:
             except Exception as exc:  # pragma: no cover - diagnostic script
                 ok = False
                 print(f"[FAIL] import {snapshot} module {module_name}: {exc}")
-        _clear_modules("dcg")
+        _clear_modules("gnn_benchmark_ppgn")
     return ok
 
 
@@ -186,7 +186,7 @@ def check_ppgn_source() -> bool:
         Computed value used by the caller.
     """
     ok = True
-    for snapshot in ("train_dcg", "predict_dcg", "gl_tail_fixed_pkg"):
+    for snapshot in ("train_gnn_benchmark", "predict_gnn_benchmark", "gl_tail_fixed_pkg"):
         ok = check_ppgn_snapshot(snapshot) and ok
     return ok
 
@@ -198,7 +198,7 @@ def print_header() -> None:
     Returns:
         None; the function updates object state, files, logs, or external process state.
     """
-    print("DCG/GNN install checker")
+    print("GNN Benchmark install checker")
     print(f"repo: {REPO_ROOT}")
     print(f"python: {sys.version.split()[0]} ({sys.executable})")
     print(f"platform: {platform.platform()}")
@@ -214,7 +214,7 @@ def main() -> int:
         Computed value used by the caller.
     """
     parser = argparse.ArgumentParser(
-        description="Check imports for the curated DCG/GNN publication code."
+        description="Check imports for the curated GNN Benchmark publication code."
     )
     parser.add_argument(
         "--component",

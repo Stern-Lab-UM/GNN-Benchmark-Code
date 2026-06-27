@@ -6,7 +6,7 @@ function [graph_names, graphs_from_Matej_before_prediction, file_header, graph_i
 %
 %   [GRAPH_NAMES, GRAPHS, FILE_HEADER, GRAPH_ID, VALS] = LOAD_DATASET(FILENAME)
 %   parses one of the all_2D_graphs*.txt dataset files produced by the
-%   DCG pipeline. Every graph in the file is laid out as:
+%   GNN Benchmark pipeline. Every graph in the file is laid out as:
 %
 %       Simulation id: graph_<n_cells>_<repeat>_<disorder>[...] .txt
 %       <edge row 1>

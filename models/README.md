@@ -5,8 +5,8 @@ This directory contains the GNN code snapshots curated for the manuscript reposi
 ## Layout
 
 - `mpnn/` contains the standard MPNN/PNA source tree used for GraphSAGE, GAT, GIN, and PNA training and prediction.
-- `ppgn/train_dcg/` contains the PPGN training package identified in the provenance notes.
-- `ppgn/predict_dcg/` contains the PPGN prediction package identified in the provenance notes.
+- `ppgn/train_gnn_benchmark/` contains the PPGN training package identified in the provenance notes.
+- `ppgn/predict_gnn_benchmark/` contains the PPGN prediction package identified in the provenance notes.
 - `ppgn/gl_tail_fixed_pkg/` contains the fixed PPGN package used for the late Great Lakes `1_32` PPGN tail run, documented as byte-identical to the Armis2 final runtime.
 
 The split PPGN layout is intentional. It preserves the actual run provenance instead of presenting the PPGN workflow as one artificially unified package.

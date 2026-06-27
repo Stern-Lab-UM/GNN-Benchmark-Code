@@ -2,7 +2,7 @@
 # Create an isolated Lighthouse/shared-HPC Python environment for this repo.
 # The environment is outside the git clone by default, keeping installed
 # packages, caches, checkpoints, and outputs away from publication source code.
-# Purpose: set up the DCG publication-code Python environments on a Lighthouse-style HPC login/session.
+# Purpose: set up the GNN Benchmark publication-code Python environments on a Lighthouse-style HPC login/session.
 # Inputs: command-line flags and environment variables documented by usage().
 # Outputs: conda environments, package installs, and printed activation instructions.
 
@@ -17,7 +17,7 @@ Usage: bash scripts/setup_lh_env.sh [options]
 
 Options:
   --component all|mpnn|ppgn   Which dependency/check set to install [default: all]
-  --env-dir PATH              Environment directory [default: $SCRATCH/dcg_gnn_envs/gnn_benchmark_code_py310]
+  --env-dir PATH              Environment directory [default: $SCRATCH/gnn_benchmark_envs/gnn_benchmark_code_py310]
   --python PYTHON             Python executable used to create the venv [default: auto-detect >=3.10]
   --torch cpu|default|skip    PyTorch install mode [default: cpu]
                                cpu: install CPU-only PyTorch from the official CPU wheel index
@@ -27,23 +27,23 @@ Options:
   -h, --help                  Show this help
 
 Environment variables:
-  DCG_GNN_ENV_DIR             Alternative default for --env-dir
-  DCG_GNN_PYTHON              Alternative default for --python
-  DCG_GNN_TORCH_MODE          Alternative default for --torch
+  GNN_BENCHMARK_ENV_DIR             Alternative default for --env-dir
+  GNN_BENCHMARK_PYTHON              Alternative default for --python
+  GNN_BENCHMARK_TORCH_MODE          Alternative default for --torch
 
 Examples:
   bash scripts/setup_lh_env.sh --component all
-  bash scripts/setup_lh_env.sh --component mpnn --env-dir "$SCRATCH/dcg_envs/mpnn_pub"
+  bash scripts/setup_lh_env.sh --component mpnn --env-dir "$SCRATCH/gnn_benchmark_envs/mpnn_pub"
   bash scripts/setup_lh_env.sh --component ppgn --torch cpu
   bash scripts/setup_lh_env.sh --component all --torch skip
 EOF
 }
 
 component="all"
-python_bin="${DCG_GNN_PYTHON:-}"
-torch_mode="${DCG_GNN_TORCH_MODE:-cpu}"
+python_bin="${GNN_BENCHMARK_PYTHON:-}"
+torch_mode="${GNN_BENCHMARK_TORCH_MODE:-cpu}"
 default_base="${SCRATCH:-$HOME}"
-env_dir="${DCG_GNN_ENV_DIR:-$default_base/dcg_gnn_envs/gnn_benchmark_code_py310}"
+env_dir="${GNN_BENCHMARK_ENV_DIR:-$default_base/gnn_benchmark_envs/gnn_benchmark_code_py310}"
 do_install=1
 
 while [[ $# -gt 0 ]]; do

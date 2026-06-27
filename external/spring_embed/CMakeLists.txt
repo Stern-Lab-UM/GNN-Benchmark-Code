@@ -3,7 +3,7 @@
 # Outputs: a build system for the spring_embed executable.
 
 cmake_minimum_required(VERSION 3.12)
-project(dcg_spring_embed LANGUAGES CXX)
+project(GNNBenchmark_spring_embed LANGUAGES CXX)
 
 add_executable(spring_embed src/main.c)
 set_source_files_properties(src/main.c PROPERTIES LANGUAGE CXX)

@@ -51,10 +51,10 @@ The MATLAB analysis pipeline normally runs this executable for you. Point MATLAB
 to the compiled binary with either:
 
 ```matlab
-setenv('DCG_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/spring_embed/build/spring_embed')
+setenv('GNN_BENCHMARK_EMBED_ENGINE', '/path/to/GNN-Benchmark-Code/external/spring_embed/build/spring_embed')
 ```
 
-or by setting `cfg.embed_engine` in an untracked `DCG_local_config.m`.
+or by setting `cfg.embed_engine` in an untracked `GNNBenchmark_local_config.m`.
 
 ## Numerical Settings
 

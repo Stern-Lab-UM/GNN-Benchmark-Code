@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / models / pna.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / models / pna.py in the GNN Benchmark codebase."""
 
 from torch_geometric.nn.conv  import MessagePassing
 from torch_geometric.nn import PNAConv

@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / models / __init__.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / models / __init__.py in the GNN Benchmark codebase."""
 
 from .gin import GIN
 from .pna import PNA

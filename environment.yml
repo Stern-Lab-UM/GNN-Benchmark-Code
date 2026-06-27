@@ -1,4 +1,4 @@
-name: dcg-gnn
+name: gnn-benchmark
 channels:
   - conda-forge
 dependencies:

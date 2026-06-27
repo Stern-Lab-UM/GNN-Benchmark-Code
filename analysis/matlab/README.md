@@ -8,24 +8,24 @@ Before running:
 
 ```matlab
 addpath(genpath('/path/to/GNN-Benchmark-Code/analysis/matlab'))
-setenv('DCG_DATA_ROOT', '/path/to/gnn_benchmark_consolidated_20260530')
+setenv('GNN_BENCHMARK_DATA_ROOT', '/path/to/gnn_benchmark_consolidated_20260530')
 ```
 
-or create an untracked `DCG_local_config.m` from
-`DCG_local_config_template.m`.
+or create an untracked `GNNBenchmark_local_config.m` from
+`GNNBenchmark_local_config_template.m`.
 
 Typical full workflow:
 
 ```matlab
-DCG_rebuild_all_summaries
-DCG_plot_everything
+GNNBenchmark_rebuild_all_summaries
+GNNBenchmark_plot_everything
 ```
 
 Focused diagnostics can be run independently:
 
 ```matlab
-DCG_analyze_embedding_error_bounds
-DCG_analyze_counterfactual_copying( ...
+GNNBenchmark_analyze_embedding_error_bounds
+GNNBenchmark_analyze_counterfactual_copying( ...
     'regular_pred_root', data_root, ...
     'counterfactual_pred_root', '/path/to/counterfactual_predictions', ...
     'inds_dir', '/path/to/split_dir')

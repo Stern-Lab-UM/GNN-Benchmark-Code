@@ -14,9 +14,9 @@ GAT, GIN, and PNA. The copied tree contains `trainer_final.py`,
 
 Repository destinations:
 
-- `models/ppgn/train_dcg/dcg/`
-- `models/ppgn/predict_dcg/dcg/`
-- `models/ppgn/gl_tail_fixed_pkg/dcg/`
+- `models/ppgn/train_gnn_benchmark/gnn_benchmark_ppgn/`
+- `models/ppgn/predict_gnn_benchmark/gnn_benchmark_ppgn/`
+- `models/ppgn/gl_tail_fixed_pkg/gnn_benchmark_ppgn/`
 
 The PPGN split is preserved because the training and prediction code paths were
 not a single clean package. The GL tail package is included separately because

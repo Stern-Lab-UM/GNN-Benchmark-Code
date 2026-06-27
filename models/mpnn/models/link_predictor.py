@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / models / link_predictor.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / models / link_predictor.py in the GNN Benchmark codebase."""
 
 import torch
 import torch.nn as nn

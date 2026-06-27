@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / gpu_monitor.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / gpu_monitor.py in the GNN Benchmark codebase."""
 
 # gpu_monitor.py
 from __future__ import annotations

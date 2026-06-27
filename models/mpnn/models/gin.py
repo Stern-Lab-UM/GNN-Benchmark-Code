@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / models / gin.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / models / gin.py in the GNN Benchmark codebase."""
 
 
 from torch_geometric.nn.conv  import MessagePassing

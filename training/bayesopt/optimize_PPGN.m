@@ -6,9 +6,9 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %
 %   RESULTS = OPTIMIZE_PPGN(DATASET_FILENAME, INDS_DIRNAME, HP_RANGES,
 %   N_TRIALS) runs Bayesian optimization (MATLAB's BAYESOPT) over the
-%   hyper-parameters of the deepcellgraph/0.1 `dcg train` CLI. The
+%   hyper-parameters of the curated PPGN training CLI. The
 %   objective minimized is the smoothed minimum of the validation loss
-%   curve that `dcg train` writes to <out-dir>/metrics.csv for each trial.
+%   curve that `gnn_benchmark_ppgn train` writes to <out-dir>/metrics.csv for each trial.
 %
 %   Required inputs
 %   ---------------
@@ -35,7 +35,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %
 %   Optional name/value pairs
 %   -------------------------
-%     'cuda'           : GPU id (default 0; -1 = CPU). Not a `dcg train`
+%     'cuda'           : GPU id (default 0; -1 = CPU). Not a `gnn_benchmark_ppgn train`
 %                        flag -- exported as CUDA_VISIBLE_DEVICES before
 %                        each trial so PyTorch picks the right device.
 %     'max_epochs'     : --args epochs=<val> (default 120 for BO).
@@ -60,13 +60,13 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %                        over the whole curve, and no minimum-length gate.
 %                        Use false for smoke tests where you only want to
 %                        confirm each trial runs, not how well it trains.
-%     'keep_trial_dirs': If true, keep every trial's `dcg train --out-dir`
+%     'keep_trial_dirs': If true, keep every trial's `gnn_benchmark_ppgn train --out-dir`
 %                        (default false -- only the final BayesianOptimization
 %                        object and each trial's metrics.csv are retained).
 %     'module_prefix'  : Shell prefix that places the curated PPGN package on
 %                        PYTHONPATH or activates a prepared environment.
-%     'dcg_cmd'        : command used to invoke the PPGN CLI. Default is
-%                        'python -m dcg.main', so a fresh clone does not
+%     'ppgn_cmd'        : command used to invoke the PPGN CLI. Default is
+%                        'python -m gnn_benchmark_ppgn.main', so a fresh clone does not
 %                        require an installed console-script entry point.
 %
 %   Output
@@ -89,7 +89,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %   re-seeds a fresh BAYESOPT call from completed finite observations.
 %   This preserves finished trials after a wall-time kill or crash while
 %   avoiding MATLAB resume() closures that may contain stale runtime
-%   options. A crash during an individual dcg train run can still lose
+%   options. A crash during an individual gnn_benchmark_ppgn train run can still lose
 %   that one in-progress trial, because BAYESOPT checkpoints only after
 %   the objective function returns.
 %
@@ -99,7 +99,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
 %     such as batch_size and factor are represented as ordinal integer
 %     variables, so the Gaussian-process surrogate treats neighboring
 %     numeric choices as nearby rather than unrelated categories.
-%   * Each trial builds a `dcg train` command with fixed architecture
+%   * Each trial builds a `gnn_benchmark_ppgn train` command with fixed architecture
 %     arguments, the sampled optimization arguments, the requested split,
 %     and the configured CUDA device/environment prefix.
 %   * The objective reads the trial's metrics.csv, extracts the validation
@@ -161,7 +161,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     %   'val_loss'         - default; smoothed min val_loss (legacy behaviour)
     %   'val_macro_f1'     - maximise mean over targets of val_f1_<target>
     %                        (F1 at threshold logit>0); requires the patched
-    %                        dcg trainer.
+    %                        gnn_benchmark_ppgn trainer.
     %   'val_min_f1'       - same, but min over targets (weakest-link).
     %   'val_min_f1_tuned' - same min-over-targets, but each epoch's per-
     %                        target val F1 is computed at the threshold
@@ -173,10 +173,10 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     %                        when high pos_weight shifts the natural cut
     %                        far from logit=0 -- ranking can be excellent
     %                        while threshold-zero F1 underrates the model.
-    default_module_prefix = getenv('DCG_PPGN_MODULE_PREFIX');
+    default_module_prefix = getenv('GNN_BENCHMARK_PPGN_MODULE_PREFIX');
     if isempty(default_module_prefix)
         repo_root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
-        ppgn_src = fullfile(repo_root, 'models', 'ppgn', 'train_dcg');
+        ppgn_src = fullfile(repo_root, 'models', 'ppgn', 'train_gnn_benchmark');
         if ispc
             default_module_prefix = sprintf(['set "PYTHONPATH=%s;%%PYTHONPATH%%" & ', ...
                 'set TERM=xterm & set OMP_NUM_THREADS=2 & set MKL_NUM_THREADS=2 & ', ...
@@ -187,11 +187,11 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
                 'export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 NUMEXPR_NUM_THREADS=2; '], ppgn_src);
         end
     end
-    default_dcg_cmd = getenv('DCG_PPGN_CMD');
-    if isempty(default_dcg_cmd)
-        default_python = getenv('DCG_PYTHON');
+    default_ppgn_cmd = getenv('GNN_BENCHMARK_PPGN_CMD');
+    if isempty(default_ppgn_cmd)
+        default_python = getenv('GNN_BENCHMARK_PYTHON');
         if isempty(default_python), default_python = 'python'; end
-        default_dcg_cmd = [default_python, ' -m dcg.main'];
+        default_ppgn_cmd = [default_python, ' -m gnn_benchmark_ppgn.main'];
     end
 
     addParameter(p, 'bo_objective',    'val_loss');
@@ -202,13 +202,13 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
     % source file is copied up-front because diary restart would delete
     % it otherwise.
     addParameter(p, 'prior_log',       '');
-    % Shell prefix for the `dcg train` subprocess. Use this to activate a
+    % Shell prefix for the `gnn_benchmark_ppgn train` subprocess. Use this to activate a
     % virtual environment, load modules, or set CUDA/CPU-thread limits.
     % By default only conservative CPU-thread caps are exported; set
-    % DCG_PPGN_MODULE_PREFIX or pass 'module_prefix' for cluster-specific
+    % GNN_BENCHMARK_PPGN_MODULE_PREFIX or pass 'module_prefix' for cluster-specific
     % activation commands.
     addParameter(p, 'module_prefix', default_module_prefix, @(x) ischar(x) || isstring(x));
-    addParameter(p, 'dcg_cmd', default_dcg_cmd, @(x) ischar(x) || isstring(x));
+    addParameter(p, 'ppgn_cmd', default_ppgn_cmd, @(x) ischar(x) || isstring(x));
     parse(p, dataset_filename, inds_dirname, hp_ranges, n_trials, varargin{:});
     opts = p.Results;
 
@@ -249,7 +249,7 @@ function results = optimize_PPGN(dataset_filename, inds_dirname, hp_ranges, n_tr
              'from this name.'], parent_name);
     end
 
-    %% ---- feature strings (mirror get_DCG_parameters, add_node_features=1)
+    %% ---- feature strings (mirror get_benchmark_parameters, add_node_features=1)
     eigs_str = strjoin(arrayfun(@(k) sprintf('eig%d', k), 1:opts.laplacian_k, ...
         'UniformOutput', false), ',');
     node_feats = ['degree,n_min_degree,n_max_degree,n_mean_degree,n_sd_degree,' eigs_str];
@@ -485,7 +485,7 @@ end
 
 
 % =====================================================================
-% Per-trial objective: run `dcg train` once and return smoothed val loss.
+% Per-trial objective: run `gnn_benchmark_ppgn train` once and return smoothed val loss.
 % =====================================================================
 function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
                                 dataset_filename, inds_dirname, trials_root, opts)
@@ -528,13 +528,13 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
         mkdir(out_dir);
     end
 
-    com = [char(opts.dcg_cmd), ' train --training-data "', dataset_filename, ...
+    com = [char(opts.ppgn_cmd), ' train --training-data "', dataset_filename, ...
            '" --out-dir "', out_dir, '"', ...
            ' --no-evaluation ', ...
            ' --args "', args_string, '"', ...
            ' --inds-dir "', inds_dirname, '"'];
 
-    % CUDA_VISIBLE_DEVICES picks the GPU for torch inside dcg. opts.cuda<0
+    % CUDA_VISIBLE_DEVICES picks the GPU for torch inside gnn_benchmark_ppgn. opts.cuda<0
     % pins to CPU.
     if opts.cuda >= 0
         cuda_prefix = sprintf('export CUDA_VISIBLE_DEVICES=%d; ', opts.cuda);
@@ -543,7 +543,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
     end
 
     % Two ways to interpret module_prefix (mirrors optimize_MPNN):
-    %  * default: shell-env prefix that brings `dcg` onto PATH (HPC venv).
+    %  * default: shell-env prefix that brings `gnn_benchmark_ppgn` onto PATH (HPC venv).
     %  * '@cmdenv:<cmd>': place the trainer invocation in env NANO_TRAINER_CMD
     %    and run <cmd> alone. Used by runpod_ppgn_trainer.sh: it reads
     %    NANO_TRAINER_CMD, rewrites --training-data/--inds-dir/--out-dir to
@@ -557,7 +557,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
     end
 
     % --- Live-tail support ------------------------------------------------
-    % Redirect dcg's stdout/stderr to a per-trial log file, and update a
+    % Redirect gnn_benchmark_ppgn's stdout/stderr to a per-trial log file, and update a
     % "current.log" symlink in the trials_root so a separate terminal can
     % `tail -F <trials_root>/current.log` to watch epochs of the live trial.
     % MATLAB still reads metrics.csv afterward for the BO objective; the
@@ -581,7 +581,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
         return;
     end
 
-    % dcg train writes a CSV with header `epochs,train_loss,val_loss,...`.
+    % gnn_benchmark_ppgn train writes a CSV with header `epochs,train_loss,val_loss,...`.
     T = readtable(metrics_file);
     if ~ismember('val_loss', T.Properties.VariableNames) || height(T) < 5
         maybe_cleanup(out_dir, opts.keep_trial_dirs);
@@ -591,7 +591,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
         % Aggregate per-target val F1 columns per epoch, then take max
         % across epochs. bayesopt minimises, so return 1 - max(agg_f1).
         % NaN for trials missing the relevant F1 columns (older runs,
-        % non-BCE losses, or unpatched dcg).
+        % non-BCE losses, or unpatched gnn_benchmark_ppgn).
         %
         % Column source depends on the objective:
         %   'val_min_f1' / 'val_macro_f1' -> val_f1_<target>      (threshold logit>0)
@@ -613,7 +613,7 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, fixed_args, ...
         if isempty(f1_cols)
             warn_fmt = ['bo_objective=%s but no %s columns in %s. ', ...
                         'Falling back to NaN -- likely the trial used the ', ...
-                        'unpatched dcg or a non-BCE loss.'];
+                        'unpatched gnn_benchmark_ppgn or a non-BCE loss.'];
             warning('optimize_PPGN:noF1', warn_fmt, ...
                 opts.bo_objective, [col_prefix '*'], metrics_file);
             maybe_cleanup(out_dir, opts.keep_trial_dirs);

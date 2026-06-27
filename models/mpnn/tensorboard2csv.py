@@ -1,4 +1,4 @@
-"""Utilities for models / mpnn / tensorboard2csv.py in the DCG benchmark codebase."""
+"""Utilities for models / mpnn / tensorboard2csv.py in the GNN Benchmark codebase."""
 
 import os
 import numpy as np

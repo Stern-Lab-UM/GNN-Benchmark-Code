@@ -119,7 +119,7 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
 %     as the objective. NaN is returned for failed or degenerate
 %     trials (trainer nonzero exit, <60 logged epochs, all-zero curve).
 %
-%   See also DCG_pipeline_2D_revision, BAYESOPT, OPTIMIZABLEVARIABLE.
+%   See also gnn_benchmark_pipeline_2D_revision, BAYESOPT, OPTIMIZABLEVARIABLE.
 
     %% ---- parse inputs --------------------------------------------------
     p = inputParser;
@@ -141,14 +141,14 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
     addParameter(p, 'acquisition_fn',  'expected-improvement-plus', @(x) ischar(x) || isstring(x));
     addParameter(p, 'output_dirname',  '',                          @(x) ischar(x) || isstring(x));
     addParameter(p, 'skip_existing',   false,                       @(x) islogical(x) && isscalar(x));
-    default_trainer = getenv('DCG_MPNN_TRAINER');
+    default_trainer = getenv('GNN_BENCHMARK_MPNN_TRAINER');
     if isempty(default_trainer)
         repo_root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
         default_trainer = fullfile(repo_root, 'models', 'mpnn', 'trainer_final.py');
     end
-    default_python = getenv('DCG_PYTHON');
+    default_python = getenv('GNN_BENCHMARK_PYTHON');
     if isempty(default_python), default_python = 'python'; end
-    default_module_prefix = getenv('DCG_MPNN_MODULE_PREFIX');
+    default_module_prefix = getenv('GNN_BENCHMARK_MPNN_MODULE_PREFIX');
     if isempty(default_module_prefix)
         default_module_prefix = ['export TERM=xterm; ', ...
             'export OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 NUMEXPR_NUM_THREADS=4; '];
@@ -164,7 +164,7 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
     % Shell prefix for the trainer subprocess. Use this to activate a
     % virtual environment, load modules, or set CUDA/CPU-thread limits.
     % By default only conservative CPU-thread caps are exported; set
-    % DCG_MPNN_MODULE_PREFIX or pass 'module_prefix' for cluster-specific
+    % GNN_BENCHMARK_MPNN_MODULE_PREFIX or pass 'module_prefix' for cluster-specific
     % activation commands.
     addParameter(p, 'module_prefix', default_module_prefix, @(x) ischar(x) || isstring(x));
     parse(p, dataset_filename, inds_dirname, model_name, hp_ranges, n_trials, varargin{:});
@@ -449,11 +449,11 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, work_dirname, we
     %  * default: a shell-env prefix that leaves the configured Python
     %    interpreter and trainer path usable in the subprocess environment.
     %  * '@cmdenv:<cmd>': place the full trainer invocation in env var
-    %    DCG_MPNN_TRAINER_CMD and run <cmd> alone. This is useful for
+    %    GNN_BENCHMARK_MPNN_TRAINER_CMD and run <cmd> alone. This is useful for
     %    site-specific wrappers that dispatch the training command remotely.
     prefix_str = char(opts.module_prefix);
     if startsWith(prefix_str, '@cmdenv:')
-        setenv('DCG_MPNN_TRAINER_CMD', com);
+        setenv('GNN_BENCHMARK_MPNN_TRAINER_CMD', com);
         curr_command = [extractAfter(prefix_str, '@cmdenv:'), ' 2>&1'];
     else
         curr_command = [prefix_str, com, ' 2>&1'];

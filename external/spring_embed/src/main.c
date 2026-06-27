@@ -17,11 +17,11 @@ double h;
 
 #ifdef _WIN32
 #include <direct.h>
-#define DCG_MKDIR(path) _mkdir(path)
+#define GNNBenchmark_MKDIR(path) _mkdir(path)
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
-#define DCG_MKDIR(path) mkdir(path, 0777)
+#define GNNBenchmark_MKDIR(path) mkdir(path, 0777)
 #endif
 
 #include "_functions.h"
@@ -33,7 +33,7 @@ double h;
 
 static int ensure_output_dir(void)
 {
-    int rc = DCG_MKDIR("output");
+    int rc = GNNBenchmark_MKDIR("output");
     if (rc == 0 || errno == EEXIST) return 1;
 
     perror("Could not create output directory");

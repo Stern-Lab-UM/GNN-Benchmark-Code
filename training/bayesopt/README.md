@@ -12,14 +12,14 @@ checkpoints, or cluster logs.
 - `optimize_MPNN.m` runs Bayesian optimization for GraphSAGE, GAT, GIN, and PNA
   by launching the MPNN trainer once per trial and reading the validation-loss
   curve written by that trial.
-- `optimize_PPGN.m` runs Bayesian optimization for PPGN by launching `dcg train`
+- `optimize_PPGN.m` runs Bayesian optimization for PPGN by launching `gnn_benchmark_ppgn train`
   once per trial and reading `metrics.csv`.
 - `run_or_resume_bayesopt.m` reloads a partial `.mat` checkpoint and reseeds a
   fresh `bayesopt` call with previous observations.
 - `parse_bayesopt_log.m` reconstructs prior observations from a saved bayesopt
   diary log when no partial checkpoint exists.
 - `email_bayesopt_outputfcn.m` is an optional per-iteration notification hook.
-- `DCG_bayesopt_search_spaces.m` returns the final V1 search spaces used for the
+- `GNNBenchmark_bayesopt_search_spaces.m` returns the final V1 search spaces used for the
   revision runs.
 
 ## Search Spaces
@@ -63,16 +63,16 @@ models/mpnn/trainer_final.py
 ```
 
 Override it when needed with either the `trainer_py` name-value argument or the
-`DCG_MPNN_TRAINER` environment variable. The Python executable defaults to
-`python`; override with the `python` argument or `DCG_PYTHON`.
+`GNN_BENCHMARK_MPNN_TRAINER` environment variable. The Python executable defaults to
+`python`; override with the `python` argument or `GNN_BENCHMARK_PYTHON`.
 
 Both optimizers accept a `module_prefix` string. This string is prepended to each
 trial's shell command and should activate the relevant Python environment or HPC
 module stack. The environment-variable defaults are:
 
 ```bash
-export DCG_MPNN_MODULE_PREFIX='source /path/to/mpnn_env/bin/activate; '
-export DCG_PPGN_MODULE_PREFIX='source /path/to/ppgn_env/bin/activate; '
+export GNN_BENCHMARK_MPNN_MODULE_PREFIX='source /path/to/mpnn_env/bin/activate; '
+export GNN_BENCHMARK_PPGN_MODULE_PREFIX='source /path/to/ppgn_env/bin/activate; '
 ```
 
 If no prefix is supplied, the functions only set conservative CPU-thread limits.
@@ -116,7 +116,7 @@ single training trial may require that one trial to be re-run, because
 
 `optimize_MPNN.m` creates one shared working directory per optimization run and
 reuses the MPNN processed-data cache across trials. `optimize_PPGN.m` creates a
-`trials_PPGN_<...>/` directory under `output_dirname`; trial-specific `dcg`
+`trials_PPGN_<...>/` directory under `output_dirname`; trial-specific `gnn_benchmark_ppgn`
 outputs are written there while the objective is evaluated. By default, large
 per-trial PPGN output directories are cleaned after the relevant metric is read;
 set `keep_trial_dirs = true` when debugging failed trials.
@@ -130,7 +130,7 @@ and is less complete than the `.partial.mat` checkpoint.
 
 ```matlab
 addpath(genpath('/path/to/GNN-Benchmark-Code/training/bayesopt'))
-spaces = DCG_bayesopt_search_spaces();
+spaces = GNNBenchmark_bayesopt_search_spaces();
 
 hp = spaces.mpnn_v1_l16.hp_ranges;
 hp.num_layers = {'16'};   % fixed final depth
@@ -145,7 +145,7 @@ results = optimize_MPNN( ...
     'early_stop_patience', spaces.mpnn_v1_l16.early_stop_patience, ...
     'early_stop_min_delta', spaces.mpnn_v1_l16.early_stop_min_delta, ...
     'num_seed_points', spaces.mpnn_v1_l16.num_seed_points, ...
-    'module_prefix', getenv('DCG_MPNN_MODULE_PREFIX'));
+    'module_prefix', getenv('GNN_BENCHMARK_MPNN_MODULE_PREFIX'));
 
 % Ablation variant:
 % results = optimize_MPNN(..., 'ablate_head_edge_attr', true);
@@ -155,7 +155,7 @@ results = optimize_MPNN( ...
 
 ```matlab
 addpath(genpath('/path/to/GNN-Benchmark-Code/training/bayesopt'))
-spaces = DCG_bayesopt_search_spaces();
+spaces = GNNBenchmark_bayesopt_search_spaces();
 
 results = optimize_PPGN( ...
     '/path/to/Training set lengths_to_lengths/training_set_2_16_cells.txt', ...
@@ -168,7 +168,7 @@ results = optimize_PPGN( ...
     'num_seed_points', spaces.ppgn_v1.num_seed_points, ...
     'block_features', spaces.ppgn_v1.fixed.block_features, ...
     'depth_of_mlp', spaces.ppgn_v1.fixed.depth_of_mlp, ...
-    'module_prefix', getenv('DCG_PPGN_MODULE_PREFIX'));
+    'module_prefix', getenv('GNN_BENCHMARK_PPGN_MODULE_PREFIX'));
 
 % Ablation variant:
 % results = optimize_PPGN(..., 'disable_first_skip', true);
