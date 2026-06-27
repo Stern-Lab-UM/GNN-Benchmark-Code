@@ -88,3 +88,8 @@ python scripts/check_install.py --component all
 
 The checker verifies package imports and the curated MPNN/PPGN source snapshots
 without requiring manuscript data or trained checkpoints.
+
+## Contact
+
+For questions or issues, please contact Tomer Stern, University of Michigan,
+tomers@umich.edu.

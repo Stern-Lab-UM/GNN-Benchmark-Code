@@ -16,3 +16,8 @@ Online preprint URL/DOI: pending public posting.
 - Tomer Stern adapted the GNN code for the updated manuscript analyses and
   ablation analyses.
 - Matej Krajnc provided the tissue-simulation and spring-embedding code.
+
+## Contact
+
+For questions or issues, please contact Tomer Stern, University of Michigan,
+tomers@umich.edu.
