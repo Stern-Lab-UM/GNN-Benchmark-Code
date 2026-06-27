@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
 
 
     //INPUT PARAMETERS
-    if(argc != 8) { std::cerr << "Error! Wrong number of input elements!" << std::endl; return -1; }
+    if(argc != 8 && argc != 11) { std::cerr << "Error! Expected 7 required inputs plus optional time1 time2 time3." << std::endl; return -1; }
     Nx= std::atoi(argv[1]); //even number greater or equal than 8
     kA = std::stod(argv[2]); //cell incompressibility modulus
     packageID = std::atoi(argv[3]); //essentialy determines the seed for random number generator
@@ -41,6 +41,11 @@ int main(int argc, char *argv[]){
     shearFactor = std::stod(argv[5]); //T1 edge 2
     T1EdgeID_1 = std::atoi(argv[6]); //T1 edge 1
     T1EdgeID_2 = std::atoi(argv[7]); //T1 edge 2
+    if(argc == 11){
+        time1 = std::stod(argv[8]);
+        time2 = std::stod(argv[9]);
+        time3 = std::stod(argv[10]);
+    }
     int rndSeed=(packageID-1)*51+SigI+1; srand(rndSeed);
     array_max=100000;
     allocate();

@@ -22,7 +22,7 @@ function manifest = DCG_run_publication_pipeline(varargin)
 %     prompt_cache     ask at startup whether to reuse long-stage outputs
 %     cache_policy     struct fields: data_generation, bayesopt,
 %                      final_training, prediction, embedding
-%     mini_graphs_per_dataset / mini_split_counts
+%     mini_graphs_per_dataset / mini_split_counts / mini_simulation_times
 %                      make a fast train/val/test subset from publication order
 %     n_trials, bo_max_epochs, final_epochs
 %                      shrink or expand runtime without changing code paths
@@ -125,6 +125,7 @@ p.addParameter('cache_policy', struct(), @isstruct);
 p.addParameter('run_unweighted_revision_conditions', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('mini_graphs_per_dataset', 6, @(x) isnumeric(x) && isscalar(x) && x >= 3);
 p.addParameter('mini_split_counts', [4 1 1], @(x) isnumeric(x) && numel(x) == 3);
+p.addParameter('mini_simulation_times', [1 7 2], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
 p.addParameter('n_trials', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('num_seed_points', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('bo_max_epochs', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
@@ -268,7 +269,7 @@ if reuse_cache && isfile(summary_file)
 end
 extra = {};
 if strcmp(opts.mode, 'mini')
-    extra = {'max_graphs_per_dataset', opts.mini_graphs_per_dataset, 'split_counts', opts.mini_split_counts};
+    extra = {'max_graphs_per_dataset', opts.mini_graphs_per_dataset, 'split_counts', opts.mini_split_counts, 'simulation_times', opts.mini_simulation_times};
 end
 report = DCG_generate_vertex_model_datasets('mode', 'publication', ...
     'output_root', paths.generated_root, 'workers', opts.workers, ...

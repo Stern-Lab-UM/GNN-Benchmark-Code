@@ -28,6 +28,8 @@ function report = DCG_generate_vertex_model_datasets(varargin)
 %                     end-to-end mini pipeline to create a fast but trainable
 %                     subset from the publication graph order
 %     'split_counts'  optional [n_train n_val n_test] split for limited runs
+%     'simulation_times' optional [time1 time2 time3] C-simulator durations;
+%                     empty keeps the publication defaults compiled in main.c
 %     'counterfactual'          also write a perturbed weighted-input variant
 %                               for the fallback-copying diagnostic; false
 %     'counterfactual_h_min'    perturb interfaces whose edge-hop distance from
@@ -41,7 +43,7 @@ function report = DCG_generate_vertex_model_datasets(varargin)
 %     kA_100, shear_1_0, and tissue_256 are documented aliases of standard_16.
 %
 %   Simulator command:
-%     vertex_model_generator Nx kA packageID SigI shearFactor T1EdgeID_1 T1EdgeID_2
+%     vertex_model_generator Nx kA packageID SigI shearFactor T1EdgeID_1 T1EdgeID_2 [time1 time2 time3]
 
 p = inputParser;
 p.addParameter('mode', 'minimal', @(x) any(strcmp(x, {'minimal','publication'})));
@@ -52,6 +54,7 @@ p.addParameter('assemble_only', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('datasets', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('max_graphs_per_dataset', inf, @(x) isnumeric(x) && isscalar(x) && x >= 1);
 p.addParameter('split_counts', [], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
+p.addParameter('simulation_times', [], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
 p.addParameter('counterfactual', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x) && x >= 0);
 p.addParameter('counterfactual_delta', 0.05, @(x) isnumeric(x) && isscalar(x) && x >= 0);
@@ -60,6 +63,7 @@ p.addParameter('counterfactual_suffix', '', @(x) ischar(x) || isstring(x));
 p.parse(varargin{:});
 opts = p.Results;
 opts.workers = max(1, floor(opts.workers));
+if ~isempty(opts.simulation_times), opts.simulation_times = double(opts.simulation_times(:).'); end
 opts.counterfactual_h_min = floor(opts.counterfactual_h_min);
 opts.counterfactual_suffix = char(opts.counterfactual_suffix);
 
@@ -226,6 +230,7 @@ for i = 1:height(unique_rows)
         continue
     end
     args = sprintf('%d %s %d %d 1 -1 -1', nx, c_g_format(kA), package_id, sigma_index);
+    args = append_simulation_times(args, opts);
     commands{i} = make_run_command(run_root, exe_path, args);
 end
 commands = commands(~cellfun(@isempty, commands));
@@ -253,12 +258,25 @@ for i = 1:height(rows)
     t1_edge_2 = table_number(rows(i,:), 't1_edge_2');
     args = sprintf('%d %s %d %d %s %d %d', nx, c_g_format(kA), package_id, ...
         sigma_index, c_g_format(shear_factor), t1_edge_1, t1_edge_2);
+    args = append_simulation_times(args, opts);
     commands{i} = make_run_command(run_root, exe_path, args);
 end
 commands = commands(~cellfun(@isempty, commands));
 run_commands(commands, opts.workers, 'graph');
 end
 
+function args = append_simulation_times(args, opts)
+% append_simulation_times  Add optional simulator durations for mini smoke runs.
+% Inputs:
+%   args  Required vertex_model_generator command arguments.
+%   opts  Parsed generator options; opts.simulation_times is [] or [time1 time2 time3].
+% Outputs:
+%   args  Required arguments, optionally followed by three duration overrides.
+if ~isempty(opts.simulation_times)
+    t = opts.simulation_times;
+    args = sprintf('%s %s %s %s', args, c_g_format(t(1)), c_g_format(t(2)), c_g_format(t(3)));
+end
+end
 function run_commands(commands, workers, label)
 % run_commands  Implement run commands for data_generation/vertex_model/DCG_generate_vertex_model_datasets.m.
 % Inputs: commands, workers, label
