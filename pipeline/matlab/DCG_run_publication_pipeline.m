@@ -237,11 +237,25 @@ end
 
 function out = stage_install_check(opts, paths)
 log_file = fullfile(paths.logs, 'install_check.log');
-cmd = sprintf('"%s" "%s" --component all', opts.python, fullfile(paths.repo_root, 'scripts', 'check_install.py'));
+component = install_component_for_models(opts.models);
+cmd = sprintf('"%s" "%s" --component %s', opts.python, fullfile(paths.repo_root, 'scripts', 'check_install.py'), component);
 [status, output] = run_logged(cmd, log_file, paths.repo_root);
-out = struct('status', status, 'log_file', log_file, 'command', cmd);
+out = struct('status', status, 'log_file', log_file, 'command', cmd, 'component', component);
 if status ~= 0
     error('DCG:pipeline:installCheck', 'Install check failed. Log: %s\n%s', log_file, output);
+end
+end
+
+function component = install_component_for_models(models)
+models = cellstr(models);
+has_ppgn = any(strcmp(models, 'PPGN'));
+has_mpnn = any(~strcmp(models, 'PPGN'));
+if has_ppgn && has_mpnn
+    component = 'all';
+elseif has_ppgn
+    component = 'ppgn';
+else
+    component = 'mpnn';
 end
 end
 

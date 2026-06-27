@@ -179,6 +179,24 @@ def check_none(string):
     raise ValueError
 
 
+def parse_bool(string):
+    """
+    Parse boolean configuration values used by command-line overrides.
+
+    Args:
+        string: Text representation supplied by the YAML file or command line.
+
+    Returns:
+        True for true-like strings and False for false-like strings.
+    """
+    s = string.strip().lower()
+    if s in ('true', '1', 'yes'):
+        return True
+    if s in ('false', '0', 'no'):
+        return False
+    raise ValueError(f'Unable to parse "{string}" as bool')
+
+
 def is_all(string: str) -> str:
     '''
     Normalizes the string to be 'all' or raises a value error
