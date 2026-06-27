@@ -7,63 +7,107 @@ and Stern, T. (2026). *A Controlled in Silico Benchmark for GNN
 Prediction of Tissue Dynamics*. Preprint. Online preprint URL/DOI:
 pending public posting.
 
-The goal is to keep publication-relevant code in one clean repository while
-excluding raw data, trained checkpoints, generated figures, large caches, local
-screenshots, and cluster-specific scratch logs.
+The paper introduces a controlled in silico benchmark for graph neural network
+prediction of tissue remodeling. The task is to predict relaxed post-T1
+cell-cell interface lengths from simulated epithelial tissues while varying
+training-set size, tissue order, mechanics, tissue size, feature availability,
+and perturbation structure. This repository provides the code used to generate
+the simulated tissue graphs, train and evaluate the GNN models, run the spring
+embedding checks, and reproduce the analysis/plotting pipeline.
+
+## Two Ways To Run
+
+The repository supports two main run modes through the MATLAB top-level pipeline
+in `pipeline/matlab/`.
+
+### Full Publication Run
+
+This mode is the end-to-end manuscript workflow: tissue generation, dataset
+assembly, Bayesian optimization, final training, prediction, embedding, analysis,
+and plotting for the full set of paper analyses. It is computationally expensive
+and intended for a properly configured compute node or cluster environment.
+
+```matlab
+addpath(genpath('/path/to/GNN-Benchmark-Code'))
+manifest = GNNBenchmark_run_publication_pipeline( ...
+    'mode', 'publication', ...
+    'output_root', '/path/to/project/gnn_benchmark_publication_run', ...
+    'workers', 20, ...
+    'cuda', 0);
+```
+
+### Mini Example
+
+This mode uses the same code paths but shrinks the data, epochs, seeds, BO
+trials, and simulator durations. It is meant to show that the full pipeline is
+installed correctly and can run from start to finish.
+
+```matlab
+addpath(genpath('/path/to/GNN-Benchmark-Code'))
+manifest = GNNBenchmark_run_publication_pipeline('mode', 'mini', 'cuda', 0);
+```
+
+See `pipeline/matlab/README.md` for cache policies, CPU-only examples, and
+output-folder details.
+
+## Main Pipeline Stages
+
+The chronological workflow is:
+
+1. Initial tissue generation: `data_generation/vertex_model/` compiles and runs
+   the vertex-model simulator to create pre-T1 tissue geometries.
+2. T1 perturbation and relaxation: `data_generation/vertex_model/` applies one
+   or two T1 events, relaxes the tissues, and writes raw `final_*.vt2d` and
+   `graph_*.txt` outputs.
+3. Dataset assembly and splits: `data_generation/vertex_model/` and its
+   `manifests/` convert raw simulator outputs into model-ready weighted and
+   unweighted graph datasets with train/validation/test splits.
+4. Bayesian optimization: `training/bayesopt/` launches the MPNN/PNA or PPGN
+   training code for each trial and records partial and final BO results.
+5. Final training: `models/mpnn/` and `models/ppgn/` train the final GraphSAGE,
+   GAT, GIN, PNA, and PPGN models. This covers the standard W/UW V1 data and
+   the revision analyses: hexagonality, kA, shear, tissue size, two T1 events,
+   counterfactual data perturbation with delta = 0.05, and skip/feature
+   architecture-ablation analyses.
+6. Prediction: `models/mpnn/`, `models/ppgn/`, and `pipeline/matlab/` generate
+   and consolidate prediction files for downstream analysis.
+7. Spring embedding: `external/spring_embed/` builds the spring-relaxation
+   executable; `pipeline/matlab/` and `analysis/matlab/` run and analyze the
+   embedding outputs.
+8. Post-prediction analysis and plotting: `analysis/matlab/` computes the MAE,
+   nMAE, hop-distance, fallback, embedding-error, perturbation, ablation, and
+   figure-generation analyses used in the manuscript and revision.
+
+Each run writes outputs under the chosen `output_root`, including generated
+data, BO logs, trained checkpoints, predictions, embeddings, analysis tables,
+figures, logs, and manifests.
 
 ## Repository Layout
 
 - `analysis/matlab/` - MATLAB analysis, manuscript diagnostics, and plotting pipeline.
 - `data_generation/vertex_model/` - vertex-model simulator source and MATLAB wrappers for regenerating raw and model-ready tissue-graph datasets.
-- `external/spring_embed/` - source for the spring-relaxation executable used by MATLAB embedding example figures.
-- `models/mpnn/` - source snapshot used for the GraphSAGE, GAT, GIN, and PNA training and prediction runs.
-- `models/ppgn/` - source snapshots used for PPGN, kept split into training, prediction, and GL tail packages to preserve provenance.
+- `external/spring_embed/` - source for the spring-relaxation executable used for embedding predicted tissues.
+- `models/mpnn/` - source snapshot used for GraphSAGE, GAT, GIN, and PNA training and prediction.
+- `models/ppgn/` - source snapshots used for PPGN training and prediction, kept split to preserve run provenance.
 - `pipeline/matlab/` - MATLAB top-level orchestration for mini and publication-scale end-to-end runs.
 - `training/bayesopt/` - MATLAB Bayesian-optimization drivers and final search-space definitions.
-- `docs/` - installation notes, provenance records, and analysis-pipeline documentation.
+- `docs/` - installation notes, tested settings, provenance records, and analysis-pipeline documentation.
+- `requirements/` and `scripts/` - Python environment requirements and installation/import checkers.
 
-## Bayesian Optimization
+## Languages
 
-The MATLAB BayesOpt drivers are under `training/bayesopt/`. They launch the curated MPNN or PPGN training code once per trial, checkpoint partial `bayesopt` results, and store the final V1 search spaces in `GNNBenchmark_bayesopt_search_spaces.m`. See `training/bayesopt/README.md`.
-
-## End-To-End MATLAB Pipeline
-
-The MATLAB conductor under `pipeline/matlab/` can run either a small trainable mini workflow or a publication-scale workflow from one entry point:
-
-```matlab
-manifest = GNNBenchmark_run_publication_pipeline('mode', 'mini')
-```
-
-Use `mode='publication'` for full-scale regeneration, BO, final training, prediction, analysis, and figure generation. See `pipeline/matlab/README.md`.
-
-## MATLAB Analysis
-
-The MATLAB scripts in `analysis/matlab/` perform the post-prediction analysis, manuscript-specific diagnostics, and plotting. They start from saved prediction files; Bayesian optimization, model training, and prediction generation are implemented in the Python/PyTorch code under `models/`. See `docs/MATLAB_ANALYSIS_PIPELINE.md` for the full MATLAB workflow.
-
-## Vertex-Model Data
-
-The tissue-graph generation pipeline is in `data_generation/vertex_model/`.
-It compiles the vertex-model simulator, regenerates raw `final_*.vt2d` and
-`graph_*.txt` files, and assembles weighted/unweighted model-ready graph files.
-See `data_generation/vertex_model/README.md`.
-
-The top-level mini/publication pipeline can build the spring engine under
-`external/spring_embed/` and run spring embeddings for generated prediction files.
-Standalone manuscript example-panel plotting can also use a prebuilt executable
-through `GNN_BENCHMARK_EMBED_ENGINE` or `GNNBenchmark_local_config.m`.
+The top-level orchestration, Bayesian optimization drivers, data assembly, and
+post-prediction analyses are written in MATLAB. The GNN models are implemented
+in Python with PyTorch/PyTorch Geometric. Tissue simulation and spring embedding
+use C/C++ source compiled locally. Shell scripts are provided only for setup and
+cluster-environment convenience.
 
 ## Data Policy
 
-Do not commit raw datasets, prediction dumps, embeddings, model checkpoints,
-large `.mat` caches, generated figures, or private cluster credentials. The
-publication repository should contain code plus lightweight documentation only.
-
-## Model Code Status
-
-The model source snapshots were copied from provenance-pinned run trees on
-2026-06-25. See `models/README.md` and `docs/model_source_hashes_20260625.csv`
-for SHA256 hash records. The repository includes environment templates and an
-import checker for validating a local setup.
+Generated data, raw prediction dumps, embeddings, model checkpoints, large
+`.mat` caches, generated figures, and private cluster credentials should not be
+committed to this repository. The pipeline writes those outputs to the user-chosen
+`output_root`, keeping the code repository separate from large run artifacts.
 
 ## Credits and Citation
 
@@ -76,18 +120,22 @@ code; Tomer Stern adapted the GNN code for the updated manuscript and ablation
 analyses; and Matej Krajnc provided the tissue-simulation and spring-embedding
 code.
 
-## Installation Check
+## Installation Instructions
 
 See `docs/INSTALL.md` for environment notes and setup commands, and
-`docs/TESTED_SETTINGS.md` for the software/hardware settings that have actually
-been exercised. After installing dependencies, run:
+`docs/TESTED_SETTINGS.md` for the software/hardware settings that have been
+exercised. A typical Lighthouse/shared-HPC setup is:
 
 ```bash
+git clone https://github.com/Stern-Lab-UM/GNN-Benchmark-Code.git
+cd GNN-Benchmark-Code
+bash scripts/setup_lh_env.sh --component all --torch default
 python scripts/check_install.py --component all
 ```
 
-The checker verifies package imports and the curated MPNN/PPGN source snapshots
-without requiring manuscript data or trained checkpoints.
+For conda or local `venv` setup, see `docs/INSTALL.md`. The checker verifies
+package imports and curated MPNN/PPGN source snapshots; it does not require raw
+manuscript data or trained checkpoints.
 
 ## Contact
 
