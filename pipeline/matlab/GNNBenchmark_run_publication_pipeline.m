@@ -445,13 +445,20 @@ ensure_dir(paths.figures);
 if strcmp(opts.mode, 'mini')
     table_file = fullfile(paths.analysis_tables, 'mini_prediction_mae.csv');
     if ~isfile(table_file), mini_analysis(paths); end
-    T = readtable(table_file, 'TextType', 'string');
-    vars = string(T.Properties.VariableNames);
-    label_var = vars(1);
-    mae_var = vars(strcmpi(vars, 'mae'));
-    if isempty(mae_var), error('GNNBenchmark:pipeline:miniFigureSchema', 'Mini MAE table has no mae column.'); end
+    C = readcell(table_file, 'Delimiter', ',');
+    if size(C, 1) < 2, error('GNNBenchmark:pipeline:miniFigureSchema', 'Mini MAE table is empty.'); end
+    header = string(C(1, :));
+    mae_col = find(strcmpi(strtrim(header), 'mae'), 1);
+    if isempty(mae_col)
+        if size(C, 2) < 2, error('GNNBenchmark:pipeline:miniFigureSchema', 'Mini MAE table has no numeric MAE column.'); end
+        mae_col = 2;
+    end
+    labels = string(C(2:end, 1));
+    mae_values = str2double(string(C(2:end, mae_col)));
+    keep = isfinite(mae_values) & labels ~= "";
+    if ~any(keep), error('GNNBenchmark:pipeline:miniFigureSchema', 'Mini MAE table has no finite MAE values.'); end
     fig = figure('Color', 'w', 'Name', 'Mini pipeline MAE smoke test');
-    bar(categorical(string(T.(label_var))), T.(mae_var(1)));
+    bar(categorical(labels(keep), labels(keep), 'Ordinal', true), mae_values(keep));
     ylabel('Mean absolute error');
     title('Mini pipeline prediction MAE');
     xtickangle(45);
