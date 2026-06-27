@@ -113,6 +113,12 @@ Generated data, raw prediction dumps, embeddings, model checkpoints, large
 committed to this repository. The pipeline writes those outputs to the user-chosen
 `output_root`, keeping the code repository separate from large run artifacts.
 
+## License
+
+This repository is released under the MIT License; see `LICENSE`. If you use
+this code, please cite the accompanying preprint and retain the credits listed in
+`CREDITS.md`.
+
 ## Credits and Citation
 
 Please cite the accompanying preprint when using this code. Citation metadata is
