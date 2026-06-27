@@ -134,6 +134,36 @@ bash scripts/setup_lh_env.sh --component all --torch skip
 
 Exact GPU reproduction may require installing the specific PyTorch/CUDA build appropriate for the cluster before running the checker.
 
+## Vertex-Model Generator
+
+The manuscript tissue graphs can be regenerated from the vertex-model simulator
+under `data_generation/vertex_model/`. The MATLAB wrapper compiles the C/C++
+source with `g++`, runs the simulator, and assembles weighted/unweighted graph
+files for the Python training code.
+
+On Linux or Lighthouse:
+
+```matlab
+addpath(genpath('/path/to/GNN-Benchmark-Code/data_generation/vertex_model'))
+DCG_generate_vertex_model_datasets('mode', 'minimal', 'workers', 1)
+DCG_generate_vertex_model_datasets('mode', 'minimal', 'datasets', {'kA_10'}, 'workers', 1)
+```
+
+For the full publication manifests, run from a compute node and write outputs to
+scratch or project storage rather than to the git clone:
+
+```matlab
+DCG_generate_vertex_model_datasets( ...
+    'mode', 'publication', ...
+    'output_root', '/path/to/generated_data/vertex_model', ...
+    'workers', 20)
+```
+
+The baseline conditions `kA_100`, `shear_1_0`, and `tissue_256` are aliases of
+`standard_16`; the wrapper records this in the output rather than regenerating
+three identical datasets. See `data_generation/vertex_model/README.md` for the
+condition list, raw file conventions, and output layout.
+
 ## Spring Embedding Engine
 
 The MATLAB embedding example figures use a small external spring-relaxation

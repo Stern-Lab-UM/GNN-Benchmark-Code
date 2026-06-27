@@ -9,6 +9,7 @@ screenshots, and cluster-specific scratch logs.
 ## Repository Layout
 
 - `analysis/matlab/` - MATLAB analysis and plotting pipeline.
+- `data_generation/vertex_model/` - vertex-model simulator source and MATLAB wrappers for regenerating raw and model-ready tissue-graph datasets.
 - `external/spring_embed/` - source for the spring-relaxation executable used by MATLAB embedding example figures.
 - `models/mpnn/` - source snapshot used for the GraphSAGE, GAT, GIN, and PNA training and prediction runs.
 - `models/ppgn/` - source snapshots used for PPGN, kept split into training, prediction, and GL tail packages to preserve provenance.
@@ -19,6 +20,13 @@ screenshots, and cluster-specific scratch logs.
 ## MATLAB Analysis
 
 The MATLAB scripts in `analysis/matlab/` perform the post-prediction analysis and plotting. They start from saved prediction files; Bayesian optimization, model training, and prediction generation are implemented in the Python/PyTorch code under `models/`. See `docs/MATLAB_ANALYSIS_PIPELINE.md` for the full MATLAB workflow.
+
+## Vertex-Model Data
+
+The tissue-graph generation pipeline is in `data_generation/vertex_model/`.
+It compiles the vertex-model simulator, regenerates raw `final_*.vt2d` and
+`graph_*.txt` files, and assembles weighted/unweighted model-ready graph files.
+See `data_generation/vertex_model/README.md`.
 
 Embedding example figures additionally require compiling the spring engine under
 `external/spring_embed/` and pointing MATLAB to the resulting executable through

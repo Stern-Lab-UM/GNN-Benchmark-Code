@@ -17,6 +17,7 @@ __pycache__/
 # Data, predictions, embeddings, checkpoints
 data/
 datasets/
+generated_data/
 raw/
 predictions/
 embeddings/
@@ -61,3 +62,6 @@ authorized_keys*
 analysis/matlab/DCG_local_config.m
 
 *.bak_*
+
+# Local compiled generators
+data_generation/vertex_model/build/

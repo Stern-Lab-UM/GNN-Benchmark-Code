@@ -1,0 +1,4 @@
+alias_key,canonical_key,reason
+kA_100,standard_16,kA=100 is the standard 16-cohort weighted reference condition
+shear_1_0,standard_16,shear factor 1.0 is the standard reference condition
+tissue_256,standard_16,16^2 = 256 cells is the standard reference condition
