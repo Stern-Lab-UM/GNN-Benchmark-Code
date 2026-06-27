@@ -124,6 +124,9 @@ code; Tomer Stern adapted the GNN code for the updated manuscript and ablation
 analyses; Matej Krajnc provided the tissue-simulation and spring-embedding code;
 and Adnan Hafeez supported code installation and computing-environment setup.
 
+Publication-repository organization, cleanup, and documentation were assisted by
+Claude (Anthropic) and Codex (OpenAI), under Tomer Stern's direction and review.
+
 ## Installation Instructions
 
 See `docs/INSTALL.md` for environment notes and setup commands, and
