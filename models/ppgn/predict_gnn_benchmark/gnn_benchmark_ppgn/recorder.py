@@ -174,7 +174,8 @@ class Recorder():
         for key in ('train', 'val', 'test'):
             with self.get_out_file(self.ind_template.format(key=key),
                                    mode='r') as infile:
-                result[key] = np.loadtxt(infile, dtype=int)
+                # np.loadtxt returns a scalar for one-line split files.
+                result[key] = np.atleast_1d(np.loadtxt(infile, dtype=int)).astype(int)
 
         return result
 
