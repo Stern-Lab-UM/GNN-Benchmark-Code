@@ -21,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 BASE_IMPORTS = [
     ("numpy", "numpy"),
     ("pandas", "pandas"),
+    ("scipy", "scipy"),
     ("yaml", "pyyaml"),
     ("click", "click"),
     ("tqdm", "tqdm"),
@@ -267,5 +268,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 
