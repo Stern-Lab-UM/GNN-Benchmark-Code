@@ -1,8 +1,11 @@
 # Public Data Package Layout
 
-The manuscript data should be deposited outside the Git repository, but the
-recommended archive layout mirrors the output tree created by
-`GNNBenchmark_run_publication_pipeline`.
+The manuscript data should be deposited outside the Git repository. The
+recommended archive layout is a curated, analysis-facing package derived from
+the durable outputs of `GNNBenchmark_run_publication_pipeline`, not a complete
+copy of a pipeline run directory. Transient run folders such as `bo_runs/`,
+`best_hps/`, `logs/`, `generated_data/`, and `staged_inputs/` are intentionally
+omitted unless they are needed for a specific deposited diagnostic.
 
 A prepared data package should look like this:
 
@@ -50,7 +53,9 @@ saved per-graph embedding outputs are sufficient for the manuscript
 embedding-error bound analysis.
 
 The `final_models/consolidated/` folder is included for provenance and optional
-reuse, but manuscript figure reproduction should not require retraining if
+reuse. It is a flat checkpoint archive and does not match the training-stage
+folder layout (`final_models/<job_id>/seed_<n>/`) produced during a live pipeline
+run. Manuscript figure reproduction should not require retraining if
 `predictions/consolidated/`, `splits/`, and the saved embedding outputs are
 present.
 
