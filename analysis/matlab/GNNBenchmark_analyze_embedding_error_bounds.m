@@ -193,7 +193,11 @@ end
 
 function ctx = parse_embedding_context(filename, models, cohorts)
 % parse_embedding_context  Infer model/cohort/seed/weighting/graph id from path text.
+% Model and seed can safely be parsed from the full path. Cohort size and W/UW
+% labels are parsed from directory names only, because graph identifiers can
+% contain numeric substrings such as "1_-1_1" that look like small cohort tokens.
 path_txt = char(filename);
+[folder_txt, stem] = fileparts(filename);
 ctx = struct('model', 'unknown', 'cohort', NaN, 'seed', NaN, ...
     'weighting', 'unknown', 'graph_id', 'unknown');
 for m = 1:numel(models)
@@ -202,10 +206,17 @@ for m = 1:numel(models)
         break;
     end
 end
-for c = reshape(cohorts, 1, [])
-    patterns = {sprintf('2_%d', c), sprintf('1_%d', c), sprintf('%d_cohort', c), sprintf('%dcohort', c), sprintf('cohorts?[_ -]?%d', c)};
+cohorts = sort(reshape(cohorts, 1, []), 'descend');
+for c = cohorts
+    patterns = { ...
+        sprintf('(^|[^0-9])2_%d([^0-9]|$)', c), ...
+        sprintf('(^|[^0-9])1_%d([^0-9]|$)', c), ...
+        sprintf('limited_%d_graphs', c), ...
+        sprintf('%d[_ -]?cohorts?', c), ...
+        sprintf('cohorts?[_ -]?%d', c), ...
+        sprintf('%d[_ -]?graphs?', c)};
     for k = 1:numel(patterns)
-        if ~isempty(regexpi(path_txt, patterns{k}, 'once'))
+        if ~isempty(regexpi(folder_txt, patterns{k}, 'once'))
             ctx.cohort = c;
             break;
         end
@@ -215,14 +226,16 @@ for c = reshape(cohorts, 1, [])
     end
 end
 seed_tok = regexp(path_txt, '(^|[^A-Za-z0-9])s(\d+)([^A-Za-z0-9]|$)', 'tokens', 'once');
+if isempty(seed_tok)
+    seed_tok = regexp(path_txt, '(^|[^A-Za-z0-9])seed[_ -]?(\d+)([^A-Za-z0-9]|$)', 'tokens', 'once');
+end
 if ~isempty(seed_tok)
     ctx.seed = str2double(seed_tok{2});
 end
-w_tok = regexp(path_txt, '(^|[^A-Za-z0-9])(UW|W)([^A-Za-z0-9]|$)', 'tokens', 'once');
+w_tok = regexp(folder_txt, '(^|[^A-Za-z0-9])(UW|W)([^A-Za-z0-9]|$)', 'tokens', 'once');
 if ~isempty(w_tok)
     ctx.weighting = w_tok{2};
 end
-[~, stem] = fileparts(filename);
 g_tok = regexp(stem, '(graph[^\s\/]*)', 'tokens', 'once');
 if ~isempty(g_tok)
     ctx.graph_id = g_tok{1};
@@ -230,7 +243,6 @@ else
     ctx.graph_id = stem;
 end
 end
-
 
 function summary = summarize_embedding_ratios(per_graph, models, cohorts)
 % summarize_embedding_ratios  Mean/SD/SE of embedding-to-prediction ratio.
