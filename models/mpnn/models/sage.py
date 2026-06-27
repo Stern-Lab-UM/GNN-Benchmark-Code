@@ -156,7 +156,10 @@ class GraphSAGE(BaseGraphSAGE):
                 x = self.norms[i](x)
             if self.act is not None and not self.act_first:
                 x = self.act(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
+            if isinstance(self.dropout, (float, int)):
+                x = F.dropout(x, p=float(self.dropout), training=self.training)
+            else:
+                x = self.dropout(x)
             if hasattr(self, 'jk'):
                 xs.append(x)
 
