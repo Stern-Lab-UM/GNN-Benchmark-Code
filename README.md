@@ -1,6 +1,11 @@
 # GNN Benchmark Publication Code
 
-This repository contains code for the GNN Benchmark manuscript revision.
+This repository contains code for the GNN Benchmark manuscript revision:
+
+Krajnc, M., Comi, T., Miao, S., Hafeez, A., Serviansky, H., Li, P.,
+and Stern, T. (2026). *A Controlled in Silico Benchmark for GNN
+Prediction of Tissue Dynamics*. Preprint. Online preprint URL/DOI:
+pending public posting.
 
 The goal is to keep publication-relevant code in one clean repository while
 excluding raw data, trained checkpoints, generated figures, large caches, local
@@ -59,6 +64,17 @@ The model source snapshots were copied from provenance-pinned run trees on
 2026-06-25. See `models/README.md` and `docs/model_source_hashes_20260625.csv`
 for SHA256 hash records. The repository includes environment templates and an
 import checker for validating a local setup.
+
+## Credits and Citation
+
+Please cite the accompanying preprint when using this code. Citation metadata is
+provided in `CITATION.cff`.
+
+Code credits are listed in `CREDITS.md`. In brief, Siqi Miao and Pan Li provided
+the MPNN code used for GraphSAGE, GAT, GIN, and PNA; Troy Comi provided the PPGN
+code; Tomer Stern adapted the GNN code for the updated manuscript and ablation
+analyses; and Matej Krajnc provided the tissue-simulation and spring-embedding
+code.
 
 ## Installation Check
 

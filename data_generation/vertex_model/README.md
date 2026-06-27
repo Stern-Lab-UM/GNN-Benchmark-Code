@@ -3,6 +3,9 @@
 This folder contains the vertex-model simulator source and MATLAB wrappers used
 to regenerate the tissue-graph datasets for the manuscript revision.
 
+Matej Krajnc provided the tissue-simulation code on which this publication
+wrapper is based.
+
 Generated data are intentionally not tracked by git. By default, MATLAB writes
 outputs to:
 

@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the accompanying preprint: Krajnc et al. (2026), A Controlled in Silico Benchmark for GNN Prediction of Tissue Dynamics. Preprint URL/DOI pending public posting."
+title: "GNN Benchmark Publication Code"
+authors:
+  - family-names: Krajnc
+    given-names: Matej
+  - family-names: Comi
+    given-names: Troy
+  - family-names: Miao
+    given-names: Siqi
+  - family-names: Hafeez
+    given-names: Adnan
+  - family-names: Serviansky
+    given-names: Hadar
+  - family-names: Li
+    given-names: Pan
+  - family-names: Stern
+    given-names: Tomer
+repository-code: "https://github.com/Stern-Lab-UM/GNN-Benchmark-Code"
+preferred-citation:
+  type: article
+  title: "A Controlled in Silico Benchmark for GNN Prediction of Tissue Dynamics"
+  authors:
+    - family-names: Krajnc
+      given-names: Matej
+    - family-names: Comi
+      given-names: Troy
+    - family-names: Miao
+      given-names: Siqi
+    - family-names: Hafeez
+      given-names: Adnan
+    - family-names: Serviansky
+      given-names: Hadar
+    - family-names: Li
+      given-names: Pan
+    - family-names: Stern
+      given-names: Tomer
+  year: 2026

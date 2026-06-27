@@ -2,6 +2,10 @@
 
 This note records the model-code snapshots curated into the publication repository on 2026-06-25.
 
+Credit: Siqi Miao and Pan Li provided the MPNN code used for GraphSAGE,
+GAT, GIN, and PNA. Troy Comi provided the PPGN code. Tomer Stern adapted
+these code paths for the updated manuscript analyses and ablation analyses.
+
 ## MPNN/PNA
 
 Repository destination: `models/mpnn/`

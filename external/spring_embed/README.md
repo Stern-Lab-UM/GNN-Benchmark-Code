@@ -3,6 +3,9 @@
 This directory contains the source for the spring-relaxation executable used by
 the MATLAB plotting code to generate 2D embedding example panels.
 
+Matej Krajnc provided the spring-embedding code on which this publication
+wrapper is based.
+
 The engine starts from a `.vt2d` vertex-model geometry and a prediction text
 file block for one graph. It performs the requested T1 transition, relaxes edge
 length springs toward the supplied target lengths, and writes relaxed geometry
