@@ -106,12 +106,10 @@ in Python with PyTorch/PyTorch Geometric. Tissue simulation and spring embedding
 use C/C++ source compiled locally. Shell scripts are provided only for setup and
 cluster-environment convenience.
 
-## Data Policy
+## Pipeline Outputs
 
-Generated data, raw prediction dumps, embeddings, model checkpoints, large
-`.mat` caches, generated figures, and private cluster credentials should not be
-committed to this repository. The pipeline writes those outputs to the user-chosen
-`output_root`, keeping the code repository separate from large run artifacts.
+Generated datasets, predictions, embeddings, model checkpoints, analysis tables,
+figures, logs, and manifests are written to the user-chosen `output_root`.
 
 ## License
 
