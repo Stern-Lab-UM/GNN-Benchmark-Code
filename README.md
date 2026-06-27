@@ -84,15 +84,19 @@ figures, logs, and manifests.
 
 ## Repository Layout
 
-- `analysis/matlab/` - MATLAB analysis, manuscript diagnostics, and plotting pipeline.
-- `data_generation/vertex_model/` - vertex-model simulator source and MATLAB wrappers for regenerating raw and model-ready tissue-graph datasets.
-- `external/spring_embed/` - source for the spring-relaxation executable used for embedding predicted tissues.
+Listed roughly in the order used by the end-to-end pipeline:
+
+- `pipeline/matlab/` - MATLAB top-level orchestration for mini and publication-scale end-to-end runs.
+- `data_generation/vertex_model/` - vertex-model simulator source and MATLAB wrappers for initial tissue generation, T1 perturbation/relaxation, and model-ready dataset assembly.
+- `training/bayesopt/` - MATLAB Bayesian-optimization drivers and final search-space definitions.
 - `models/mpnn/` - source snapshot used for GraphSAGE, GAT, GIN, and PNA training and prediction.
 - `models/ppgn/` - source snapshots used for PPGN training and prediction, kept split to preserve run provenance.
-- `pipeline/matlab/` - MATLAB top-level orchestration for mini and publication-scale end-to-end runs.
-- `training/bayesopt/` - MATLAB Bayesian-optimization drivers and final search-space definitions.
+- `external/spring_embed/` - source for the spring-relaxation executable used for embedding predicted tissues.
+- `analysis/matlab/` - MATLAB post-prediction analyses, manuscript diagnostics, and plotting pipeline.
+- `manuscript_analyses/` - small manuscript-facing analysis helpers and archived calculation snippets.
+- `remote_examples/` - example remote/HPC launch helpers used for long-running jobs.
+- `requirements/` and `scripts/` - Python environment requirements, setup helpers, and installation/import checkers.
 - `docs/` - installation notes, tested settings, provenance records, and analysis-pipeline documentation.
-- `requirements/` and `scripts/` - Python environment requirements and installation/import checkers.
 
 ## Languages
 
