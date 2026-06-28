@@ -157,7 +157,14 @@ graphs_from_Matej_before_prediction(lens < 100) = [];
 % column count from the edge rows alone. The regex anchors on the
 % 9-column numeric shape of a node row and truncates there.
 if consider_nodes
-    graphs_from_Matej_before_prediction = cellfun(@(x) x(1:min(regexp(x, '\d+ \d+ \d+ \d+ \d+ [\d\.\-\e\E]+ [\d\.\-\e\E]+ [\d\.\-\e\E]+ [\d\.\-\e\E]+ '))-1), graphs_from_Matej_before_prediction, 'UniformOutput', false);
+    node_row_pattern = '\d+ \d+ \d+ \d+ \d+ [\d\.\-\e\E]+ [\d\.\-\e\E]+ [\d\.\-\e\E]+ [\d\.\-\e\E]+ ';
+    for block_idx = 1 : numel(graphs_from_Matej_before_prediction)
+        node_start = regexp(graphs_from_Matej_before_prediction{block_idx}, node_row_pattern, 'once');
+        if ~isempty(node_start) && node_start > 1
+            graphs_from_Matej_before_prediction{block_idx} = ...
+                graphs_from_Matej_before_prediction{block_idx}(1:node_start-1);
+        end
+    end
 end
 
 % Parse each graph block into a numeric matrix. The column count is
@@ -168,6 +175,11 @@ end
 vals = cell(length(graphs_from_Matej_before_prediction),1);
 for i = 1 : length(graphs_from_Matej_before_prediction)
     newlines = find(graphs_from_Matej_before_prediction{i} == newline, 3, 'first');
+    if numel(newlines) < 3
+        error('load_dataset:malformedGraphBlock', ...
+            'Graph block %d in %s has fewer than three newline-delimited numeric rows.', ...
+            i, filename);
+    end
     n_vals_per_line = nnz(graphs_from_Matej_before_prediction{i}(newlines(2)+1:newlines(3)-1) == ' ')+1;
     vals{i} = sscanf(graphs_from_Matej_before_prediction{i}, '%f');
     % v2 (2026-05-15): tolerate trailing junk in the last graph block. Some

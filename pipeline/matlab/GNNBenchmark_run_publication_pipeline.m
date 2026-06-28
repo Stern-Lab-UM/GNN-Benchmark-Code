@@ -799,6 +799,8 @@ else
     assignin('base', 'data_root', data_root);
     assignin('base', 'rebuild_summaries', true);
     assignin('base', 'plot_after_summary', false);
+    analysis_seeds = opts.seeds; %#ok<NASGU>
+    ensure_integration_hex_alias_from_consolidated(opts, data_root);
     run(fullfile(paths.repo_root, 'analysis', 'matlab', 'GNNBenchmark_rebuild_all_summaries.m'));
     counterfactual_out = struct();
     if opts.counterfactual
@@ -806,7 +808,7 @@ else
         counterfactual_out = GNNBenchmark_analyze_counterfactual_copying( ...
             'regular_pred_root', data_root, ...
             'counterfactual_pred_root', data_root, ...
-            'regular_include_token', 'W_2_16', ...
+            'regular_include_token', '_W_2_16_s', ...
             'counterfactual_include_token', 'counterfactual', ...
             'inds_dir', cf_inds_dir, ...
             'output_dir', GNNBenchmark_figure_paths('diagnostic_dir', paths.figures, 'counterfactual_copying'), ...
@@ -853,6 +855,8 @@ else
     data_root = ternary(isempty(opts.data_root_for_figures), paths.pred_consolidated_root, opts.data_root_for_figures);
     figures_root_override = paths.figures; %#ok<NASGU>
     embed_examples = opts.plot_embedding_examples; %#ok<NASGU>
+    analysis_seeds = opts.seeds; %#ok<NASGU>
+    ensure_integration_hex_alias_from_consolidated(opts, data_root);
     run(fullfile(paths.repo_root, 'analysis', 'matlab', 'GNNBenchmark_plot_everything.m'));
     out = struct('status', 'ok', 'data_root', data_root, 'figures_root', figures_root_override);
 end
@@ -1159,6 +1163,50 @@ copy_split(job.split_dir, dst);
 write_text(fullfile(dst, '_applies_to.txt'), sprintf('applies to datasets: hex_2_8_W\n'));
 write_text(fullfile(dst, '_integration_alias_note.txt'), sprintf(['Integration-mode smoke-test alias.\n', ...
     'Source prediction: %s\nSource split: %s\nThis is not a publication hexagonality dataset.\n'], con_out, job.split_dir));
+end
+function ensure_integration_hex_alias_from_consolidated(opts, consolidated_root)
+% ensure_integration_hex_alias_from_consolidated  Backfill reduced hex smoke-test files.
+if ~strcmp(opts.mode, 'integration') || ~opts.integration_include_hex_alias || ~isfolder(consolidated_root)
+    return
+end
+src_files = dir(fullfile(consolidated_root, 'standard-flip_*_W_2_8_s*.pred.txt'));
+if isempty(src_files)
+    return
+end
+for i = 1:numel(src_files)
+    tok = regexp(src_files(i).name, '^standard-flip_(.+)_W_2_8_s(\d+)\.pred\.txt$', 'tokens', 'once');
+    if isempty(tok), continue; end
+    dst_file = fullfile(consolidated_root, sprintf('Hexagonality_%s_W_2_8_s%s.pred.txt', tok{1}, tok{2}));
+    if ~isfile(dst_file)
+        copyfile(fullfile(src_files(i).folder, src_files(i).name), dst_file);
+    end
+end
+split_root = fullfile(consolidated_root, 'splits');
+src_split = first_existing_path({
+    fullfile(split_root, 'v1_2_8_W')
+    fullfile(split_root, 'standard_2_8')
+    fullfile(split_root, 'standard_2_8_W')
+    });
+if isempty(src_split)
+    return
+end
+dst_split = fullfile(split_root, 'hex_2_8_W');
+ensure_dir(dst_split);
+copy_split(src_split, dst_split);
+write_text(fullfile(dst_split, '_applies_to.txt'), sprintf('applies to datasets: hex_2_8_W\n'));
+write_text(fullfile(dst_split, '_integration_alias_note.txt'), sprintf(['Integration-mode smoke-test alias.\n', ...
+    'Source split: %s\nThis is not a publication hexagonality dataset.\n'], src_split));
+end
+
+function path_out = first_existing_path(candidates)
+% first_existing_path  Return the first existing file or folder from candidates.
+path_out = '';
+for i = 1:numel(candidates)
+    if isfile(candidates{i}) || isfolder(candidates{i})
+        path_out = candidates{i};
+        return
+    end
+end
 end
 function publish_split(job, paths)
 dst = fullfile(paths.pred_consolidated_root, 'splits', clean_id(job.analysis_prefix));

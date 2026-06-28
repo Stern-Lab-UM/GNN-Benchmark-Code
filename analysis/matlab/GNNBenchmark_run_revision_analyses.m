@@ -189,6 +189,9 @@ for batch_dataset_index_2026 = 1 : numel(datasets)
             GNNBenchmark_CONFIG.output_filename = revision_analysis;
             GNNBenchmark_CONFIG.results_summary_filename = revision_summary;
             GNNBenchmark_CONFIG.cache_dir = revision_cache_root;
+            if exist('analysis_seeds', 'var') && ~isempty(analysis_seeds)
+                GNNBenchmark_CONFIG.seeds = analysis_seeds;
+            end
             run(analyzer_script);
             clear GNNBenchmark_CONFIG;
         else
@@ -223,6 +226,9 @@ for batch_dataset_index_2026 = 1 : numel(datasets)
                 GNNBenchmark_CONFIG.output_filename = source_analysis;
                 GNNBenchmark_CONFIG.results_summary_filename = revision_summary;
                 GNNBenchmark_CONFIG.cache_dir = revision_cache_root;
+                if exist('analysis_seeds', 'var') && ~isempty(analysis_seeds)
+                    GNNBenchmark_CONFIG.seeds = analysis_seeds;
+                end
                 run(analyzer_script);
                 clear GNNBenchmark_CONFIG;
             end
@@ -256,6 +262,9 @@ for batch_dataset_index_2026 = 1 : numel(datasets)
         GNNBenchmark_CONFIG.figure_panel_size = figure_panel_size;
         GNNBenchmark_CONFIG.scatter_marker_size = scatter_marker_size;
         GNNBenchmark_CONFIG.embed_examples = embed_examples;
+        if exist('analysis_seeds', 'var') && ~isempty(analysis_seeds)
+            GNNBenchmark_CONFIG.seeds = analysis_seeds;
+        end
         run(plotter_script);
         clear GNNBenchmark_CONFIG;
     end

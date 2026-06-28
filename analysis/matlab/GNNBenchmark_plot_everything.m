@@ -99,6 +99,9 @@ for d = 1 : numel(original_datasets)
     GNNBenchmark_CONFIG.figure_panel_size = figure_panel_size;
     GNNBenchmark_CONFIG.scatter_marker_size = scatter_marker_size;
     GNNBenchmark_CONFIG.models_to_exclude = models_to_exclude;
+    if exist('analysis_seeds', 'var') && ~isempty(analysis_seeds)
+        GNNBenchmark_CONFIG.seeds = analysis_seeds;
+    end
     if ~isempty(revision_cache_root_override)
         GNNBenchmark_CONFIG.cache_dir = revision_cache_root_override;
         GNNBenchmark_CONFIG.results_summary_filename = fullfile(revision_cache_root_override, [original_datasets{d}, ' - results_summary.mat']);
@@ -124,6 +127,9 @@ GNNBenchmark_CONFIG.hex_paper_uncertainty = 'sd';
 GNNBenchmark_CONFIG.figure_panel_size = figure_panel_size;
 GNNBenchmark_CONFIG.scatter_marker_size = scatter_marker_size;
 GNNBenchmark_CONFIG.models_to_exclude = models_to_exclude;
+if exist('analysis_seeds', 'var') && ~isempty(analysis_seeds)
+    GNNBenchmark_CONFIG.seeds = analysis_seeds;
+end
 if ~isempty(revision_cache_root_override)
     GNNBenchmark_CONFIG.cache_dir = revision_cache_root_override;
     GNNBenchmark_CONFIG.results_summary_filename = fullfile(revision_cache_root_override, 'hex - results_summary.mat');
