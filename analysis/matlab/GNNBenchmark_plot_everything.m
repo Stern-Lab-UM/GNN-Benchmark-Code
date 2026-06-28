@@ -85,7 +85,9 @@ if isempty(main_figures_root_override) && ~isempty(figures_root_override)
 end
 
 skip_cache_guard = false;
-embed_examples   = true;    % 2D spring-embedding panels (v1 only); ON for finals (2026-06-02)
+if ~exist('embed_examples', 'var') || isempty(embed_examples)
+    embed_examples = true;    % 2D spring-embedding panels (v1 only); ON for finals (2026-06-02)
+end
 % -----------------------------------------------------------------------------
 
 original_datasets = {'v1_W', 'v1_UW'};

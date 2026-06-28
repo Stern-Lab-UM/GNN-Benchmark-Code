@@ -57,6 +57,56 @@ The mini figure is a simple MAE smoke-test plot under:
 <output_root>/figures/00_mini_smoke/mini_prediction_mae.png
 ```
 
+## Integration-Scale Run
+
+Integration mode sits between the tiny mini example and the full publication run.
+It is intended for an overnight GPU/CPU-node test that exercises the manuscript
+pipeline shape: all generated condition families, canonical V1 cohort split
+names, Bayesian optimization, final training, prediction, spring embedding,
+summary rebuilding, counterfactual copy diagnostics, and the manuscript/revision
+plotting wrappers.
+
+```matlab
+addpath(genpath('/path/to/GNN-Benchmark-Code'))
+manifest = GNNBenchmark_run_publication_pipeline( ...
+    'mode', 'integration', ...
+    'output_root', '/path/to/scratch/gnn_benchmark_pipeline_integration', ...
+    'workers', 12, ...
+    'cuda', 0, ...
+    'integration_graphs_per_dataset', 18, ...
+    'integration_split_counts', [12 3 3], ...
+    'integration_simulation_times', [2 12 4], ...
+    'n_trials', 2, ...
+    'bo_max_epochs', 6, ...
+    'final_epochs', 10, ...
+    'seeds', 0:1, ...
+    'embedding_max_graphs_per_prediction', 2);
+```
+
+The integration data are intentionally small, but the generated split folders use
+canonical manuscript names such as `standard_2_16` and
+`training_set_1_16_cells`. This lets the standard analyzer and figure scripts run
+without a separate testing branch. PPGN is skipped for the 484- and 784-cell
+conditions by default, matching the manuscript-scale availability; set
+`'include_ppgn_large_tissues', true` only when you explicitly want to try those
+large PPGN jobs.
+
+Integration mode sets `counterfactual=true` by default. It trains the normal
+models, then re-predicts the perturbed weighted standard 16-cohort inputs with
+the same checkpoints and runs `GNNBenchmark_analyze_counterfactual_copying`. It
+does not retrain models on perturbed data.
+
+To smoke-test the hexagonality plotter without regenerating the separate full
+hexagonality dataset, integration mode copies the standard weighted `2_8`
+predictions to a clearly marked `Hexagonality_*_W_2_8` alias. The alias is only a
+pipeline/plotting test artifact and is not a publication hexagonality dataset.
+Disable it with `'integration_include_hex_alias', false`.
+
+The expensive embedded example panels can be controlled independently from the
+embedding-error analysis. Integration mode enables them by default; disable them
+with `'plot_embedding_examples', false` if you only want the saved per-graph
+embedding diagnostics.
+
 ## Publication-Scale Run
 
 Publication mode uses all generated revision datasets by default and asks at

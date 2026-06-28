@@ -54,6 +54,7 @@ p.addParameter('assemble_only', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('datasets', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('max_graphs_per_dataset', inf, @(x) isnumeric(x) && isscalar(x) && x >= 1);
 p.addParameter('split_counts', [], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
+p.addParameter('limited_split_scheme', 'single', @(x) any(strcmp(char(x), {'single','canonical'})));
 p.addParameter('simulation_times', [], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
 p.addParameter('counterfactual', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x) && x >= 0);
@@ -66,6 +67,7 @@ opts.workers = max(1, floor(opts.workers));
 if ~isempty(opts.simulation_times), opts.simulation_times = double(opts.simulation_times(:).'); end
 opts.counterfactual_h_min = floor(opts.counterfactual_h_min);
 opts.counterfactual_suffix = char(opts.counterfactual_suffix);
+opts.limited_split_scheme = char(opts.limited_split_scheme);
 
 paths = local_paths();
 if isempty(opts.output_root)
@@ -124,7 +126,7 @@ for s = 1:numel(specs)
     assembly = GNNBenchmark_assemble_vertex_model_graphs(raw_output_dir, spec.rows, model_ready_dir, spec.key);
     splits_dir = fullfile(opts.output_root, 'model_ready', spec.key, 'splits');
     if isfinite(opts.max_graphs_per_dataset)
-        write_limited_split(model_ready_dir, splits_dir, height(spec.rows), opts.split_counts);
+        write_limited_splits(model_ready_dir, splits_dir, height(spec.rows), opts.split_counts, spec.key, opts.limited_split_scheme);
     elseif strcmp(opts.mode, 'publication')
         copy_split_manifests(spec.split_manifest_dir, splits_dir);
         copy_default_split(splits_dir, model_ready_dir);
@@ -152,7 +154,7 @@ for s = 1:numel(specs)
             'counterfactual_delta', opts.counterfactual_delta, ...
             'counterfactual_seed', opts.counterfactual_seed);
         if isfinite(opts.max_graphs_per_dataset)
-            write_limited_split(cf_model_ready_dir, cf_splits_dir, height(spec.rows), opts.split_counts);
+            write_limited_splits(cf_model_ready_dir, cf_splits_dir, height(spec.rows), opts.split_counts, spec.key, opts.limited_split_scheme);
         elseif strcmp(opts.mode, 'publication')
             copy_split_manifests(spec.split_manifest_dir, cf_splits_dir);
             copy_default_split(cf_splits_dir, cf_model_ready_dir);
@@ -390,6 +392,95 @@ write_text_file(fullfile(splits_dir, 'minimal_one_graph', 'val.inds'), '');
 write_text_file(fullfile(splits_dir, 'minimal_one_graph', 'test.inds'), sprintf('0\n'));
 end
 
+function write_limited_splits(model_ready_dir, splits_dir, n_graphs, split_counts, dataset_key, scheme)
+% write_limited_splits  Write small splits using either smoke or canonical names.
+% Inputs:
+%   model_ready_dir  Folder containing the generated model-ready graph files.
+%   splits_dir       Folder where named split subdirectories are mirrored.
+%   n_graphs         Number of generated graphs in the limited dataset.
+%   split_counts     Base [train val test] counts.
+%   dataset_key      Publication dataset key, e.g. standard_16 or shear_1_5.
+%   scheme           'single' for one limited_<N> split; 'canonical' for the
+%                    manuscript split names expected by the analyzer/plotter.
+if nargin < 6 || isempty(scheme) || strcmp(scheme, 'single')
+    write_limited_split(model_ready_dir, splits_dir, n_graphs, split_counts);
+    return
+end
+if ~strcmp(scheme, 'canonical')
+    error('write_limited_splits:badScheme', 'Unknown limited split scheme: %s', scheme);
+end
+if strcmp(dataset_key, 'standard_16')
+    names = {'standard_2_1','standard_2_2','standard_2_4','standard_2_8','standard_2_16','standard_1_32'};
+    max_train = limited_train_count(n_graphs, split_counts);
+    train_counts = unique(max(1, round(linspace(2, max_train, numel(names)))), 'stable');
+    if numel(train_counts) < numel(names)
+        train_counts = round(linspace(1, max_train, numel(names)));
+        train_counts = max(1, min(max_train, train_counts));
+    end
+    for i = 1:numel(names)
+        counts = limited_counts_for_train(n_graphs, train_counts(i), split_counts);
+        write_named_limited_split(model_ready_dir, splits_dir, names{i}, n_graphs, counts, i == numel(names));
+    end
+else
+    counts = limited_counts_for_train(n_graphs, limited_train_count(n_graphs, split_counts), split_counts);
+    write_named_limited_split(model_ready_dir, splits_dir, 'training_set_1_16_cells', n_graphs, counts, true);
+end
+end
+
+function n_train = limited_train_count(n_graphs, split_counts)
+if nargin < 2 || isempty(split_counts)
+    if n_graphs >= 3
+        n_train = n_graphs - 2;
+    elseif n_graphs == 2
+        n_train = 1;
+    else
+        n_train = 0;
+    end
+else
+    n_train = min(floor(split_counts(1)), max(0, n_graphs - 1));
+end
+end
+
+function counts = limited_counts_for_train(n_graphs, n_train, split_counts)
+if nargin < 3 || isempty(split_counts)
+    requested_val = 1;
+    requested_test = 1;
+else
+    split_counts = floor(split_counts(:).');
+    requested_val = split_counts(2);
+    requested_test = split_counts(3);
+end
+n_train = max(0, min(n_train, n_graphs));
+remaining = max(0, n_graphs - n_train);
+n_val = min(requested_val, max(0, remaining - 1));
+n_test = min(requested_test, remaining - n_val);
+if n_test == 0 && n_graphs > n_train
+    n_test = 1;
+    if n_val > 0 && n_train + n_val + n_test > n_graphs
+        n_val = n_val - 1;
+    end
+end
+counts = [n_train, n_val, n_test];
+end
+
+function write_named_limited_split(model_ready_dir, splits_dir, split_name, n_graphs, split_counts, copy_to_root)
+idx = 0:(n_graphs - 1);
+train_idx = idx(1:split_counts(1));
+val_start = split_counts(1) + 1;
+val_idx = idx(val_start:(val_start + split_counts(2) - 1));
+test_start = sum(split_counts(1:2)) + 1;
+test_idx = idx(test_start:(test_start + split_counts(3) - 1));
+split_dir = fullfile(splits_dir, split_name);
+ensure_dir(split_dir);
+write_index_file(fullfile(split_dir, 'train.inds'), train_idx);
+write_index_file(fullfile(split_dir, 'val.inds'), val_idx);
+write_index_file(fullfile(split_dir, 'test.inds'), test_idx);
+if copy_to_root
+    write_index_file(fullfile(model_ready_dir, 'train.inds'), train_idx);
+    write_index_file(fullfile(model_ready_dir, 'val.inds'), val_idx);
+    write_index_file(fullfile(model_ready_dir, 'test.inds'), test_idx);
+end
+end
 function write_limited_split(model_ready_dir, splits_dir, n_graphs, split_counts)
 % write_limited_split  Write a train/val/test split for limited mini runs.
 % Inputs:

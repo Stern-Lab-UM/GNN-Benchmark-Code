@@ -47,8 +47,23 @@ addpath(genpath('/path/to/GNN-Benchmark-Code'))
 manifest = GNNBenchmark_run_publication_pipeline('mode', 'mini', 'cuda', 0);
 ```
 
-See `pipeline/matlab/README.md` for cache policies, CPU-only examples, and
-output-folder details.
+### Integration-Scale Example
+
+This mode is larger than the mini example but far smaller than the full run. It
+keeps the manuscript-style dataset and figure layout, uses small generated
+datasets, runs all generated condition families, and is meant for an overnight
+GPU-node validation.
+
+```matlab
+manifest = GNNBenchmark_run_publication_pipeline( ...
+    'mode', 'integration', ...
+    'output_root', '/path/to/scratch/gnn_benchmark_pipeline_integration', ...
+    'workers', 12, ...
+    'cuda', 0);
+```
+
+See `pipeline/matlab/README.md` for cache policies, integration-profile knobs,
+CPU-only examples, and output-folder details.
 
 ## Main Pipeline Stages
 

@@ -3,26 +3,32 @@ function manifest = GNNBenchmark_run_publication_pipeline(varargin)
 %
 %   MANIFEST = GNNBenchmark_run_publication_pipeline('mode','mini') runs a small but
 %   trainable end-to-end check. MANIFEST =
-%   GNNBenchmark_run_publication_pipeline('mode','publication') uses the same stages at
+%   GNNBenchmark_run_publication_pipeline('mode','integration') runs a reduced
+%   overnight-scale workflow that keeps the manuscript dataset/figure layout.
+%   MANIFEST = GNNBenchmark_run_publication_pipeline('mode','publication') uses the same stages at
 %   manuscript scale. MATLAB is the orchestrator; tissue generation, BO,
 %   training, prediction, analysis, and plotting remain in their existing
 %   modules.
 %
 %   Important options:
-%     mode             'mini' or 'publication' (default 'mini')
+%     mode             'mini', 'integration', or 'publication' (default 'mini')
 %     output_root      run folder; default <repo>/pipeline_runs/<timestamp>
 %     stages           {'all'} or a subset of install_check, data_generation,
 %                      bayesopt, final_training, prediction, embedding,
 %                      analysis, figures
-%     datasets         dataset keys; mini default {'standard_16'}
+%     datasets         dataset keys; mini default {'standard_16'}; integration
+%                      and publication default to all generated manuscript
+%                      condition families
 %     models           default all five models
 %     weights          default {'W','UW'} for standard_16; revision conditions
 %                      are W-only unless run_unweighted_revision_conditions=true
-%     seeds            mini default 0; publication default 0:4
+%     seeds            mini default 0; integration default 0:1; publication default 0:4
 %     prompt_cache     ask at startup whether to reuse long-stage outputs
 %     cache_policy     struct fields: data_generation, bayesopt,
 %                      final_training, prediction, embedding
-%     mini_graphs_per_dataset / mini_split_counts / mini_simulation_times
+%     mini_graphs_per_dataset / integration_graphs_per_dataset
+%     mini_split_counts / integration_split_counts
+%     mini_simulation_times / integration_simulation_times
 %                      make a fast train/val/test subset from publication order
 %     n_trials, bo_max_epochs, final_epochs
 %                      shrink or expand runtime without changing code paths
@@ -121,7 +127,7 @@ end
 function opts = parse_inputs(varargin)
 p = inputParser;
 p.FunctionName = 'GNNBenchmark_run_publication_pipeline';
-p.addParameter('mode', 'mini', @(x) any(strcmpi(char(x), {'mini','publication'})));
+p.addParameter('mode', 'mini', @(x) any(strcmpi(char(x), {'mini','integration','publication'})));
 p.addParameter('output_root', '', @(x) ischar(x) || isstring(x));
 p.addParameter('stages', {'all'}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('datasets', {}, @(x) iscell(x) || isstring(x) || ischar(x));
@@ -137,6 +143,11 @@ p.addParameter('run_unweighted_revision_conditions', false, @(x) islogical(x) &&
 p.addParameter('mini_graphs_per_dataset', 6, @(x) isnumeric(x) && isscalar(x) && x >= 3);
 p.addParameter('mini_split_counts', [4 1 1], @(x) isnumeric(x) && numel(x) == 3);
 p.addParameter('mini_simulation_times', [1 7 2], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
+p.addParameter('integration_graphs_per_dataset', 18, @(x) isnumeric(x) && isscalar(x) && x >= 6);
+p.addParameter('integration_split_counts', [12 3 3], @(x) isnumeric(x) && numel(x) == 3);
+p.addParameter('integration_simulation_times', [2 12 4], @(x) isempty(x) || (isnumeric(x) && numel(x) == 3 && all(x >= 0)));
+p.addParameter('integration_include_hex_alias', true, @(x) islogical(x) && isscalar(x));
+p.addParameter('plot_embedding_examples', [], @(x) isempty(x) || (islogical(x) && isscalar(x)));
 p.addParameter('n_trials', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('num_seed_points', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('bo_max_epochs', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
@@ -148,7 +159,7 @@ p.addParameter('mini_max_prediction_mae', 10, @(x) isnumeric(x) && isscalar(x) &
 p.addParameter('run_bayesopt', true, @(x) islogical(x) && isscalar(x));
 p.addParameter('reuse_best_hps', true, @(x) islogical(x) && isscalar(x));
 p.addParameter('overwrite_generation', false, @(x) islogical(x) && isscalar(x));
-p.addParameter('counterfactual', false, @(x) islogical(x) && isscalar(x));
+p.addParameter('counterfactual', [], @(x) isempty(x) || (islogical(x) && isscalar(x)));
 p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x));
 p.addParameter('counterfactual_delta', 0.05, @(x) isnumeric(x) && isscalar(x));
 p.addParameter('counterfactual_seed', 20260616, @(x) isnumeric(x) && isscalar(x));
@@ -159,6 +170,9 @@ p.addParameter('embedding_generate', [], @(x) isempty(x) || (islogical(x) && iss
 p.addParameter('embedding_max_graphs_per_prediction', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && x >= 1));
 p.addParameter('data_root_for_figures', '', @(x) ischar(x) || isstring(x));
 p.addParameter('include_ppgn', true, @(x) islogical(x) && isscalar(x));
+p.addParameter('include_ppgn_large_tissues', false, @(x) islogical(x) && isscalar(x));
+p.addParameter('mpnn_ablate_head_edge_attr', false, @(x) islogical(x) && isscalar(x));
+p.addParameter('ppgn_disable_first_skip', false, @(x) islogical(x) && isscalar(x));
 p.parse(varargin{:});
 opts = p.Results;
 opts.mode = lower(char(opts.mode));
@@ -168,6 +182,9 @@ opts.python = char(opts.python);
 opts.embedding_root = char(opts.embedding_root);
 opts.embedding_engine = char(opts.embedding_engine);
 opts.data_root_for_figures = char(opts.data_root_for_figures);
+if isempty(opts.counterfactual)
+    opts.counterfactual = strcmp(opts.mode, 'integration');
+end
 if isempty(opts.datasets)
     if strcmp(opts.mode, 'mini')
         opts.datasets = {'standard_16'};
@@ -186,28 +203,37 @@ if ~opts.include_ppgn
     opts.models = setdiff(opts.models, {'PPGN'}, 'stable');
 end
 if isempty(opts.seeds)
-    opts.seeds = ternary(strcmp(opts.mode, 'mini'), 0, 0:4);
+    if strcmp(opts.mode, 'mini')
+        opts.seeds = 0;
+    elseif strcmp(opts.mode, 'integration')
+        opts.seeds = 0:1;
+    else
+        opts.seeds = 0:4;
+    end
 end
 if isempty(opts.prompt_cache)
     opts.prompt_cache = strcmp(opts.mode, 'publication');
 end
+if isempty(opts.plot_embedding_examples)
+    opts.plot_embedding_examples = ~strcmp(opts.mode, 'mini');
+end
 if isempty(opts.n_trials)
-    opts.n_trials = ternary(strcmp(opts.mode, 'mini'), 1, NaN);
+    opts.n_trials = mode_default_number(opts.mode, 1, 2, NaN);
 end
 if isempty(opts.num_seed_points)
-    opts.num_seed_points = ternary(strcmp(opts.mode, 'mini'), 1, NaN);
+    opts.num_seed_points = mode_default_number(opts.mode, 1, 2, NaN);
 end
 if isempty(opts.bo_max_epochs)
-    opts.bo_max_epochs = ternary(strcmp(opts.mode, 'mini'), 3, NaN);
+    opts.bo_max_epochs = mode_default_number(opts.mode, 3, 6, NaN);
 end
 if isempty(opts.final_epochs)
-    opts.final_epochs = ternary(strcmp(opts.mode, 'mini'), 3, 120);
+    opts.final_epochs = mode_default_number(opts.mode, 3, 10, 120);
 end
 if isempty(opts.embedding_generate)
     opts.embedding_generate = isempty(opts.embedding_root);
 end
 if isempty(opts.embedding_max_graphs_per_prediction)
-    opts.embedding_max_graphs_per_prediction = ternary(strcmp(opts.mode, 'mini'), 1, Inf);
+    opts.embedding_max_graphs_per_prediction = mode_default_number(opts.mode, 1, 2, Inf);
 end
 end
 
@@ -298,6 +324,11 @@ end
 extra = {};
 if strcmp(opts.mode, 'mini')
     extra = {'max_graphs_per_dataset', opts.mini_graphs_per_dataset, 'split_counts', opts.mini_split_counts, 'simulation_times', opts.mini_simulation_times};
+elseif strcmp(opts.mode, 'integration')
+    extra = {'max_graphs_per_dataset', opts.integration_graphs_per_dataset, ...
+        'split_counts', opts.integration_split_counts, ...
+        'simulation_times', opts.integration_simulation_times, ...
+        'limited_split_scheme', 'canonical'};
 end
 report = GNNBenchmark_generate_vertex_model_datasets('mode', 'publication', ...
     'output_root', paths.generated_root, 'workers', opts.workers, ...
@@ -334,11 +365,13 @@ for j = 1:numel(jobs)
                 'early_stop_min_delta', search.early_stop_min_delta, ...
                 'num_seed_points', min(search.num_seed_points, search.n_trials), ...
                 'output_dirname', bo_dir, 'skip_existing', reuse_cache, ...
-                'smooth_val_loss', ~strcmp(opts.mode, 'mini'), 'python', opts.python);
+                'smooth_val_loss', ~strcmp(opts.mode, 'mini'), 'python', opts.python, ...
+                'ablate_head_edge_attr', opts.mpnn_ablate_head_edge_attr);
             hp = best_hps_from_bayesopt(results, search.hp_ranges, job.family);
         else
             hp = default_hps(job.model, job.family);
         end
+        hp = apply_architecture_flags(hp, job, opts);
     else
         search = apply_runtime_overrides(spaces.ppgn_v1, opts);
         search = apply_mini_ppgn_stability_overrides(search, opts);
@@ -351,14 +384,17 @@ for j = 1:numel(jobs)
                 'num_seed_points', min(search.num_seed_points, search.n_trials), ...
                 'output_dirname', bo_dir, 'skip_existing', reuse_cache, ...
                 'smooth_val_loss', ~strcmp(opts.mode, 'mini'), ...
-                'ppgn_cmd', [opts.python, ' -m gnn_benchmark_ppgn.main']);
+                'ppgn_cmd', [opts.python, ' -m gnn_benchmark_ppgn.main'], ...
+                'disable_first_skip', opts.ppgn_disable_first_skip);
             hp = best_hps_from_bayesopt(results, search.hp_ranges, job.family);
         else
             hp = default_hps(job.model, job.family);
         end
+        hp = apply_architecture_flags(hp, job, opts);
         if use_mini_ppgn_fixed_hps(opts, job)
             bo_hp = hp; %#ok<NASGU>
             hp = mini_ppgn_smoke_hps(job);
+            hp = apply_architecture_flags(hp, job, opts);
             fprintf('[bayesopt] mini PPGN final training uses fixed smoke-test HPs for %s.\n', job.job_id);
         end
     end
@@ -395,6 +431,14 @@ if isfield(search, 'hp_ranges') && isfield(search.hp_ranges, 'learning_rate')
 end
 end
 
+function hp = apply_architecture_flags(hp, job, opts)
+% apply_architecture_flags  Attach architecture-ablation switches to saved HPs.
+if strcmp(job.family, 'MPNN')
+    hp.ablate_head_edge_attr = opts.mpnn_ablate_head_edge_attr;
+elseif strcmp(job.family, 'PPGN')
+    hp.disable_first_skip = opts.ppgn_disable_first_skip;
+end
+end
 function out = stage_final_training(opts, paths, reuse_cache)
 ensure_dir(paths.model_root);
 jobs = enumerate_jobs(opts, paths);
@@ -442,6 +486,9 @@ for j = 1:numel(jobs)
         raw_out = fullfile(paths.pred_raw_root, sprintf('%s_seed_%d.pred.txt', job.job_id, s));
         con_out = fullfile(paths.pred_consolidated_root, consolidated_name(job, s));
         if reuse_cache && isfile(raw_out) && isfile(con_out)
+            publish_split(job, paths);
+            publish_integration_hex_alias(opts, job, paths, con_out);
+            predict_counterfactual_if_needed(opts, paths, job, s, reuse_cache);
             rows(end+1) = struct('job_id', job.job_id, 'seed', s, 'status', 'reused', 'pred_file', raw_out, 'consolidated_file', con_out); %#ok<AGROW>
             continue
         end
@@ -460,12 +507,61 @@ for j = 1:numel(jobs)
         ensure_dir(fileparts(con_out));
         copyfile(raw_out, con_out);
         publish_split(job, paths);
+        publish_integration_hex_alias(opts, job, paths, con_out);
+        predict_counterfactual_if_needed(opts, paths, job, s, reuse_cache);
         rows(end+1) = struct('job_id', job.job_id, 'seed', s, 'status', 'ok', 'pred_file', raw_out, 'consolidated_file', con_out); %#ok<AGROW>
     end
 end
 out = struct('jobs', rows, 'raw_root', paths.pred_raw_root, 'consolidated_root', paths.pred_consolidated_root);
 end
 
+function predict_counterfactual_if_needed(opts, paths, job, seed, reuse_cache)
+% predict_counterfactual_if_needed  Re-evaluate normal checkpoints on perturbed inputs.
+if ~opts.counterfactual
+    return
+end
+if ~strcmp(job.dataset_key, 'standard_16') || ~strcmp(job.weight, 'W') || ~strcmp(job.size_token, '2_16')
+    return
+end
+cf_key = counterfactual_dataset_key(job.dataset_key, opts);
+cf_dataset_file = fullfile(paths.generated_root, 'model_ready', cf_key, '2D', [cf_key, '_weighted.txt']);
+cf_split_dir = fullfile(paths.generated_root, 'model_ready', cf_key, 'splits', job.split_label);
+if ~isfile(cf_dataset_file) || ~isfolder(cf_split_dir)
+    warning('GNNBenchmark:pipeline:counterfactualMissing', ...
+        'Counterfactual input missing for %s seed %d; skipping perturbed prediction.', job.job_id, seed);
+    return
+end
+raw_out = fullfile(paths.pred_raw_root, sprintf('%s_counterfactual_seed_%d.pred.txt', job.job_id, seed));
+con_out = fullfile(paths.pred_consolidated_root, sprintf('standard-flip-counterfactual_%s_W_2_16_s%d.pred.txt', job.model, seed));
+if reuse_cache && isfile(raw_out) && isfile(con_out)
+    return
+end
+cf_job = job;
+cf_job.dataset_key = cf_key;
+cf_job.dataset_file = cf_dataset_file;
+cf_job.split_dir = cf_split_dir;
+cf_job.job_id = [job.job_id, '_counterfactual'];
+log_file = fullfile(paths.logs, sprintf('predict_%s_seed_%d.log', cf_job.job_id, seed));
+if strcmp(job.family, 'MPNN')
+    hp = load_hps(job, paths, opts);
+    ckpt = find_checkpoint(fullfile(paths.model_root, job.job_id, sprintf('seed_%d', seed)), job.model, job.weight, seed);
+    cmd = mpnn_predict_cmd(opts, ckpt, cf_dataset_file, raw_out, max(1, round(hp.batch_size)));
+else
+    ppgn = stage_ppgn_dataset(cf_job, paths, 'predict_gnn_benchmark');
+    model_dir = fullfile(paths.model_root, job.job_id, sprintf('seed_%d', seed));
+    cmd = ppgn_predict_cmd(opts, model_dir, ppgn.dataset_file, raw_out);
+end
+[status, output] = run_logged(cmd, log_file, paths.repo_root);
+if status ~= 0
+    error('GNNBenchmark:pipeline:counterfactualPredict', 'Counterfactual prediction failed: %s\n%s', log_file, output);
+end
+ensure_dir(fileparts(con_out));
+copyfile(raw_out, con_out);
+dst = fullfile(paths.pred_consolidated_root, 'splits', 'counterfactual_v1_2_16_W');
+ensure_dir(dst);
+copy_split(cf_split_dir, dst);
+write_text(fullfile(dst, '_applies_to.txt'), sprintf('applies to datasets: counterfactual_v1_2_16_W\n'));
+end
 function out = stage_embedding(opts, paths, reuse_cache)
 ensure_dir(paths.analysis_tables);
 out = struct('status', 'started', 'embedding_root', '', 'message', '', ...
@@ -701,7 +797,23 @@ else
     assignin('base', 'rebuild_summaries', true);
     assignin('base', 'plot_after_summary', false);
     run(fullfile(paths.repo_root, 'analysis', 'matlab', 'GNNBenchmark_rebuild_all_summaries.m'));
-    out = struct('status', 'ok', 'data_root', data_root);
+    counterfactual_out = struct();
+    if opts.counterfactual
+        cf_inds_dir = fullfile(data_root, 'splits', 'v1_2_16_W');
+        counterfactual_out = GNNBenchmark_analyze_counterfactual_copying( ...
+            'regular_pred_root', data_root, ...
+            'counterfactual_pred_root', data_root, ...
+            'regular_include_token', 'W_2_16', ...
+            'counterfactual_include_token', 'counterfactual', ...
+            'inds_dir', cf_inds_dir, ...
+            'output_dir', GNNBenchmark_figure_paths('diagnostic_dir', paths.figures, 'counterfactual_copying'), ...
+            'models', opts.models, ...
+            'seeds', opts.seeds, ...
+            'h_min', opts.counterfactual_h_min, ...
+            'delta', opts.counterfactual_delta, ...
+            'close_figure', true);
+    end
+    out = struct('status', 'ok', 'data_root', data_root, 'counterfactual', counterfactual_out);
 end
 end
 
@@ -737,6 +849,7 @@ if strcmp(opts.mode, 'mini')
 else
     data_root = ternary(isempty(opts.data_root_for_figures), paths.pred_consolidated_root, opts.data_root_for_figures);
     figures_root_override = paths.figures; %#ok<NASGU>
+    embed_examples = opts.plot_embedding_examples; %#ok<NASGU>
     run(fullfile(paths.repo_root, 'analysis', 'matlab', 'GNNBenchmark_plot_everything.m'));
     out = struct('status', 'ok', 'data_root', data_root, 'figures_root', figures_root_override);
 end
@@ -758,8 +871,9 @@ for d = 1:numel(opts.datasets)
         dataset_file = dataset_file_for_weight(ds_dir, dataset_key, weight);
         for sp = 1:numel(split_dirs)
             [~, split_label] = fileparts(split_dirs{sp});
-            for m = 1:numel(opts.models)
-                model = opts.models{m};
+            models_here = models_for_dataset(dataset_key, opts);
+            for m = 1:numel(models_here)
+                model = models_here{m};
                 size_token = size_token_for_job(dataset_key, split_label);
                 prefix = analysis_prefix(dataset_key, weight, split_label, size_token);
                 jobs(end+1) = struct('dataset_key', dataset_key, 'weight', weight, ...
@@ -792,6 +906,13 @@ end
 if isempty(split_dirs), error('GNNBenchmark:pipeline:noSplits', 'No split folders for %s', ds_dir); end
 end
 
+function models = models_for_dataset(dataset_key, opts)
+% models_for_dataset  Apply dataset-specific model availability rules.
+models = opts.models;
+if any(strcmp(dataset_key, {'tissue_484','tissue_784'})) && ~opts.include_ppgn_large_tissues
+    models = setdiff(models, {'PPGN'}, 'stable');
+end
+end
 function weights = weights_for_dataset(dataset_key, opts)
 if strcmp(dataset_key, 'standard_16') || opts.run_unweighted_revision_conditions
     weights = opts.weights;
@@ -874,7 +995,7 @@ parts = {sprintf('epochs=%d', epochs), 'patience=20', 'early_stop=40', 'threshol
     sprintf('learning_rate=%.12g', hp.learning_rate), sprintf('batch_size=%d', hp.batch_size), ...
     sprintf('factor=%.8g', hp.factor), sprintf('gradient_clipping=%.8g', hp.gradient_clipping), ...
     sprintf('input_features=%s', input_features), 'target_features=[out_preferred_length]', ...
-    sprintf('normalize=%s', normalize), 'disable_first_skip=False'};
+    sprintf('normalize=%s', normalize), sprintf('disable_first_skip=%s', lower(boolstr(isfield(hp, 'disable_first_skip') && hp.disable_first_skip)))};
 args = strjoin(parts, ';');
 end
 
@@ -953,7 +1074,7 @@ end
 
 function hp = default_hps(model, family)
 if strcmp(family, 'PPGN')
-    hp = struct('learning_rate', 5.676e-4, 'batch_size', 8, 'factor', 0.6, 'gradient_clipping', 0.1);
+    hp = struct('learning_rate', 5.676e-4, 'batch_size', 8, 'factor', 0.6, 'gradient_clipping', 0.1, 'disable_first_skip', false);
 else
     switch model
         case 'GraphSAGE', hp = struct('lr', 6.356e-4, 'hidden_channels', 128, 'dropout', 0, 'batch_size', 2, 'factor', 0.75);
@@ -1000,6 +1121,42 @@ end
 token = clean_id(split_label);
 end
 
+function key = counterfactual_dataset_key(base_key, opts)
+% counterfactual_dataset_key  Match the data-generation counterfactual key.
+delta_txt = regexprep(sprintf('%.8g', opts.counterfactual_delta), '[^\dA-Za-z]+', 'p');
+key = sprintf('%s_counterfactual_h%d_delta%s', base_key, floor(opts.counterfactual_h_min), delta_txt);
+end
+function publish_integration_hex_alias(opts, job, paths, con_out)
+% publish_integration_hex_alias  Exercise hex plotting in integration runs.
+% The integration profile is deliberately tiny and generated from the standard
+% vertex-model manifest. To smoke-test the hexagonality analyzer/plotter without
+% committing a separate full hex dataset, copy the standard 2_8 weighted
+% predictions into the consolidated Hexagonality filename and publish a matching
+% split alias. This is marked as integration-only output by the manifest and is
+% not used by publication-scale runs.
+if ~strcmp(opts.mode, 'integration') || ~opts.integration_include_hex_alias
+    return
+end
+if ~strcmp(job.dataset_key, 'standard_16') || ~strcmp(job.weight, 'W') || ~strcmp(job.size_token, '2_8')
+    return
+end
+if ~isfile(con_out)
+    return
+end
+[~, base, ext] = fileparts(con_out);
+seed_tok = regexp(base, '_s(\d+)$', 'tokens', 'once');
+if isempty(seed_tok)
+    return
+end
+hex_file = fullfile(paths.pred_consolidated_root, sprintf('Hexagonality_%s_W_2_8_s%s%s', job.model, seed_tok{1}, ext));
+copyfile(con_out, hex_file);
+dst = fullfile(paths.pred_consolidated_root, 'splits', 'hex_2_8_W');
+ensure_dir(dst);
+copy_split(job.split_dir, dst);
+write_text(fullfile(dst, '_applies_to.txt'), sprintf('applies to datasets: hex_2_8_W\n'));
+write_text(fullfile(dst, '_integration_alias_note.txt'), sprintf(['Integration-mode smoke-test alias.\n', ...
+    'Source prediction: %s\nSource split: %s\nThis is not a publication hexagonality dataset.\n'], con_out, job.split_dir));
+end
 function publish_split(job, paths)
 dst = fullfile(paths.pred_consolidated_root, 'splits', clean_id(job.analysis_prefix));
 ensure_dir(dst);
@@ -1146,6 +1303,16 @@ if st == 0
 end
 end
 
+function out = mode_default_number(mode, mini_value, integration_value, publication_value)
+% mode_default_number  Select a numeric default for the three run profiles.
+if strcmp(mode, 'mini')
+    out = mini_value;
+elseif strcmp(mode, 'integration')
+    out = integration_value;
+else
+    out = publication_value;
+end
+end
 function value = getenv_or(name, fallback)
 value = getenv(name);
 if isempty(value), value = fallback; end
