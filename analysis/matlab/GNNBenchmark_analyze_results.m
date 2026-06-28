@@ -509,7 +509,6 @@ end
 % would indicate a deeper alignment problem).
 if ismember('none_to_lengths', tasks)
     for m = 1 : length(all_models)
-        m
         for i = 1 : size(I.(all_models{m}).(tasks{t}).vals,1)
             for j = 1 : size(I.(all_models{m}).(tasks{t}).vals,2)
                 for k = 1 : length(I.(all_models{m}).(tasks{t}).vals{i,j})
@@ -528,31 +527,37 @@ if ismember('none_to_lengths', tasks)
                     end
                     nums2 = sub2ind([n_cells,n_cells], pairs(:,1), pairs(:,2));
 
-                    % b = indices in W not in UW; c = indices in UW not in W.
-                    [a,b,c] = setxor(nums1, nums2);
-
-                    % Post-drop_flag1, W and UW have identical (u,v) sets, so
-                    % b and c are empty. The reassignment below would then
-                    % collapse vals to 0 rows (because 1:[]-1 and []:end both
-                    % evaluate to empty). Skip when there's nothing to move.
-                    if ~isempty(c)
-                        % Pull out the UW row(s) that need to move, delete
-                        % them from their current position, then re-insert
-                        % them at W's position (so UW row k matches W row k).
-                        moved = I.(all_models{m}).none_to_lengths.vals{i,j}{k}(c,:);
-                        I.(all_models{m}).none_to_lengths.vals{i,j}{k}(c,:) = [];
-                        I.(all_models{m}).none_to_lengths.vals{i,j}{k} = [I.(all_models{m}).none_to_lengths.vals{i,j}{k}(1:b-1,:); moved; I.(all_models{m}).none_to_lengths.vals{i,j}{k}(b:end,:)];
-
-                        % Sanity check: after the move, at most one row should
-                        % still differ (the eliminated edge row in pre-drop_flag1
-                        % data; zero rows post-drop_flag1).
-                        n_mismatched_rows = nnz(any(I.(all_models{m}).none_to_lengths.vals{i,j}{k}(:,1:2) ~= I.(all_models{m}).lengths_to_lengths.vals{i,j}{k}(:,1:2),2));
-                        if n_mismatched_rows ~= 1
+                    % Current generated files may list the exact same directed
+                    % edges in a different row order (not merely a one-row
+                    % offset). Reorder the UW rows by directed edge identity so
+                    % row k in UW refers to the same interface as row k in W.
+                    [row_is_present, row_order] = ismember(nums1, nums2);
+                    if all(row_is_present) && numel(unique(row_order)) == numel(row_order)
+                        I.(all_models{m}).none_to_lengths.vals{i,j}{k} = ...
+                            I.(all_models{m}).none_to_lengths.vals{i,j}{k}(row_order,:);
+                    else
+                        % Legacy pre-drop_flag1 files could differ by the single
+                        % eliminated-edge row. Preserve that historical repair,
+                        % but fail loudly if the sets differ more substantially.
+                        [~, b, c] = setxor(nums1, nums2);
+                        if numel(b) == 1 && numel(c) == 1
+                            moved = I.(all_models{m}).none_to_lengths.vals{i,j}{k}(c,:);
+                            I.(all_models{m}).none_to_lengths.vals{i,j}{k}(c,:) = [];
+                            I.(all_models{m}).none_to_lengths.vals{i,j}{k} = [I.(all_models{m}).none_to_lengths.vals{i,j}{k}(1:b-1,:); moved; I.(all_models{m}).none_to_lengths.vals{i,j}{k}(b:end,:)];
+                        else
                             error('GNNBenchmark:uwAlignmentMismatch', ...
-                                ['Unexpected W/UW edge-order mismatch after row realignment ', ...
-                                 '(model=%s, subset=%d, seed=%d, graph=%d, mismatched_rows=%d).'], ...
-                                all_models{m}, i, j, k, n_mismatched_rows);
+                                ['W/UW edge sets cannot be aligned ', ...
+                                 '(model=%s, subset=%d, seed=%d, graph=%d, missing_in_uw=%d, extra_in_uw=%d).'], ...
+                                all_models{m}, i, j, k, nnz(~row_is_present), numel(setdiff(nums2, nums1)));
                         end
+                    end
+
+                    n_mismatched_rows = nnz(any(I.(all_models{m}).none_to_lengths.vals{i,j}{k}(:,1:2) ~= I.(all_models{m}).lengths_to_lengths.vals{i,j}{k}(:,1:2),2));
+                    if n_mismatched_rows ~= 0
+                        error('GNNBenchmark:uwAlignmentMismatch', ...
+                            ['Unexpected W/UW edge-order mismatch after row realignment ', ...
+                             '(model=%s, subset=%d, seed=%d, graph=%d, mismatched_rows=%d).'], ...
+                            all_models{m}, i, j, k, n_mismatched_rows);
                     end
 
                     % (alternative ordering kept for reference)

@@ -265,6 +265,10 @@ for batch_dataset_index_2026 = 1 : numel(datasets)
         if exist('analysis_seeds', 'var') && ~isempty(analysis_seeds)
             GNNBenchmark_CONFIG.seeds = analysis_seeds;
         end
+        if exist('embed_engine', 'var') && ~isempty(embed_engine), GNNBenchmark_CONFIG.embed_engine = embed_engine; end
+        if exist('embed_workdir', 'var') && ~isempty(embed_workdir), GNNBenchmark_CONFIG.embed_workdir = embed_workdir; end
+        if exist('embed_vt2d_std', 'var') && ~isempty(embed_vt2d_std), GNNBenchmark_CONFIG.embed_vt2d_std = embed_vt2d_std; end
+        if exist('embed_vt2d_rev', 'var') && ~isempty(embed_vt2d_rev), GNNBenchmark_CONFIG.embed_vt2d_rev = embed_vt2d_rev; end
         run(plotter_script);
         clear GNNBenchmark_CONFIG;
     end

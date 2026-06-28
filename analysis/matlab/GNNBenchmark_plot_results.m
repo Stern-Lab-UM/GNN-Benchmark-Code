@@ -5319,6 +5319,14 @@ p = '';
 % std / v1: vt2d name matches the sim-id stem directly
 cand = fullfile(stdRoot, name);
 if exist(cand,'file') == 2, p = cand; return; end
+if exist(stdRoot,'dir') == 7
+    tok_std = strsplit(mid, '_');
+    if numel(tok_std) >= 3
+        pat_std = sprintf('final_%s_*_%s_%s.vt2d', tok_std{1}, tok_std{2}, tok_std{3});
+        d_std = dir(fullfile(stdRoot, '**', pat_std));
+        if ~isempty(d_std), p = fullfile(d_std(1).folder, d_std(1).name); return; end
+    end
+end
 % revision datasets: sim-id tokens 1/2/3 = ncells/rep/dis; vt2d is
 % final_<ncells>_<kA>_<rep>_<dis>.vt2d (kA varies per family, so glob it).
 switch dataset

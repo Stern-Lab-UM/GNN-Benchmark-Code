@@ -856,6 +856,10 @@ else
     figures_root_override = paths.figures; %#ok<NASGU>
     embed_examples = opts.plot_embedding_examples; %#ok<NASGU>
     analysis_seeds = opts.seeds; %#ok<NASGU>
+    embed_engine = resolve_spring_engine(opts, paths); %#ok<NASGU>
+    embed_workdir = paths.embedding_work_root; %#ok<NASGU>
+    embed_vt2d_std = fullfile(paths.generated_root, 'raw', 'standard_16'); %#ok<NASGU>
+    embed_vt2d_rev = fullfile(paths.generated_root, 'raw'); %#ok<NASGU>
     ensure_integration_hex_alias_from_consolidated(opts, data_root);
     run(fullfile(paths.repo_root, 'analysis', 'matlab', 'GNNBenchmark_plot_everything.m'));
     out = struct('status', 'ok', 'data_root', data_root, 'figures_root', figures_root_override);
