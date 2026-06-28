@@ -154,7 +154,7 @@ explicit `output_root`. Standalone scripts also recognize both the package root
 and `predictions/consolidated`.
 
 ```text
-<output_root>/analysis_tables/analyzer_cache/revision_codex_2026/
+<output_root>/analysis_tables/analyzer_cache/revision_2026/
 <output_root>/figures/00_mini_smoke/
 <output_root>/figures/01_standard_v1/weighted_all_cohorts/
 <output_root>/figures/01_standard_v1/unweighted_all_cohorts/

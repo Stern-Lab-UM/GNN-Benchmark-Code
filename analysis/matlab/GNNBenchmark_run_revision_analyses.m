@@ -130,11 +130,11 @@ end
 
 if ~isempty(analysis_cache_root)
     source_cache_root = analysis_cache_root;
-    revision_cache_root = fullfile(source_cache_root, 'revision_codex_2026');
+    revision_cache_root = fullfile(source_cache_root, 'revision_2026');
     if ~rebuild_summaries
         existing_revision_cache = first_existing({
-            fullfile(source_cache_root, 'revision_codex_2026')
             fullfile(source_cache_root, 'revision_2026')
+            fullfile(source_cache_root, 'revision_codex_2026')
             });
         if ~isempty(existing_revision_cache)
             revision_cache_root = existing_revision_cache;

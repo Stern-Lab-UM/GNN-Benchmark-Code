@@ -56,7 +56,7 @@ function report = GNNBenchmark_run_from_data_package(package_root, varargin)
 %
 %   Output tree
 %   -----------
-%     output_root/analysis_tables/analyzer_cache/revision_codex_2026/
+%     output_root/analysis_tables/analyzer_cache/revision_2026/
 %     output_root/figures/01_standard_v1/...
 %     output_root/figures/03_condition_comparisons/...
 %     output_root/figures/04_two_T1_events/...
@@ -105,7 +105,7 @@ end
 paths.output_root = opts.output_root;
 paths.analysis_tables = fullfile(paths.output_root, 'analysis_tables');
 paths.output_analysis_cache_root = fullfile(paths.analysis_tables, 'analyzer_cache');
-paths.output_revision_cache_root = fullfile(paths.output_analysis_cache_root, 'revision_codex_2026');
+paths.output_revision_cache_root = fullfile(paths.output_analysis_cache_root, 'revision_2026');
 paths.input_analysis_cache_root = input_paths.analysis_cache_root;
 paths.input_revision_cache_root = input_paths.revision_cache_root;
 if opts.rebuild_summaries || ~isfolder(paths.input_revision_cache_root)

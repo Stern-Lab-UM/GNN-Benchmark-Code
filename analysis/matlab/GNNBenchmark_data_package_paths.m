@@ -61,11 +61,11 @@ if paths.is_public_package
         });
     paths.analysis_cache_root = fullfile(pkg, 'analysis_tables', 'analyzer_cache');
     paths.revision_cache_root = first_existing_dir({
-        fullfile(paths.analysis_cache_root, 'revision_codex_2026')
         fullfile(paths.analysis_cache_root, 'revision_2026')
+        fullfile(paths.analysis_cache_root, 'revision_codex_2026')
         });
     if isempty(paths.revision_cache_root)
-        paths.revision_cache_root = fullfile(paths.analysis_cache_root, 'revision_codex_2026');
+        paths.revision_cache_root = fullfile(paths.analysis_cache_root, 'revision_2026');
     end
 else
     paths.embedding_root = existing_or_empty(fullfile(paths.data_root, 'embeddings', 'per_graph'));

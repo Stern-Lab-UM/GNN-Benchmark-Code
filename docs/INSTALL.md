@@ -1,10 +1,13 @@
 # Installation And Environment Checks
 
-This repository currently contains source snapshots and analysis code, not a polished Python package. The installation goal at this stage is therefore:
+This repository contains source snapshots, MATLAB orchestration/analysis code,
+and C/C++ helper sources rather than a packaged Python library. The installation
+goal is therefore:
 
 1. create a Python environment with the required dependencies;
 2. make sure the curated source snapshots can be imported;
-3. later add toy data and checkpoint smoke tests for exact numerical checks.
+3. compile the C/C++ helper tools when embedding or data generation is needed;
+4. run the MATLAB mini or integration pipeline to exercise the workflow.
 
 For a record of the platforms, dependency stacks, and validation commands that
 have actually been exercised, see `docs/TESTED_SETTINGS.md`.
