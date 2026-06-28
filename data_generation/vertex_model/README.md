@@ -132,7 +132,10 @@ the distal fallback/copying diagnostic. This is disabled by default. When enable
 the normal dataset is generated first, then a second model-ready dataset is
 assembled in which interfaces at edge-hop distance `h >= counterfactual_h_min`
 from the newly formed T1 interface have their pre-T1 input length shifted by
-`+/- counterfactual_delta` with deterministic random signs.
+`+/- counterfactual_delta` with deterministic random signs. By default, the
+counterfactual variant is written only for `standard_16`, which is the dataset
+used by the distal copy diagnostic; pass `'counterfactual_datasets', 'all'` or a
+cell array of dataset keys to override that scope.
 
 ```matlab
 GNNBenchmark_generate_vertex_model_datasets( ...

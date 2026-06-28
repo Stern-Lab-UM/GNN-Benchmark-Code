@@ -163,6 +163,7 @@ p.addParameter('counterfactual', [], @(x) isempty(x) || (islogical(x) && isscala
 p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x));
 p.addParameter('counterfactual_delta', 0.05, @(x) isnumeric(x) && isscalar(x));
 p.addParameter('counterfactual_seed', 20260616, @(x) isnumeric(x) && isscalar(x));
+p.addParameter('counterfactual_datasets', {'standard_16'}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('embedding_root', '', @(x) ischar(x) || isstring(x));
 p.addParameter('embedding_engine', getenv_or('GNN_BENCHMARK_EMBED_ENGINE', ''), @(x) ischar(x) || isstring(x));
 p.addParameter('embedding_build_engine', true, @(x) islogical(x) && isscalar(x));
@@ -182,6 +183,7 @@ opts.python = char(opts.python);
 opts.embedding_root = char(opts.embedding_root);
 opts.embedding_engine = char(opts.embedding_engine);
 opts.data_root_for_figures = char(opts.data_root_for_figures);
+opts.counterfactual_datasets = cellstr(opts.counterfactual_datasets);
 if isempty(opts.counterfactual)
     opts.counterfactual = strcmp(opts.mode, 'integration');
 end
@@ -336,7 +338,8 @@ report = GNNBenchmark_generate_vertex_model_datasets('mode', 'publication', ...
     'counterfactual', opts.counterfactual, ...
     'counterfactual_h_min', opts.counterfactual_h_min, ...
     'counterfactual_delta', opts.counterfactual_delta, ...
-    'counterfactual_seed', opts.counterfactual_seed, extra{:});
+    'counterfactual_seed', opts.counterfactual_seed, ...
+    'counterfactual_datasets', opts.counterfactual_datasets, extra{:});
 out = struct('reused', false, 'output_root', paths.generated_root, 'summary', summary_file, 'report', report);
 end
 

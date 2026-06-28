@@ -37,6 +37,9 @@ function report = GNNBenchmark_generate_vertex_model_datasets(varargin)
 %     'counterfactual_delta'    absolute length shift added with random sign
 %     'counterfactual_seed'     fixed seed controlling the random signs
 %     'counterfactual_suffix'   optional dataset-key suffix for the variant
+%     'counterfactual_datasets' dataset keys that should receive the
+%                               counterfactual variant; default standard_16.
+%                               Pass 'all' to perturb every selected dataset.
 %
 %   Dataset conventions:
 %     standard_16 is the canonical kA=100, shear=1.0, 16^2-cell dataset.
@@ -61,6 +64,7 @@ p.addParameter('counterfactual_h_min', 14, @(x) isnumeric(x) && isscalar(x) && x
 p.addParameter('counterfactual_delta', 0.05, @(x) isnumeric(x) && isscalar(x) && x >= 0);
 p.addParameter('counterfactual_seed', 20260616, @(x) isnumeric(x) && isscalar(x));
 p.addParameter('counterfactual_suffix', '', @(x) ischar(x) || isstring(x));
+p.addParameter('counterfactual_datasets', {'standard_16'}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.parse(varargin{:});
 opts = p.Results;
 opts.workers = max(1, floor(opts.workers));
@@ -68,6 +72,7 @@ if ~isempty(opts.simulation_times), opts.simulation_times = double(opts.simulati
 opts.counterfactual_h_min = floor(opts.counterfactual_h_min);
 opts.counterfactual_suffix = char(opts.counterfactual_suffix);
 opts.limited_split_scheme = char(opts.limited_split_scheme);
+opts.counterfactual_datasets = normalize_counterfactual_datasets(opts.counterfactual_datasets);
 
 paths = local_paths();
 if isempty(opts.output_root)
@@ -140,7 +145,7 @@ for s = 1:numel(specs)
     report.datasets.(matlab.lang.makeValidName(spec.key)).assembly_report = ...
         fullfile(model_ready_dir, [spec.key, '_assembly_report.csv']);
 
-    if opts.counterfactual
+    if opts.counterfactual && should_write_counterfactual(spec.key, opts.counterfactual_datasets)
         cf_key = counterfactual_dataset_key(spec.key, opts);
         cf_model_ready_dir = fullfile(opts.output_root, 'model_ready', cf_key, '2D');
         cf_splits_dir = fullfile(opts.output_root, 'model_ready', cf_key, 'splits');
@@ -181,6 +186,27 @@ write_run_summary(report);
 fprintf('\n[vertex-model] Done. Output root:\n  %s\n', opts.output_root);
 end
 
+function datasets = normalize_counterfactual_datasets(datasets)
+% normalize_counterfactual_datasets  Canonicalize dataset scoping for copy tests.
+if isstring(datasets)
+    datasets = cellstr(datasets(:));
+elseif ischar(datasets)
+    datasets = {datasets};
+elseif iscell(datasets)
+    datasets = cellfun(@char, datasets(:).', 'UniformOutput', false);
+else
+    error('GNNBenchmark:badCounterfactualDatasets', 'counterfactual_datasets must be a char, string, or cell array.');
+end
+if isempty(datasets)
+    datasets = {'standard_16'};
+end
+datasets = strtrim(datasets);
+end
+
+function tf = should_write_counterfactual(dataset_key, datasets)
+% should_write_counterfactual  Decide whether to assemble a perturbed variant.
+tf = any(strcmpi(datasets, 'all')) || any(strcmp(dataset_key, datasets));
+end
 function key = counterfactual_dataset_key(base_key, opts)
 % counterfactual_dataset_key  Build a readable, collision-resistant variant key.
 if ~isempty(opts.counterfactual_suffix)

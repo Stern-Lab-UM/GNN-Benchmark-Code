@@ -93,8 +93,10 @@ large PPGN jobs.
 
 Integration mode sets `counterfactual=true` by default. It trains the normal
 models, then re-predicts the perturbed weighted standard 16-cohort inputs with
-the same checkpoints and runs `GNNBenchmark_analyze_counterfactual_copying`. It
-does not retrain models on perturbed data.
+the same checkpoints and runs `GNNBenchmark_analyze_counterfactual_copying`. The
+counterfactual generated-data variant is scoped to `standard_16` by default via
+`counterfactual_datasets`, because this is the dataset consumed by the copy
+diagnostic. It does not retrain models on perturbed data.
 
 To smoke-test the hexagonality plotter without regenerating the separate full
 hexagonality dataset, integration mode copies the standard weighted `2_8`
