@@ -54,20 +54,18 @@ if paths.is_public_package
     paths.final_models_consolidated = existing_or_empty(fullfile(pkg, 'final_models', 'consolidated'));
     paths.figures_root = fullfile(pkg, 'figures');
     paths.main_figures_root = paths.figures_root;
-    paths.revision_figures_root = first_existing_dir({
+    paths.revision_figures_root = paths.figures_root;
+    paths.legacy_revision_figures_root = first_existing_dir({
         fullfile(pkg, 'figures', 'revision_2026')
         fullfile(pkg, 'figures', 'revision_codex_2026')
         });
-    if isempty(paths.revision_figures_root)
-        paths.revision_figures_root = fullfile(pkg, 'figures', 'revision_2026');
-    end
     paths.analysis_cache_root = fullfile(pkg, 'analysis_tables', 'analyzer_cache');
     paths.revision_cache_root = first_existing_dir({
-        fullfile(paths.analysis_cache_root, 'revision_2026')
         fullfile(paths.analysis_cache_root, 'revision_codex_2026')
+        fullfile(paths.analysis_cache_root, 'revision_2026')
         });
     if isempty(paths.revision_cache_root)
-        paths.revision_cache_root = fullfile(paths.analysis_cache_root, 'revision_2026');
+        paths.revision_cache_root = fullfile(paths.analysis_cache_root, 'revision_codex_2026');
     end
 else
     paths.embedding_root = existing_or_empty(fullfile(paths.data_root, 'embeddings', 'per_graph'));
@@ -75,7 +73,8 @@ else
     paths.final_models_consolidated = existing_or_empty(fullfile(paths.data_root, 'final_models', 'consolidated'));
     paths.figures_root = fullfile(paths.data_root, '_figures');
     paths.main_figures_root = paths.figures_root;
-    paths.revision_figures_root = fullfile(paths.figures_root, 'revision_2026');
+    paths.revision_figures_root = paths.figures_root;
+    paths.legacy_revision_figures_root = fullfile(paths.figures_root, 'revision_2026');
     paths.analysis_cache_root = fullfile(paths.data_root, '_analyzer_cache');
     paths.revision_cache_root = fullfile(paths.analysis_cache_root, 'revision_2026');
 end

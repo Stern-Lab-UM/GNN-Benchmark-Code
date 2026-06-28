@@ -73,13 +73,17 @@ try
             revision_cache_root_override = path_layout.revision_cache_root;
         end
         if isempty(figures_root_override)
-            figures_root_override = path_layout.revision_figures_root;
+            figures_root_override = path_layout.figures_root;
         end
-        main_figures_root_override = path_layout.main_figures_root;
+        main_figures_root_override = path_layout.figures_root;
     end
 catch
     % Legacy flat layouts remain supported by the underlying plotter.
 end
+if isempty(main_figures_root_override) && ~isempty(figures_root_override)
+    main_figures_root_override = figures_root_override;
+end
+
 skip_cache_guard = false;
 embed_examples   = true;    % 2D spring-embedding panels (v1 only); ON for finals (2026-06-02)
 % -----------------------------------------------------------------------------
@@ -99,7 +103,7 @@ for d = 1 : numel(original_datasets)
     end
     if ~isempty(main_figures_root_override)
         GNNBenchmark_CONFIG.figures_root = main_figures_root_override;
-        GNNBenchmark_CONFIG.figures_output_dir = fullfile(main_figures_root_override, original_datasets{d});
+        GNNBenchmark_CONFIG.figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', main_figures_root_override, original_datasets{d});
     end
     GNNBenchmark_CONFIG.embed_examples = embed_examples;   % 2D embedding panels (v1_W / v1_UW) -- top toggle
     run(plotter_script);
@@ -126,7 +130,7 @@ if ~isempty(revision_cache_root_override)
 end
 if ~isempty(main_figures_root_override)
     GNNBenchmark_CONFIG.figures_root = main_figures_root_override;
-    GNNBenchmark_CONFIG.figures_output_dir = fullfile(main_figures_root_override, 'hex');
+    GNNBenchmark_CONFIG.figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', main_figures_root_override, 'hex');
 end
 run(plotter_script);
 clear GNNBenchmark_CONFIG;

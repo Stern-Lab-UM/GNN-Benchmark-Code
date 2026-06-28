@@ -113,7 +113,7 @@ for f = 1 : numel(figure_filenames)
     existing_paths = {};
 
     for d = 1 : numel(datasets)
-        fig_path = fullfile(figures_root, datasets{d}, fig_name);
+        fig_path = fullfile(GNNBenchmark_figure_paths('dataset_dir', figures_root, datasets{d}), fig_name);
         if ~isfile(fig_path)
             continue;
         end

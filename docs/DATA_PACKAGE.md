@@ -16,8 +16,15 @@ gnn_benchmark_public_data_<date>/
     *.pred.txt
     splits/<split_key>/{train.inds,val.inds,test.inds,_applies_to.txt}
   embeddings/per_graph/
-  analysis_tables/analyzer_cache/revision_2026/   (or revision_codex_2026/)
+  analysis_tables/analyzer_cache/revision_codex_2026/   (legacy packages may contain revision_2026/)
   figures/
+    01_standard_v1/
+    02_hexagonality/
+    03_condition_comparisons/
+    04_two_T1_events/
+    05_summary_panels/
+    06_embedding_error_bounds/
+    07_counterfactual_copying/
   final_models/consolidated/
   manuscript_analyses/feature_head_ablation_20260619/
   manifests/
@@ -29,7 +36,7 @@ gnn_benchmark_public_data_<date>/
 
 For analysis-only reproduction, use the MATLAB data-package runner. It treats
 the downloaded package as input and writes rebuilt summaries, regenerated
-figures, embedding-bound tables, and a JSON/MAT report under a separate output
+figures, embedding-bound diagnostics, and a JSON/MAT report under a separate output
 folder:
 
 ```matlab
@@ -47,8 +54,7 @@ report = GNNBenchmark_run_from_data_package(package_root, ...
 
 By default the runner reparses the consolidated prediction files instead of
 trusting cached summaries. If called with `rebuild_summaries=false`, it will use
-existing summaries from `analysis_tables/analyzer_cache/revision_2026/` or the
-current staging name `analysis_tables/analyzer_cache/revision_codex_2026/`. It
+existing summaries from `analysis_tables/analyzer_cache/revision_codex_2026/`, falling back to the legacy `analysis_tables/analyzer_cache/revision_2026/` when needed. It
 also analyzes `embeddings/per_graph/` when that folder is present. Embedding example panels inside the main plotting script are
 off by default because they require vt2d geometry and a spring executable; the
 saved per-graph embedding outputs are sufficient for the manuscript

@@ -51,10 +51,12 @@ p.FunctionName = 'GNNBenchmark_analyze_counterfactual_copying';
 default_models = {'PPGN','GraphSAGE','GAT','GIN','PNA'};
 cfg = GNNBenchmark_publication_config();
 default_root = '';
+default_output_dir = '';
 if isfield(cfg, 'data_root') && ~isempty(cfg.data_root)
     try
         path_layout = GNNBenchmark_data_package_paths(cfg.data_root);
         default_root = path_layout.data_root;
+        default_output_dir = GNNBenchmark_figure_paths('diagnostic_dir', path_layout.figures_root, 'counterfactual_copying');
     catch
         default_root = cfg.data_root;
     end
@@ -62,7 +64,7 @@ end
 addParameter(p, 'regular_pred_root', default_root, @(x) ischar(x) || isstring(x));
 addParameter(p, 'counterfactual_pred_root', default_root, @(x) ischar(x) || isstring(x));
 addParameter(p, 'inds_dir', '', @(x) ischar(x) || isstring(x));
-addParameter(p, 'output_dir', '', @(x) ischar(x) || isstring(x));
+addParameter(p, 'output_dir', default_output_dir, @(x) ischar(x) || isstring(x));
 addParameter(p, 'models', default_models, @(x) iscell(x) || isstring(x));
 addParameter(p, 'seeds', 0:4, @(x) isnumeric(x));
 addParameter(p, 'regular_include_token', '', @(x) ischar(x) || isstring(x));

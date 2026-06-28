@@ -45,7 +45,7 @@ function report = GNNBenchmark_verify_Flip_two_figures(figures_output_dir)
 %       contains the *.fig files to audit, and into which the CSV report
 %       is written. If omitted or empty (nargin < 1 || isempty(...)), it
 %       defaults to the configured Flip_two dataset figure folder:
-%           fullfile(cfg.data_root, '_figures', 'revision_2026', 'Flip_two')
+%           figures/04_two_T1_events under the configured figure root
 %       Only files matching '*.fig' directly in this directory are scanned
 %       (dir() is non-recursive here, so sub-folders are not traversed).
 %
@@ -161,7 +161,7 @@ if nargin < 1 || isempty(figures_output_dir)
             'GNN_BENCHMARK_DATA_ROOT / GNNBenchmark_local_config.m.']);
     end
     path_layout = GNNBenchmark_data_package_paths(path_cfg.data_root);
-    figures_output_dir = fullfile(path_layout.revision_figures_root, 'Flip_two');
+    figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', path_layout.figures_root, 'Flip_two');
 end
 fig_files = dir(fullfile(figures_output_dir, '*.fig'));
 expected_colors = [

@@ -418,22 +418,10 @@ if isempty(cache_dir)
     end
 end
 if isempty(figures_root)
-    revision_fig_datasets = {'v1_2_16_W', 'Shear_1_2', 'Shear_1_5', ...
-        'kA_1', 'kA_10', 'Flip_two', 'Tissue_484', 'Tissue_784'};
     if isstruct(path_layout) && isfield(path_layout, 'is_public_package') && path_layout.is_public_package
-        if ismember(dataset, revision_fig_datasets)
-            figures_root = path_layout.revision_figures_root;
-        else
-            figures_root = path_layout.main_figures_root;
-        end
+        figures_root = path_layout.figures_root;
     else
         figures_root = fullfile(data_root, '_figures');
-        if ismember(dataset, revision_fig_datasets) && ...
-                GNNBenchmark_consolidated_paths('is_consolidated', data_root)
-            % Direct runs should land in the same canonical revision figure tree
-            % used by GNNBenchmark_run_revision_analyses.
-            figures_root = fullfile(figures_root, 'revision_2026');
-        end
     end
 end
 if isempty(results_summary_filename)
@@ -446,7 +434,12 @@ if isempty(hex_left_analyses_filename)
     hex_left_analyses_filename = fullfile(cache_dir, 'v1_W - analyses data.mat');
 end
 if isempty(figures_output_dir)
-    figures_output_dir = fullfile(figures_root, figures_subdir);
+    if exist('GNNBenchmark_CONFIG', 'var') && isstruct(GNNBenchmark_CONFIG) && ...
+            isfield(GNNBenchmark_CONFIG, 'figures_subdir') && ~isempty(GNNBenchmark_CONFIG.figures_subdir)
+        figures_output_dir = fullfile(figures_root, figures_subdir);
+    else
+        figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', figures_root, dataset);
+    end
 end
 
 hex_left_panel_cfg = struct( ...
@@ -6193,9 +6186,9 @@ if nargin < 4 || isempty(dataset_to_analyze), dataset_to_analyze = 'test'; end
 if nargin < 3 || isempty(figures_root)
     try
         path_layout = GNNBenchmark_data_package_paths(data_root);
-        figures_root = path_layout.revision_figures_root;
+        figures_root = path_layout.figures_root;
     catch
-        figures_root = fullfile(data_root, '_figures', 'revision_2026');
+        figures_root = fullfile(data_root, '_figures');
     end
 end
 if nargin < 2 || isempty(cache_dir)
@@ -6211,7 +6204,7 @@ if nargin < 2 || isempty(cache_dir)
         cache_dir = fullfile(data_root, '_analyzer_cache', 'revision_2026');
     end
 end
-output_dir = extreme_cfg(GNNBenchmark_CONFIG, 'extreme_output_dir', fullfile(figures_root, 'revision_extreme_task_composites'));
+output_dir = extreme_cfg(GNNBenchmark_CONFIG, 'extreme_output_dir', GNNBenchmark_figure_paths('composite_dir', figures_root, 'revision_extreme_task_composites'));
 save_png = extreme_cfg(GNNBenchmark_CONFIG, 'extreme_save_png', false);
 if exist(output_dir, 'dir') ~= 7, mkdir(output_dir); end
 

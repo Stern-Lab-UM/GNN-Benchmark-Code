@@ -42,3 +42,8 @@ GNNBenchmark_analyze_counterfactual_copying( ...
 
 The model training and prediction steps are implemented in Python/PyTorch under
 `models/`. MATLAB starts from prediction files already written to disk.
+
+
+## Figure Output Layout
+
+Figure-writing scripts use nalysis/matlab/GNNBenchmark_figure_paths.m so regenerated figures land in manuscript-oriented folders such as igures/01_standard_v1/, igures/03_condition_comparisons/, igures/04_two_T1_events/, and igures/05_summary_panels/. Explicit igures_output_dir overrides are still honored for one-off runs.

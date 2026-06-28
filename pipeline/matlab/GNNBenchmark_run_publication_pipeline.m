@@ -483,7 +483,7 @@ else
 end
 
 analysis = GNNBenchmark_analyze_embedding_error_bounds('embedding_root', embedding_root, ...
-    'output_dir', fullfile(paths.analysis_tables, 'embedding_error_bounds'), ...
+    'output_dir', GNNBenchmark_figure_paths('diagnostic_dir', paths.figures, 'embedding_error_bounds'), ...
     'models', opts.models, 'cohorts', embedding_cohorts(opts), ...
     'close_figures', strcmp(opts.mode, 'mini'));
 out.analysis = struct('n_graphs', height(analysis.per_graph), ...
@@ -727,16 +727,18 @@ if strcmp(opts.mode, 'mini')
     ylabel('Mean absolute error');
     title('Mini pipeline prediction MAE');
     xtickangle(45);
-    fig_file = fullfile(paths.figures, 'mini_prediction_mae.fig');
-    png_file = fullfile(paths.figures, 'mini_prediction_mae.png');
+    mini_fig_dir = GNNBenchmark_figure_paths('mini_dir', paths.figures);
+    ensure_dir(mini_fig_dir);
+    fig_file = fullfile(mini_fig_dir, 'mini_prediction_mae.fig');
+    png_file = fullfile(mini_fig_dir, 'mini_prediction_mae.png');
     savefig(fig, fig_file);
     exportgraphics(fig, png_file, 'Resolution', 200);
     out = struct('status', 'ok', 'figure', fig_file, 'png', png_file);
 else
     data_root = ternary(isempty(opts.data_root_for_figures), paths.pred_consolidated_root, opts.data_root_for_figures);
-    assignin('base', 'data_root', data_root);
+    figures_root_override = paths.figures; %#ok<NASGU>
     run(fullfile(paths.repo_root, 'analysis', 'matlab', 'GNNBenchmark_plot_everything.m'));
-    out = struct('status', 'ok', 'data_root', data_root);
+    out = struct('status', 'ok', 'data_root', data_root, 'figures_root', figures_root_override);
 end
 end
 

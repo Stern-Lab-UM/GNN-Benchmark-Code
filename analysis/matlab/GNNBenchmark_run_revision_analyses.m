@@ -112,11 +112,11 @@ if is_consolidated_root
     if isstruct(path_layout) && isfield(path_layout, 'is_public_package') && path_layout.is_public_package
         source_cache_root = path_layout.analysis_cache_root;
         revision_cache_root = path_layout.revision_cache_root;
-        figures_root = path_layout.revision_figures_root;
+        figures_root = path_layout.figures_root;
     else
         source_cache_root = fullfile(data_root, '_analyzer_cache');
         revision_cache_root  = fullfile(source_cache_root, 'revision_2026');
-        figures_root      = fullfile(data_root, '_figures', 'revision_2026');
+        figures_root      = fullfile(data_root, '_figures');
     end
 elseif endsWith(data_root, 'GNN benchmark results')
     source_cache_root = fullfile(data_root, '_analyzer_cache');
@@ -125,16 +125,16 @@ elseif endsWith(data_root, 'GNN benchmark results')
 else
     source_cache_root = fullfile(data_root, 'Analyzer cache');
     revision_cache_root = fullfile(source_cache_root, 'revision_2026');
-    figures_root = fullfile(data_root, 'Output figures', 'revision_2026');
+    figures_root = fullfile(data_root, 'Output figures');
 end
 
 if ~isempty(analysis_cache_root)
     source_cache_root = analysis_cache_root;
-    revision_cache_root = fullfile(source_cache_root, 'revision_2026');
+    revision_cache_root = fullfile(source_cache_root, 'revision_codex_2026');
     if ~rebuild_summaries
         existing_revision_cache = first_existing({
-            fullfile(source_cache_root, 'revision_2026')
             fullfile(source_cache_root, 'revision_codex_2026')
+            fullfile(source_cache_root, 'revision_2026')
             });
         if ~isempty(existing_revision_cache)
             revision_cache_root = existing_revision_cache;
@@ -238,7 +238,7 @@ for batch_dataset_index_2026 = 1 : numel(datasets)
     end
 
     if plot_after_summary
-        figures_output_dir = fullfile(figures_root, dataset);
+        figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', figures_root, dataset);
         if ~isfolder(figures_output_dir), mkdir(figures_output_dir); end
 
         fprintf('Plotting from summary: %s\n', revision_summary);
@@ -308,8 +308,8 @@ if plot_after_summary && make_flip_two_interaction_figures && any(strcmp(dataset
             'No Flip_two analyses_data.mat found; skipping two-source Flip_two diagnostics.');
     else
         % Save the dedicated Flip_two diagnostics directly beside the standard
-        % Flip_two figures, so the dataset has one canonical _figures folder.
-        flip_two_output_dir = fullfile(figures_root, 'Flip_two');
+        % Flip_two figures, so the dataset has one canonical figure folder.
+        flip_two_output_dir = GNNBenchmark_figure_paths('dataset_dir', figures_root, 'Flip_two');
         GNNBenchmark_plot_Flip_two_interaction(flip_two_analysis, flip_two_output_dir, save_png);
         if verify_flip_two_interaction_figures && isfile(flip_two_verify_function)
             GNNBenchmark_verify_Flip_two_figures(flip_two_output_dir);

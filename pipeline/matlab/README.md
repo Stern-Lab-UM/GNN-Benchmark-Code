@@ -48,13 +48,13 @@ The embedding stage builds `external/spring_embed/build/spring_embed` if needed,
 
 ```text
 <output_root>/embeddings/per_graph/
-<output_root>/analysis_tables/embedding_error_bounds/
+<output_root>/figures/06_embedding_error_bounds/
 ```
 
 The mini figure is a simple MAE smoke-test plot under:
 
 ```text
-<output_root>/figures/mini_prediction_mae.png
+<output_root>/figures/00_mini_smoke/mini_prediction_mae.png
 ```
 
 ## Publication-Scale Run
@@ -111,7 +111,14 @@ Each run is self-contained:
 <output_root>/embeddings/per_graph/
 <output_root>/embeddings/work/
 <output_root>/analysis_tables/
-<output_root>/figures/
+<output_root>/figures/00_mini_smoke/
+<output_root>/figures/01_standard_v1/
+<output_root>/figures/02_hexagonality/
+<output_root>/figures/03_condition_comparisons/
+<output_root>/figures/04_two_T1_events/
+<output_root>/figures/05_summary_panels/
+<output_root>/figures/06_embedding_error_bounds/
+<output_root>/figures/07_counterfactual_copying/
 <output_root>/logs/
 <output_root>/manifests/
 ```

@@ -146,9 +146,9 @@ if nargin < 2 || isempty(figures_output_dir)
     path_cfg = GNNBenchmark_publication_config();
     if ~isempty(path_cfg.data_root)
         path_layout = GNNBenchmark_data_package_paths(path_cfg.data_root);
-        figures_output_dir = fullfile(path_layout.revision_figures_root, 'Flip_two');
+        figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', path_layout.figures_root, 'Flip_two');
     else
-        figures_output_dir = fullfile(fileparts(analyses_filename), '_figures', 'Flip_two');
+        figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', fullfile(fileparts(analyses_filename), '_figures'), 'Flip_two');
     end
 end
 if nargin < 3 || isempty(save_png)

@@ -71,7 +71,7 @@ function output_paths = GNNBenchmark_make_revision_transverse_dist_composites(fi
 %   figures_root (optional char/string): root directory that contains one
 %       sub-folder per dataset (e.g. 'v1_2_16_W', 'kA_10', ...). Each sub-folder
 %       is expected to hold the three named source .fig files. If omitted or
-%       empty, defaults to fullfile(cfg.data_root, '_figures', 'revision_2026')
+%       empty, defaults to the canonical figures root resolved from the data root
 %       using GNNBenchmark_publication_config().
 %   save_png (optional logical): if true, each saved composite .fig is also
 %       exported to a same-named .png at 300 DPI. If omitted or empty, false.
@@ -90,7 +90,7 @@ function output_paths = GNNBenchmark_make_revision_transverse_dist_composites(fi
 %        panel_titles - per-cell display title (TeX, e.g. 'kA = 10').
 %      and one 3x(>=2) cell array figure_names whose columns are
 %        {source .fig filename, short flavor tag, default y-axis label}.
-%   3. Ensure output_dir = figures_root/'revision_transverse_dist_composites'
+%   3. Ensure output_dir = figures/05_summary_panels/condition_distance_profiles
 %      exists, then write the provenance .txt via write_composite_assumptions.
 %   4. For each MAE flavor row f of figure_names:
 %        a. Build the 3x3 source_paths from figures_root + panel_dirs +
@@ -139,7 +139,7 @@ if nargin < 1 || isempty(figures_root)
             'GNN_BENCHMARK_DATA_ROOT / GNNBenchmark_local_config.m.']);
     end
     path_layout = GNNBenchmark_data_package_paths(path_cfg.data_root);
-    figures_root = path_layout.revision_figures_root;
+    figures_root = path_layout.figures_root;
 end
 if nargin < 2 || isempty(save_png)
     save_png = false;
@@ -162,7 +162,7 @@ figure_names = {
     'MAE vs traverse dist (log2 nMAE).fig', 'log2 nMAE', 'log2(normalized graph MAE)'
     };
 
-output_dir = fullfile(figures_root, 'revision_transverse_dist_composites');
+output_dir = GNNBenchmark_figure_paths('composite_dir', figures_root, 'revision_transverse_dist_composites');
 if ~isfolder(output_dir)
     mkdir(output_dir);
 end
@@ -179,7 +179,7 @@ for f = 1 : size(figure_names, 1)
 
     for r = 1 : size(panel_dirs, 1)
         for c = 1 : size(panel_dirs, 2)
-            source_paths{r,c} = fullfile(figures_root, panel_dirs{r,c}, figure_name);
+            source_paths{r,c} = fullfile(GNNBenchmark_figure_paths('dataset_dir', figures_root, panel_dirs{r,c}), figure_name);
             if ~isfile(source_paths{r,c})
                 warning('GNNBenchmark:missingCompositeSource', 'Missing source figure: %s', source_paths{r,c});
                 continue;

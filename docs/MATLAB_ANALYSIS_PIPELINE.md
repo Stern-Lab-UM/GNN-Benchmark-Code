@@ -16,7 +16,7 @@ requested model, dataset, training seed, and cohort size.
 
 ## Data Root
 
-All MATLAB scripts use a user-supplied data root. This can be either the public`r`ndata package root or the consolidated prediction snapshot folder inside it.
+All MATLAB scripts use a user-supplied data root. This can be either the public data package root or the consolidated prediction snapshot folder inside it.
 The folder should contain prediction text files and split files in this layout:
 
 ```text
@@ -136,7 +136,7 @@ Example:
 ```matlab
 GNNBenchmark_analyze_embedding_error_bounds( ...
     'embedding_root', fullfile(data_root, 'embeddings', 'per_graph'), ...
-    'output_dir', '/path/to/reanalysis_outputs/analysis_tables/embedding_error_bounds')
+    'output_dir', '/path/to/reanalysis_outputs/figures/06_embedding_error_bounds')
 
 GNNBenchmark_analyze_counterfactual_copying( ...
     'regular_pred_root', data_root, ...
@@ -154,8 +154,18 @@ explicit `output_root`. Standalone scripts also recognize both the package root
 and `predictions/consolidated`.
 
 ```text
-<output_root>/analysis_tables/analyzer_cache/revision_2026/
-<output_root>/figures/
+<output_root>/analysis_tables/analyzer_cache/revision_codex_2026/
+<output_root>/figures/00_mini_smoke/
+<output_root>/figures/01_standard_v1/weighted_all_cohorts/
+<output_root>/figures/01_standard_v1/unweighted_all_cohorts/
+<output_root>/figures/02_hexagonality/
+<output_root>/figures/03_condition_comparisons/kA/
+<output_root>/figures/03_condition_comparisons/shear/
+<output_root>/figures/03_condition_comparisons/tissue_size/
+<output_root>/figures/04_two_T1_events/
+<output_root>/figures/05_summary_panels/
+<output_root>/figures/06_embedding_error_bounds/
+<output_root>/figures/07_counterfactual_copying/
 ```
 
 Generated summaries, `.mat` caches, `.fig` files, exported images, prediction

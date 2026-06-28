@@ -56,11 +56,12 @@ function report = GNNBenchmark_run_from_data_package(package_root, varargin)
 %
 %   Output tree
 %   -----------
-%     output_root/analysis_tables/analyzer_cache/revision_2026/
-%     output_root/analysis_tables/embedding_error_bounds/
-%     output_root/analysis_tables/counterfactual_copying/        if available
-%     output_root/figures/main/
-%     output_root/figures/revision_2026/
+%     output_root/analysis_tables/analyzer_cache/revision_codex_2026/
+%     output_root/figures/01_standard_v1/...
+%     output_root/figures/03_condition_comparisons/...
+%     output_root/figures/04_two_T1_events/...
+%     output_root/figures/06_embedding_error_bounds/
+%     output_root/figures/07_counterfactual_copying/        if available
 %     output_root/manifests/data_package_analysis_report.{json,mat}
 %
 %   Example
@@ -104,7 +105,7 @@ end
 paths.output_root = opts.output_root;
 paths.analysis_tables = fullfile(paths.output_root, 'analysis_tables');
 paths.output_analysis_cache_root = fullfile(paths.analysis_tables, 'analyzer_cache');
-paths.output_revision_cache_root = fullfile(paths.output_analysis_cache_root, 'revision_2026');
+paths.output_revision_cache_root = fullfile(paths.output_analysis_cache_root, 'revision_codex_2026');
 paths.input_analysis_cache_root = input_paths.analysis_cache_root;
 paths.input_revision_cache_root = input_paths.revision_cache_root;
 if opts.rebuild_summaries || ~isfolder(paths.input_revision_cache_root)
@@ -114,11 +115,11 @@ else
     paths.analysis_cache_root = paths.input_analysis_cache_root;
     paths.revision_cache_root = paths.input_revision_cache_root;
 end
-paths.embedding_bounds_output = fullfile(paths.analysis_tables, 'embedding_error_bounds');
-paths.counterfactual_output = fullfile(paths.analysis_tables, 'counterfactual_copying');
 paths.figures_root = fullfile(paths.output_root, 'figures');
-paths.main_figures_root = fullfile(paths.figures_root, 'main');
-paths.revision_figures_root = fullfile(paths.figures_root, 'revision_2026');
+paths.main_figures_root = paths.figures_root;
+paths.revision_figures_root = paths.figures_root;
+paths.embedding_bounds_output = GNNBenchmark_figure_paths('diagnostic_dir', paths.figures_root, 'embedding_error_bounds');
+paths.counterfactual_output = GNNBenchmark_figure_paths('diagnostic_dir', paths.figures_root, 'counterfactual_copying');
 paths.manifests = fullfile(paths.output_root, 'manifests');
 ensure_dir(paths.analysis_tables);
 ensure_dir(paths.output_analysis_cache_root);
@@ -191,7 +192,8 @@ fprintf('\n[GNNBenchmark data package] DONE. Report:\n  %s\n', fullfile(paths.ma
         revision_cfg.rebuild_summaries = true;
         revision_cfg.plot_after_summary = false;
         revision_cfg.analysis_cache_root = paths.analysis_cache_root;
-        revision_cfg.figures_root_override = paths.revision_figures_root;
+        revision_cfg.revision_cache_root_override = paths.revision_cache_root;
+        revision_cfg.figures_root_override = paths.figures_root;
         revision_cfg.models_to_exclude = {};
         revision_cfg.save_png = opts.save_png;
         revision_cfg.embed_examples = false;
@@ -216,7 +218,8 @@ fprintf('\n[GNNBenchmark data package] DONE. Report:\n  %s\n', fullfile(paths.ma
             revision_cfg.rebuild_summaries = false;
             revision_cfg.plot_after_summary = true;
             revision_cfg.analysis_cache_root = paths.analysis_cache_root;
-            revision_cfg.figures_root_override = paths.revision_figures_root;
+            revision_cfg.revision_cache_root_override = paths.revision_cache_root;
+            revision_cfg.figures_root_override = paths.figures_root;
             revision_cfg.calibrate_y_ranges = true;
             revision_cfg.save_png = opts.save_png;
             revision_cfg.make_composite_figures = true;
@@ -260,8 +263,8 @@ fprintf('\n[GNNBenchmark data package] DONE. Report:\n  %s\n', fullfile(paths.ma
         plot_cfg.data_root = paths.data_root;
         plot_cfg.cache_dir = paths.revision_cache_root;
         plot_cfg.results_summary_filename = fullfile(paths.revision_cache_root, [dataset_name, ' - results_summary.mat']);
-        plot_cfg.figures_root = paths.main_figures_root;
-        plot_cfg.figures_output_dir = fullfile(paths.main_figures_root, dataset_name);
+        plot_cfg.figures_root = paths.figures_root;
+        plot_cfg.figures_output_dir = GNNBenchmark_figure_paths('dataset_dir', paths.figures_root, dataset_name);
         plot_cfg.skip_cache_guard = false;
         plot_cfg.figure_panel_size = [340, 300];
         plot_cfg.scatter_marker_size = 9;
@@ -323,6 +326,9 @@ rebuild_summaries = cfg.rebuild_summaries; %#ok<NASGU>
 plot_after_summary = cfg.plot_after_summary; %#ok<NASGU>
 analysis_cache_root = cfg.analysis_cache_root; %#ok<NASGU>
 figures_root_override = cfg.figures_root_override; %#ok<NASGU>
+if isfield(cfg, 'revision_cache_root_override')
+    revision_cache_root_override = cfg.revision_cache_root_override; %#ok<NASGU>
+end
 models_to_exclude = cfg.models_to_exclude; %#ok<NASGU>
 save_png = cfg.save_png; %#ok<NASGU>
 embed_examples = cfg.embed_examples; %#ok<NASGU>

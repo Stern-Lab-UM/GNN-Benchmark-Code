@@ -44,7 +44,7 @@ if ~isempty(data_root)
                 revision_cache_root_override = path_layout.revision_cache_root;
             end
             if ~exist('figures_root_override', 'var') || isempty(figures_root_override)
-                figures_root_override = path_layout.revision_figures_root;
+                figures_root_override = path_layout.figures_root;
             end
         end
     catch

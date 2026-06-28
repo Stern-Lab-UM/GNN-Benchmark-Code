@@ -6,6 +6,7 @@
 "include","analysis_matlab","analysis/matlab/GNNBenchmark_plot_results.m","Per-dataset MATLAB plotting pipeline."
 "include","analysis_matlab","analysis/matlab/GNNBenchmark_plot_Flip_two_interaction.m","Two-T1 interaction analysis and plots."
 "include","analysis_matlab","analysis/matlab/GNNBenchmark_consolidated_paths.m","Consolidated snapshot path resolver."
+"include","analysis_matlab","analysis/matlab/GNNBenchmark_figure_paths.m","Canonical figure-output folder resolver."
 "include","analysis_matlab","analysis/matlab/GNNBenchmark_publication_config.m","Portable user-local path resolver."
 "include","analysis_matlab","analysis/matlab/GNNBenchmark_local_config_template.m","Template for untracked machine-specific MATLAB paths."
 "include","analysis_matlab","analysis/matlab/GNNBenchmark_calibrate_saved_fig_y_ranges.m","Figure y-range calibration helper."

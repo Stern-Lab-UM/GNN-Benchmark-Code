@@ -55,16 +55,18 @@ default_models = {'PPGN','GraphSAGE','GAT','GIN','PNA'};
 default_cohorts = [1 2 4 8 16 32];
 cfg = GNNBenchmark_publication_config();
 default_root = '';
+default_output_dir = '';
 if isfield(cfg, 'data_root') && ~isempty(cfg.data_root)
     try
         path_layout = GNNBenchmark_data_package_paths(cfg.data_root);
         default_root = path_layout.embedding_root;
+        default_output_dir = GNNBenchmark_figure_paths('diagnostic_dir', path_layout.figures_root, 'embedding_error_bounds');
     catch
         default_root = fullfile(cfg.data_root, 'embeddings', 'per_graph');
     end
 end
 addParameter(p, 'embedding_root', default_root, @(x) ischar(x) || isstring(x));
-addParameter(p, 'output_dir', '', @(x) ischar(x) || isstring(x));
+addParameter(p, 'output_dir', default_output_dir, @(x) ischar(x) || isstring(x));
 addParameter(p, 'file_glob', 'out_graph_*.txt', @(x) ischar(x) || isstring(x));
 addParameter(p, 'models', default_models, @(x) iscell(x) || isstring(x));
 addParameter(p, 'cohorts', default_cohorts, @(x) isnumeric(x));
