@@ -176,6 +176,9 @@ results = optimize_PPGN( ...
 
 ## Notes
 
-The BO objective is the smoothed minimum validation loss by default. Final
-reported model performance should still be computed from independent final
-training runs over the intended seed set, not from the single-seed BO trials.
+The BO objective is the smoothed minimum validation loss by default. When a
+deliberately reduced smoke or integration run logs too few epochs for the
+full smoothing window, the objective falls back to the raw minimum validation
+loss for that trial. Final reported model performance should still be computed
+from independent final training runs over the intended seed set, not from the
+single-seed BO trials.

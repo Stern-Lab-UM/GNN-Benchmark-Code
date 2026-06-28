@@ -72,10 +72,13 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
 %                       (default false).
 %   'smooth_val_loss' : If true (default), each trial's objective is the
 %                       min of the smoothed val_loss curve (medfilt1 w=5,
-%                       moving-average span 100, trimmed to [50:end-10]),
-%                       and trials with <=60 logged epochs return NaN.
-%                       If false, skip both: objective = min(val_loss)
-%                       over the whole curve, and no minimum-length gate.
+%                       moving-average span 100, trimmed to [50:end-10]).
+%                       Short runs with too few logged epochs for that
+%                       smoothing window automatically fall back to
+%                       objective = min(val_loss), so reduced integration
+%                       tests still produce valid BO observations.
+%                       If false, always skip smoothing and use
+%                       objective = min(val_loss) over the whole curve.
 %                       Use false for smoke tests where you only want to
 %                       confirm each trial runs, not how well it trains.
 %
@@ -114,10 +117,11 @@ function results = optimize_MPNN(dataset_filename, inds_dirname, model_name, hp_
 %   * After each trial, the function locates the freshly-created log
 %     directory under <workdir>/logs/ (mtime-based, disambiguated by
 %     a regex on the dim/weighted/model/hc/nl prefix), reads
-%     csv/val_loss.csv, and returns
-%         min( smooth( medfilt1(val_loss, 5), 100 )[50:end-10] )
-%     as the objective. NaN is returned for failed or degenerate
-%     trials (trainer nonzero exit, <60 logged epochs, all-zero curve).
+%     csv/val_loss.csv, and returns the smoothed minimum validation loss
+%     for full-length BO trials. When the trial has too few epochs to
+%     support the smoothing window, it returns the raw minimum validation
+%     loss instead. NaN is returned for failed or degenerate trials
+%     (trainer nonzero exit, missing validation curve, all-zero curve).
 %
 %   See also gnn_benchmark_pipeline_2D_revision, BAYESOPT, OPTIMIZABLEVARIABLE.
 
@@ -544,14 +548,14 @@ function objective = eval_trial(x, hp_field_names, ordinal_map, work_dirname, we
     tok = reshape(tok, 2, numel(tok)/2)';
     val_loss = cellfun(@str2double, tok);
 
-    if opts.smooth_val_loss
-        if size(val_loss, 1) <= 60
-            objective = nan;
-            return;
-        end
+    if opts.smooth_val_loss && size(val_loss, 1) > 60
         smoothed = smooth(medfilt1(val_loss(:,2), 5), 100);
         smoothed = smoothed(50:end-10);
-        objective = min(smoothed);
+        if isempty(smoothed) || all(isnan(smoothed))
+            objective = min(val_loss(:,2), [], 'omitnan');
+        else
+            objective = min(smoothed);
+        end
     else
         if size(val_loss, 1) == 0
             objective = nan;
