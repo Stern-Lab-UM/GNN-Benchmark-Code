@@ -5349,6 +5349,17 @@ if ~isempty(revFolder) && exist(revFolder,'dir') == 7
         if ~isempty(d), p = fullfile(d(1).folder, d(1).name); return; end
     end
 end
+% Generated publication-pipeline vt2d files include the kA token between
+% n_cells and repeat (final_<n>_<kA>_<repeat>_<disorder>.vt2d).
+% Search the whole revision root with that wildcard before exact-name fallback.
+if exist(revRoot,'dir') == 7
+    tok = strsplit(mid, '_');
+    if numel(tok) >= 3
+        pat = sprintf('final_%s_*_%s_%s.vt2d', tok{1}, tok{2}, tok{3});
+        d = dir(fullfile(revRoot, '**', pat));
+        if ~isempty(d), p = fullfile(d(1).folder, d(1).name); return; end
+    end
+end
 % fallback: recursive exact-name search anywhere under revRoot
 if exist(revRoot,'dir') == 7
     d = dir(fullfile(revRoot, '**', name));
