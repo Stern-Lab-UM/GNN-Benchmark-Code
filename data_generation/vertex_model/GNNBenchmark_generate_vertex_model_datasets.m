@@ -468,23 +468,25 @@ end
 end
 
 function counts = limited_counts_for_train(n_graphs, n_train, split_counts)
+% limited_counts_for_train  Build a reduced split that still covers all graphs.
+% PyG's InMemoryDataset processing expects train+val+test to cover the whole
+% generated file. Integration mode varies the training cohort size, so the
+% remaining generated graphs are assigned to validation/test rather than left
+% unused outside the split indices.
 if nargin < 3 || isempty(split_counts)
-    requested_val = 1;
     requested_test = 1;
 else
     split_counts = floor(split_counts(:).');
-    requested_val = split_counts(2);
     requested_test = split_counts(3);
 end
 n_train = max(0, min(n_train, n_graphs));
 remaining = max(0, n_graphs - n_train);
-n_val = min(requested_val, max(0, remaining - 1));
-n_test = min(requested_test, remaining - n_val);
-if n_test == 0 && n_graphs > n_train
-    n_test = 1;
-    if n_val > 0 && n_train + n_val + n_test > n_graphs
-        n_val = n_val - 1;
-    end
+if remaining == 0
+    n_val = 0;
+    n_test = 0;
+else
+    n_test = min(max(1, requested_test), remaining);
+    n_val = remaining - n_test;
 end
 counts = [n_train, n_val, n_test];
 end
