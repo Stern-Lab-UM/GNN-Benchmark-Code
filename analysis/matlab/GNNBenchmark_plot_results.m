@@ -390,28 +390,50 @@ if isempty(data_root)
         'using GNNBenchmark_CONFIG.data_root, GNN_BENCHMARK_DATA_ROOT, or GNNBenchmark_local_config.m.']);
 end
 
+path_layout = [];
+try
+    path_layout = GNNBenchmark_data_package_paths(data_root);
+    data_root = path_layout.data_root;
+catch
+    % Legacy flat layouts are still supported below; they are not public
+    % package roots and therefore do not resolve through the package helper.
+    path_layout = [];
+end
+
 if isempty(cache_dir)
-    cache_dir = fullfile(data_root, '_analyzer_cache');
-    % Consolidated snapshot keeps the revision summaries/analyses in a
-    % 'revision_2026' subfolder (matches GNNBenchmark_run_revision_analyses
-    % and GNNBenchmark_rebuild_all_summaries). Prefer it when present so a
-    % DIRECT plotter call -- e.g. the v1_W / v1_UW / hex calls from
-    % GNNBenchmark_plot_everything that don't pass results_summary_filename -- finds the
-    % summaries instead of looking one level too high in _analyzer_cache\.
-    revision_cache = fullfile(cache_dir, 'revision_2026');
-    if isfolder(revision_cache)
-        cache_dir = revision_cache;
+    if isstruct(path_layout) && isfield(path_layout, 'is_public_package') && path_layout.is_public_package
+        cache_dir = path_layout.revision_cache_root;
+    else
+        cache_dir = fullfile(data_root, '_analyzer_cache');
+        % Consolidated snapshot keeps the revision summaries/analyses in a
+        % 'revision_2026' subfolder (matches GNNBenchmark_run_revision_analyses
+        % and GNNBenchmark_rebuild_all_summaries). Prefer it when present so a
+        % DIRECT plotter call -- e.g. the v1_W / v1_UW / hex calls from
+        % GNNBenchmark_plot_everything that don't pass results_summary_filename -- finds the
+        % summaries instead of looking one level too high in _analyzer_cache\.
+        revision_cache = fullfile(cache_dir, 'revision_2026');
+        if isfolder(revision_cache)
+            cache_dir = revision_cache;
+        end
     end
 end
 if isempty(figures_root)
-    figures_root = fullfile(data_root, '_figures');
     revision_fig_datasets = {'v1_2_16_W', 'Shear_1_2', 'Shear_1_5', ...
         'kA_1', 'kA_10', 'Flip_two', 'Tissue_484', 'Tissue_784'};
-    if ismember(dataset, revision_fig_datasets) && ...
-            GNNBenchmark_consolidated_paths('is_consolidated', data_root)
-        % Direct runs should land in the same canonical revision figure tree
-        % used by GNNBenchmark_run_revision_analyses.
-        figures_root = fullfile(figures_root, 'revision_2026');
+    if isstruct(path_layout) && isfield(path_layout, 'is_public_package') && path_layout.is_public_package
+        if ismember(dataset, revision_fig_datasets)
+            figures_root = path_layout.revision_figures_root;
+        else
+            figures_root = path_layout.main_figures_root;
+        end
+    else
+        figures_root = fullfile(data_root, '_figures');
+        if ismember(dataset, revision_fig_datasets) && ...
+                GNNBenchmark_consolidated_paths('is_consolidated', data_root)
+            % Direct runs should land in the same canonical revision figure tree
+            % used by GNNBenchmark_run_revision_analyses.
+            figures_root = fullfile(figures_root, 'revision_2026');
+        end
     end
 end
 if isempty(results_summary_filename)
@@ -6168,15 +6190,27 @@ function output_paths = GNNBenchmark_make_extreme_task_composites_internal(data_
 if nargin < 6 || isempty(GNNBenchmark_CONFIG), GNNBenchmark_CONFIG = struct(); end
 if nargin < 5 || isempty(h_bins_for_quality_analysis), h_bins_for_quality_analysis = 0.4 : 0.1 : 1; end
 if nargin < 4 || isempty(dataset_to_analyze), dataset_to_analyze = 'test'; end
-if nargin < 3 || isempty(figures_root), figures_root = fullfile(data_root, '_figures', 'revision_2026'); end
-if nargin < 2 || isempty(cache_dir), if isempty(data_root)
-    error('GNNBenchmark:missingDataRoot', ['Set the consolidated prediction snapshot path ', ...
-        'using GNNBenchmark_CONFIG.data_root, the GNN_BENCHMARK_DATA_ROOT environment variable, ', ...
-        'or an untracked GNNBenchmark_local_config.m file.']);
+if nargin < 3 || isempty(figures_root)
+    try
+        path_layout = GNNBenchmark_data_package_paths(data_root);
+        figures_root = path_layout.revision_figures_root;
+    catch
+        figures_root = fullfile(data_root, '_figures', 'revision_2026');
+    end
 end
-
-cache_dir = fullfile(data_root, '_analyzer_cache', 'revision_2026'); end
-
+if nargin < 2 || isempty(cache_dir)
+    if isempty(data_root)
+        error('GNNBenchmark:missingDataRoot', ['Set the consolidated prediction snapshot path ', ...
+            'using GNNBenchmark_CONFIG.data_root, the GNN_BENCHMARK_DATA_ROOT environment variable, ', ...
+            'or an untracked GNNBenchmark_local_config.m file.']);
+    end
+    try
+        path_layout = GNNBenchmark_data_package_paths(data_root);
+        cache_dir = path_layout.revision_cache_root;
+    catch
+        cache_dir = fullfile(data_root, '_analyzer_cache', 'revision_2026');
+    end
+end
 output_dir = extreme_cfg(GNNBenchmark_CONFIG, 'extreme_output_dir', fullfile(figures_root, 'revision_extreme_task_composites'));
 save_png = extreme_cfg(GNNBenchmark_CONFIG, 'extreme_save_png', false);
 if exist(output_dir, 'dir') ~= 7, mkdir(output_dir); end

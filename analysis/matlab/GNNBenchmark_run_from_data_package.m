@@ -91,14 +91,29 @@ opts.datasets = cellstr(opts.datasets);
 repo_root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 addpath(genpath(fullfile(repo_root, 'analysis', 'matlab')));
 
-paths = resolve_data_package_paths(opts.package_root);
+input_paths = GNNBenchmark_data_package_paths(opts.package_root);
+paths = input_paths;
+paths.counterfactual_root = find_counterfactual_root(paths.manuscript_analyses_root);
 if isempty(opts.output_root)
-    opts.output_root = choose_default_output_root(opts.package_root);
+    default_parent = opts.package_root;
+    if paths.is_public_package
+        default_parent = paths.package_root;
+    end
+    opts.output_root = choose_default_output_root(default_parent);
 end
 paths.output_root = opts.output_root;
 paths.analysis_tables = fullfile(paths.output_root, 'analysis_tables');
-paths.analysis_cache_root = fullfile(paths.analysis_tables, 'analyzer_cache');
-paths.revision_cache_root = fullfile(paths.analysis_cache_root, 'revision_2026');
+paths.output_analysis_cache_root = fullfile(paths.analysis_tables, 'analyzer_cache');
+paths.output_revision_cache_root = fullfile(paths.output_analysis_cache_root, 'revision_2026');
+paths.input_analysis_cache_root = input_paths.analysis_cache_root;
+paths.input_revision_cache_root = input_paths.revision_cache_root;
+if opts.rebuild_summaries || ~isfolder(paths.input_revision_cache_root)
+    paths.analysis_cache_root = paths.output_analysis_cache_root;
+    paths.revision_cache_root = paths.output_revision_cache_root;
+else
+    paths.analysis_cache_root = paths.input_analysis_cache_root;
+    paths.revision_cache_root = paths.input_revision_cache_root;
+end
 paths.embedding_bounds_output = fullfile(paths.analysis_tables, 'embedding_error_bounds');
 paths.counterfactual_output = fullfile(paths.analysis_tables, 'counterfactual_copying');
 paths.figures_root = fullfile(paths.output_root, 'figures');
@@ -106,8 +121,10 @@ paths.main_figures_root = fullfile(paths.figures_root, 'main');
 paths.revision_figures_root = fullfile(paths.figures_root, 'revision_2026');
 paths.manifests = fullfile(paths.output_root, 'manifests');
 ensure_dir(paths.analysis_tables);
-ensure_dir(paths.analysis_cache_root);
-ensure_dir(paths.revision_cache_root);
+ensure_dir(paths.output_analysis_cache_root);
+if opts.rebuild_summaries || strcmp(paths.revision_cache_root, paths.output_revision_cache_root)
+    ensure_dir(paths.output_revision_cache_root);
+end
 ensure_dir(paths.figures_root);
 ensure_dir(paths.main_figures_root);
 ensure_dir(paths.revision_figures_root);
@@ -137,7 +154,7 @@ fprintf('============================================================\n\n');
 if opts.rebuild_summaries
     run_step('rebuild prediction summaries', true, @run_rebuild_summaries);
 else
-    fprintf('[GNNBenchmark data package] rebuild_summaries=false; expecting summaries in %s\n', paths.revision_cache_root);
+    fprintf('[GNNBenchmark data package] rebuild_summaries=false; using summaries in %s\n', paths.revision_cache_root);
 end
 
 if opts.plot_figures
@@ -167,44 +184,47 @@ write_report(report, paths);
 fprintf('\n[GNNBenchmark data package] DONE. Report:\n  %s\n', fullfile(paths.manifests, 'data_package_analysis_report.json'));
 
     function details = run_rebuild_summaries()
-        data_root = paths.data_root; %#ok<NASGU>
-        datasets = opts.datasets; %#ok<NASGU>
-        rebuild_summaries = true; %#ok<NASGU>
-        plot_after_summary = false; %#ok<NASGU>
-        analysis_cache_root = paths.analysis_cache_root; %#ok<NASGU>
-        figures_root_override = paths.revision_figures_root; %#ok<NASGU>
-        models_to_exclude = {}; %#ok<NASGU>
-        save_png = opts.save_png; %#ok<NASGU>
-        embed_examples = false; %#ok<NASGU>
         code_dir = fileparts(mfilename('fullpath'));
-        run(fullfile(code_dir, 'GNNBenchmark_run_revision_analyses.m'));
-        details = struct('cache_root', paths.revision_cache_root, 'datasets', {datasets});
+        revision_cfg = struct();
+        revision_cfg.data_root = paths.data_root;
+        revision_cfg.datasets = opts.datasets;
+        revision_cfg.rebuild_summaries = true;
+        revision_cfg.plot_after_summary = false;
+        revision_cfg.analysis_cache_root = paths.analysis_cache_root;
+        revision_cfg.figures_root_override = paths.revision_figures_root;
+        revision_cfg.models_to_exclude = {};
+        revision_cfg.save_png = opts.save_png;
+        revision_cfg.embed_examples = false;
+        run_revision_analysis_script(fullfile(code_dir, 'GNNBenchmark_run_revision_analyses.m'), revision_cfg);
+        details = struct('cache_root', paths.revision_cache_root, 'datasets', {opts.datasets});
     end
 
     function details = run_main_figure_plots()
         plotter_script = fullfile(fileparts(mfilename('fullpath')), 'GNNBenchmark_plot_results.m');
         revision_script = fullfile(fileparts(mfilename('fullpath')), 'GNNBenchmark_run_revision_analyses.m');
-        main_sets = intersect({'v1_W','v1_UW','hex'}, summaries_available(), 'stable');
+        requested_main_sets = intersect(opts.datasets, {'v1_W','v1_UW','hex'}, 'stable');
+        main_sets = intersect(requested_main_sets, summaries_available(), 'stable');
         for ii = 1:numel(main_sets)
             plot_one_main_dataset(plotter_script, main_sets{ii});
         end
 
         revision_sets = intersect(opts.datasets, {'v1_2_16_W','kA_10','kA_1','Shear_1_2','Shear_1_5','Flip_two','Tissue_484','Tissue_784'}, 'stable');
         if ~isempty(revision_sets)
-            data_root = paths.data_root; %#ok<NASGU>
-            datasets = revision_sets; %#ok<NASGU>
-            rebuild_summaries = false; %#ok<NASGU>
-            plot_after_summary = true; %#ok<NASGU>
-            analysis_cache_root = paths.analysis_cache_root; %#ok<NASGU>
-            figures_root_override = paths.revision_figures_root; %#ok<NASGU>
-            calibrate_y_ranges = true; %#ok<NASGU>
-            save_png = opts.save_png; %#ok<NASGU>
-            make_composite_figures = true; %#ok<NASGU>
-            make_flip_two_interaction_figures = true; %#ok<NASGU>
-            verify_flip_two_interaction_figures = true; %#ok<NASGU>
-            models_to_exclude = {}; %#ok<NASGU>
-            embed_examples = opts.plot_embedding_examples; %#ok<NASGU>
-            run(revision_script);
+            revision_cfg = struct();
+            revision_cfg.data_root = paths.data_root;
+            revision_cfg.datasets = revision_sets;
+            revision_cfg.rebuild_summaries = false;
+            revision_cfg.plot_after_summary = true;
+            revision_cfg.analysis_cache_root = paths.analysis_cache_root;
+            revision_cfg.figures_root_override = paths.revision_figures_root;
+            revision_cfg.calibrate_y_ranges = true;
+            revision_cfg.save_png = opts.save_png;
+            revision_cfg.make_composite_figures = true;
+            revision_cfg.make_flip_two_interaction_figures = true;
+            revision_cfg.verify_flip_two_interaction_figures = true;
+            revision_cfg.models_to_exclude = {};
+            revision_cfg.embed_examples = opts.plot_embedding_examples;
+            run_revision_analysis_script(revision_script, revision_cfg);
         end
         details = struct('main_figures_root', paths.main_figures_root, ...
             'revision_figures_root', paths.revision_figures_root, ...
@@ -235,29 +255,25 @@ fprintf('\n[GNNBenchmark data package] DONE. Report:\n  %s\n', fullfile(paths.ma
     end
 
     function plot_one_main_dataset(plotter_script, dataset_name)
-        GNNBenchmark_CONFIG = struct(); %#ok<NASGU>
-        GNNBenchmark_CONFIG.dataset = dataset_name;
-        GNNBenchmark_CONFIG.data_root = paths.data_root;
-        GNNBenchmark_CONFIG.cache_dir = paths.revision_cache_root;
-        GNNBenchmark_CONFIG.results_summary_filename = fullfile(paths.revision_cache_root, [dataset_name, ' - results_summary.mat']);
-        GNNBenchmark_CONFIG.figures_root = paths.main_figures_root;
-        GNNBenchmark_CONFIG.figures_output_dir = fullfile(paths.main_figures_root, dataset_name);
-        GNNBenchmark_CONFIG.skip_cache_guard = false;
-        GNNBenchmark_CONFIG.figure_panel_size = [340, 300];
-        GNNBenchmark_CONFIG.scatter_marker_size = 9;
-        GNNBenchmark_CONFIG.models_to_exclude = {};
-        GNNBenchmark_CONFIG.embed_examples = opts.plot_embedding_examples;
+        plot_cfg = struct();
+        plot_cfg.dataset = dataset_name;
+        plot_cfg.data_root = paths.data_root;
+        plot_cfg.cache_dir = paths.revision_cache_root;
+        plot_cfg.results_summary_filename = fullfile(paths.revision_cache_root, [dataset_name, ' - results_summary.mat']);
+        plot_cfg.figures_root = paths.main_figures_root;
+        plot_cfg.figures_output_dir = fullfile(paths.main_figures_root, dataset_name);
+        plot_cfg.skip_cache_guard = false;
+        plot_cfg.figure_panel_size = [340, 300];
+        plot_cfg.scatter_marker_size = 9;
+        plot_cfg.models_to_exclude = {};
+        plot_cfg.embed_examples = opts.plot_embedding_examples;
         if strcmp(dataset_name, 'hex')
-            GNNBenchmark_CONFIG.plot_only_hexagonality_manuscript = true;
-            GNNBenchmark_CONFIG.plot_hex_hop_diagnostics = true;
-            GNNBenchmark_CONFIG.plot_fallback_analysis = false;
-            GNNBenchmark_CONFIG.hex_paper_uncertainty = 'sd';
+            plot_cfg.plot_only_hexagonality_manuscript = true;
+            plot_cfg.plot_hex_hop_diagnostics = true;
+            plot_cfg.plot_fallback_analysis = false;
+            plot_cfg.hex_paper_uncertainty = 'sd';
         end
-        run(plotter_script);
-        clear GNNBenchmark_CONFIG;
-        if opts.close_figures
-            close all;
-        end
+        run_plot_results_script(plotter_script, plot_cfg, opts.close_figures);
     end
 
     function names = summaries_available()
@@ -300,37 +316,42 @@ fprintf('\n[GNNBenchmark data package] DONE. Report:\n  %s\n', fullfile(paths.ma
     end
 end
 
-function datasets = default_dataset_list()
-datasets = {'v1_2_16_W', 'v1_UW', 'hex', 'Shear_1_2', 'Shear_1_5', ...
-            'kA_1', 'kA_10', 'Flip_two', 'Tissue_484', 'Tissue_784'};
+function run_revision_analysis_script(script_path, cfg)
+data_root = cfg.data_root; %#ok<NASGU>
+datasets = cfg.datasets; %#ok<NASGU>
+rebuild_summaries = cfg.rebuild_summaries; %#ok<NASGU>
+plot_after_summary = cfg.plot_after_summary; %#ok<NASGU>
+analysis_cache_root = cfg.analysis_cache_root; %#ok<NASGU>
+figures_root_override = cfg.figures_root_override; %#ok<NASGU>
+models_to_exclude = cfg.models_to_exclude; %#ok<NASGU>
+save_png = cfg.save_png; %#ok<NASGU>
+embed_examples = cfg.embed_examples; %#ok<NASGU>
+if isfield(cfg, 'calibrate_y_ranges')
+    calibrate_y_ranges = cfg.calibrate_y_ranges; %#ok<NASGU>
+end
+if isfield(cfg, 'make_composite_figures')
+    make_composite_figures = cfg.make_composite_figures; %#ok<NASGU>
+end
+if isfield(cfg, 'make_flip_two_interaction_figures')
+    make_flip_two_interaction_figures = cfg.make_flip_two_interaction_figures; %#ok<NASGU>
+end
+if isfield(cfg, 'verify_flip_two_interaction_figures')
+    verify_flip_two_interaction_figures = cfg.verify_flip_two_interaction_figures; %#ok<NASGU>
+end
+run(script_path);
 end
 
-function paths = resolve_data_package_paths(package_root)
-package_root = char(package_root);
-if ~isfolder(package_root)
-    error('GNNBenchmark:dataPackageMissing', 'Package root is not a folder: %s', package_root);
+function run_plot_results_script(plotter_script, plot_cfg, close_figures)
+GNNBenchmark_CONFIG = plot_cfg; %#ok<NASGU>
+run(plotter_script);
+clear GNNBenchmark_CONFIG;
+if close_figures
+    close all;
 end
-paths = struct();
-paths.package_root = package_root;
-consolidated = fullfile(package_root, 'predictions', 'consolidated');
-if GNNBenchmark_consolidated_paths('is_consolidated', consolidated)
-    paths.data_root = consolidated;
-elseif GNNBenchmark_consolidated_paths('is_consolidated', package_root)
-    paths.data_root = package_root;
-else
-    error('GNNBenchmark:dataPackagePredictionsMissing', ...
-        ['Could not find a consolidated prediction folder. Expected either ', ...
-        '<package>/predictions/consolidated or package_root itself to contain ', ...
-        '*.pred.txt plus splits/.']);
 end
-embedding_root = fullfile(package_root, 'embeddings', 'per_graph');
-if isfolder(embedding_root)
-    paths.embedding_root = embedding_root;
-else
-    paths.embedding_root = '';
-end
-paths.manuscript_analyses_root = fullfile(package_root, 'manuscript_analyses');
-paths.counterfactual_root = find_counterfactual_root(paths.manuscript_analyses_root);
+function datasets = default_dataset_list()
+datasets = {'v1_W', 'v1_UW', 'hex', 'v1_2_16_W', 'Shear_1_2', 'Shear_1_5', ...
+            'kA_1', 'kA_10', 'Flip_two', 'Tissue_484', 'Tissue_784'};
 end
 
 function root = find_counterfactual_root(parent)

@@ -72,6 +72,9 @@ end
 if ~exist('analysis_cache_root', 'var') || isempty(analysis_cache_root)
     analysis_cache_root = '';
 end
+if ~exist('revision_cache_root_override', 'var') || isempty(revision_cache_root_override)
+    revision_cache_root_override = '';
+end
 if ~exist('figures_root_override', 'var') || isempty(figures_root_override)
     figures_root_override = '';
 end
@@ -93,13 +96,28 @@ if isempty(data_root)
         'using the data_root variable, GNN_BENCHMARK_DATA_ROOT, or GNNBenchmark_local_config.m.']);
 end
 
+path_layout = [];
+try
+    path_layout = GNNBenchmark_data_package_paths(data_root);
+    data_root = path_layout.data_root;
+catch
+    path_layout = [];
+end
+
 is_consolidated_root = GNNBenchmark_consolidated_paths('is_consolidated', data_root);
 if is_consolidated_root
     % Snapshot has no legacy analyses_data.mat; parse it fresh into a revision
-    % cache + figures tree kept inside the snapshot folder.
-    source_cache_root = fullfile(data_root, '_analyzer_cache');
-    revision_cache_root  = fullfile(source_cache_root, 'revision_2026');
-    figures_root      = fullfile(data_root, '_figures', 'revision_2026');
+    % cache + figures tree kept inside the snapshot folder. Public packages
+    % keep these durable outputs under analysis_tables/ and figures/ instead.
+    if isstruct(path_layout) && isfield(path_layout, 'is_public_package') && path_layout.is_public_package
+        source_cache_root = path_layout.analysis_cache_root;
+        revision_cache_root = path_layout.revision_cache_root;
+        figures_root = path_layout.revision_figures_root;
+    else
+        source_cache_root = fullfile(data_root, '_analyzer_cache');
+        revision_cache_root  = fullfile(source_cache_root, 'revision_2026');
+        figures_root      = fullfile(data_root, '_figures', 'revision_2026');
+    end
 elseif endsWith(data_root, 'GNN benchmark results')
     source_cache_root = fullfile(data_root, '_analyzer_cache');
     revision_cache_root = source_cache_root;
@@ -113,6 +131,18 @@ end
 if ~isempty(analysis_cache_root)
     source_cache_root = analysis_cache_root;
     revision_cache_root = fullfile(source_cache_root, 'revision_2026');
+    if ~rebuild_summaries
+        existing_revision_cache = first_existing({
+            fullfile(source_cache_root, 'revision_2026')
+            fullfile(source_cache_root, 'revision_codex_2026')
+            });
+        if ~isempty(existing_revision_cache)
+            revision_cache_root = existing_revision_cache;
+        end
+    end
+end
+if ~isempty(revision_cache_root_override)
+    revision_cache_root = revision_cache_root_override;
 end
 if ~isempty(figures_root_override)
     figures_root = figures_root_override;

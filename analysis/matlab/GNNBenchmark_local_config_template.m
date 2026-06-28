@@ -9,8 +9,10 @@ function cfg = GNNBenchmark_local_config_template(cfg)
 %   does not contain user-specific drive letters, scratch folders, or account
 %   names.
 
-% Consolidated prediction snapshot, containing *.pred.txt and splits/.
-% cfg.data_root = '/path/to/gnn_benchmark_consolidated_20260530';
+% Public data package root, or the consolidated prediction snapshot itself.
+% Both of these are valid:
+%   cfg.data_root = '/path/to/gnn_benchmark_public_data_20260627';
+%   cfg.data_root = '/path/to/gnn_benchmark_public_data_20260627/predictions/consolidated';
 
 % Optional spring-embedding executable and geometry inputs. These are needed
 % only for the embedded-tissue example panels.

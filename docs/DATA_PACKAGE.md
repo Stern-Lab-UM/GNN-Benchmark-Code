@@ -16,7 +16,7 @@ gnn_benchmark_public_data_<date>/
     *.pred.txt
     splits/<split_key>/{train.inds,val.inds,test.inds,_applies_to.txt}
   embeddings/per_graph/
-  analysis_tables/analyzer_cache/
+  analysis_tables/analyzer_cache/revision_2026/   (or revision_codex_2026/)
   figures/
   final_models/consolidated/
   manuscript_analyses/feature_head_ablation_20260619/
@@ -46,8 +46,10 @@ report = GNNBenchmark_run_from_data_package(package_root, ...
 ```
 
 By default the runner reparses the consolidated prediction files instead of
-trusting cached summaries. It also analyzes `embeddings/per_graph/` when that
-folder is present. Embedding example panels inside the main plotting script are
+trusting cached summaries. If called with `rebuild_summaries=false`, it will use
+existing summaries from `analysis_tables/analyzer_cache/revision_2026/` or the
+current staging name `analysis_tables/analyzer_cache/revision_codex_2026/`. It
+also analyzes `embeddings/per_graph/` when that folder is present. Embedding example panels inside the main plotting script are
 off by default because they require vt2d geometry and a spring executable; the
 saved per-graph embedding outputs are sufficient for the manuscript
 embedding-error bound analysis.
@@ -58,12 +60,3 @@ folder layout (`final_models/<job_id>/seed_<n>/`) produced during a live pipelin
 run. Manuscript figure reproduction should not require retraining if
 `predictions/consolidated/`, `splits/`, and the saved embedding outputs are
 present.
-
-The local Stern Lab staging package created on 2026-06-27 is:
-
-```text
-Z:\Tomer\gnn_benchmark_public_data_20260627
-```
-
-That local staging tree uses hardlinks to avoid duplicating data on `Z:`. A
-zipped or tarred deposition archive will contain regular file contents.

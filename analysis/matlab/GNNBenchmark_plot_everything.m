@@ -52,6 +52,34 @@ if isempty(data_root)
     error('GNNBenchmark:missingDataRoot', ['Set the consolidated prediction snapshot path ', ...
         'using the data_root variable, GNN_BENCHMARK_DATA_ROOT, or GNNBenchmark_local_config.m.']);
 end
+if ~exist('analysis_cache_root', 'var') || isempty(analysis_cache_root)
+    analysis_cache_root = '';
+end
+if ~exist('revision_cache_root_override', 'var') || isempty(revision_cache_root_override)
+    revision_cache_root_override = '';
+end
+if ~exist('figures_root_override', 'var') || isempty(figures_root_override)
+    figures_root_override = '';
+end
+main_figures_root_override = '';
+try
+    path_layout = GNNBenchmark_data_package_paths(data_root);
+    data_root = path_layout.data_root;
+    if path_layout.is_public_package
+        if isempty(analysis_cache_root)
+            analysis_cache_root = path_layout.analysis_cache_root;
+        end
+        if isempty(revision_cache_root_override)
+            revision_cache_root_override = path_layout.revision_cache_root;
+        end
+        if isempty(figures_root_override)
+            figures_root_override = path_layout.revision_figures_root;
+        end
+        main_figures_root_override = path_layout.main_figures_root;
+    end
+catch
+    % Legacy flat layouts remain supported by the underlying plotter.
+end
 skip_cache_guard = false;
 embed_examples   = true;    % 2D spring-embedding panels (v1 only); ON for finals (2026-06-02)
 % -----------------------------------------------------------------------------
@@ -65,6 +93,14 @@ for d = 1 : numel(original_datasets)
     GNNBenchmark_CONFIG.figure_panel_size = figure_panel_size;
     GNNBenchmark_CONFIG.scatter_marker_size = scatter_marker_size;
     GNNBenchmark_CONFIG.models_to_exclude = models_to_exclude;
+    if ~isempty(revision_cache_root_override)
+        GNNBenchmark_CONFIG.cache_dir = revision_cache_root_override;
+        GNNBenchmark_CONFIG.results_summary_filename = fullfile(revision_cache_root_override, [original_datasets{d}, ' - results_summary.mat']);
+    end
+    if ~isempty(main_figures_root_override)
+        GNNBenchmark_CONFIG.figures_root = main_figures_root_override;
+        GNNBenchmark_CONFIG.figures_output_dir = fullfile(main_figures_root_override, original_datasets{d});
+    end
     GNNBenchmark_CONFIG.embed_examples = embed_examples;   % 2D embedding panels (v1_W / v1_UW) -- top toggle
     run(plotter_script);
     clear GNNBenchmark_CONFIG;
@@ -82,6 +118,16 @@ GNNBenchmark_CONFIG.hex_paper_uncertainty = 'sd';
 GNNBenchmark_CONFIG.figure_panel_size = figure_panel_size;
 GNNBenchmark_CONFIG.scatter_marker_size = scatter_marker_size;
 GNNBenchmark_CONFIG.models_to_exclude = models_to_exclude;
+if ~isempty(revision_cache_root_override)
+    GNNBenchmark_CONFIG.cache_dir = revision_cache_root_override;
+    GNNBenchmark_CONFIG.results_summary_filename = fullfile(revision_cache_root_override, 'hex - results_summary.mat');
+    GNNBenchmark_CONFIG.hex_analyses_filename = fullfile(revision_cache_root_override, 'hex - analyses data.mat');
+    GNNBenchmark_CONFIG.hex_left_analyses_filename = fullfile(revision_cache_root_override, 'v1_W - analyses data.mat');
+end
+if ~isempty(main_figures_root_override)
+    GNNBenchmark_CONFIG.figures_root = main_figures_root_override;
+    GNNBenchmark_CONFIG.figures_output_dir = fullfile(main_figures_root_override, 'hex');
+end
 run(plotter_script);
 clear GNNBenchmark_CONFIG;
 close all;

@@ -138,7 +138,8 @@ if nargin < 1 || isempty(figures_root)
         error('GNNBenchmark:missingDataRoot', ['Pass figures_root explicitly or set ', ...
             'GNN_BENCHMARK_DATA_ROOT / GNNBenchmark_local_config.m.']);
     end
-    figures_root = fullfile(path_cfg.data_root, '_figures', 'revision_2026');
+    path_layout = GNNBenchmark_data_package_paths(path_cfg.data_root);
+    figures_root = path_layout.revision_figures_root;
 end
 if nargin < 2 || isempty(save_png)
     save_png = false;

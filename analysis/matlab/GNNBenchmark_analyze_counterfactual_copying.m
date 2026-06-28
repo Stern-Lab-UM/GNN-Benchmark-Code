@@ -52,7 +52,12 @@ default_models = {'PPGN','GraphSAGE','GAT','GIN','PNA'};
 cfg = GNNBenchmark_publication_config();
 default_root = '';
 if isfield(cfg, 'data_root') && ~isempty(cfg.data_root)
-    default_root = cfg.data_root;
+    try
+        path_layout = GNNBenchmark_data_package_paths(cfg.data_root);
+        default_root = path_layout.data_root;
+    catch
+        default_root = cfg.data_root;
+    end
 end
 addParameter(p, 'regular_pred_root', default_root, @(x) ischar(x) || isstring(x));
 addParameter(p, 'counterfactual_pred_root', default_root, @(x) ischar(x) || isstring(x));

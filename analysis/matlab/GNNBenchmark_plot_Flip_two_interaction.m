@@ -139,14 +139,14 @@ if nargin < 1 || isempty(analyses_filename)
         error('GNNBenchmark:missingDataRoot', ['Pass analyses_filename explicitly or set ', ...
             'GNN_BENCHMARK_DATA_ROOT / GNNBenchmark_local_config.m.']);
     end
-    analyses_filename = fullfile(path_cfg.data_root, '_analyzer_cache', ...
-        'revision_2026', 'Flip_two - analyses data.mat');
+    path_layout = GNNBenchmark_data_package_paths(path_cfg.data_root);
+    analyses_filename = fullfile(path_layout.revision_cache_root, 'Flip_two - analyses data.mat');
 end
 if nargin < 2 || isempty(figures_output_dir)
     path_cfg = GNNBenchmark_publication_config();
     if ~isempty(path_cfg.data_root)
-        figures_output_dir = fullfile(path_cfg.data_root, '_figures', ...
-            'revision_2026', 'Flip_two');
+        path_layout = GNNBenchmark_data_package_paths(path_cfg.data_root);
+        figures_output_dir = fullfile(path_layout.revision_figures_root, 'Flip_two');
     else
         figures_output_dir = fullfile(fileparts(analyses_filename), '_figures', 'Flip_two');
     end

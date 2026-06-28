@@ -56,7 +56,12 @@ default_cohorts = [1 2 4 8 16 32];
 cfg = GNNBenchmark_publication_config();
 default_root = '';
 if isfield(cfg, 'data_root') && ~isempty(cfg.data_root)
-    default_root = fullfile(cfg.data_root, 'embeddings', 'per_graph');
+    try
+        path_layout = GNNBenchmark_data_package_paths(cfg.data_root);
+        default_root = path_layout.embedding_root;
+    catch
+        default_root = fullfile(cfg.data_root, 'embeddings', 'per_graph');
+    end
 end
 addParameter(p, 'embedding_root', default_root, @(x) ischar(x) || isstring(x));
 addParameter(p, 'output_dir', '', @(x) ischar(x) || isstring(x));

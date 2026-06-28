@@ -16,28 +16,28 @@ requested model, dataset, training seed, and cohort size.
 
 ## Data Root
 
-All MATLAB scripts use a user-supplied consolidated prediction snapshot folder.
+All MATLAB scripts use a user-supplied data root. This can be either the public`r`ndata package root or the consolidated prediction snapshot folder inside it.
 The folder should contain prediction text files and split files in this layout:
 
 ```text
-<data_root>/
-  <task>_<model>_<W|UW>_<size>_s<seed>.pred.txt
-  splits/<key>/train.inds
-  splits/<key>/val.inds
-  splits/<key>/test.inds
+<package_root>/
+  predictions/consolidated/<task>_<model>_<W|UW>_<size>_s<seed>.pred.txt
+  predictions/consolidated/splits/<key>/train.inds
+  predictions/consolidated/splits/<key>/val.inds
+  predictions/consolidated/splits/<key>/test.inds
 ```
 
 Set the data root in one of three ways:
 
 ```matlab
-data_root = '/path/to/gnn_benchmark_consolidated_20260530';
+data_root = '/path/to/gnn_benchmark_public_data_20260627';
 GNNBenchmark_plot_everything
 ```
 
 or:
 
 ```matlab
-setenv('GNN_BENCHMARK_DATA_ROOT', '/path/to/gnn_benchmark_consolidated_20260530')
+setenv('GNN_BENCHMARK_DATA_ROOT', '/path/to/gnn_benchmark_public_data_20260627')
 GNNBenchmark_plot_everything
 ```
 
@@ -136,7 +136,7 @@ Example:
 ```matlab
 GNNBenchmark_analyze_embedding_error_bounds( ...
     'embedding_root', fullfile(data_root, 'embeddings', 'per_graph'), ...
-    'output_dir', fullfile(data_root, '_figures', 'embedding_bounds'))
+    'output_dir', '/path/to/reanalysis_outputs/analysis_tables/embedding_error_bounds')
 
 GNNBenchmark_analyze_counterfactual_copying( ...
     'regular_pred_root', data_root, ...
@@ -147,11 +147,15 @@ GNNBenchmark_analyze_counterfactual_copying( ...
 ```
 ## Output Folders
 
-For a consolidated data root, summaries and figures are written under:
+For the public data package, the recommended entry point is
+`GNNBenchmark_run_from_data_package`, which treats the package as input and
+writes regenerated outputs under a separate `reanalysis_outputs/` folder or an
+explicit `output_root`. Standalone scripts also recognize both the package root
+and `predictions/consolidated`.
 
 ```text
-<data_root>/_analyzer_cache/revision_2026/
-<data_root>/_figures/revision_2026/
+<output_root>/analysis_tables/analyzer_cache/revision_2026/
+<output_root>/figures/
 ```
 
 Generated summaries, `.mat` caches, `.fig` files, exported images, prediction

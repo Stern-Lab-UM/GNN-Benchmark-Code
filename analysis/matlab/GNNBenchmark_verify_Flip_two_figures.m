@@ -160,8 +160,8 @@ if nargin < 1 || isempty(figures_output_dir)
         error('GNNBenchmark:missingDataRoot', ['Pass figures_output_dir explicitly or set ', ...
             'GNN_BENCHMARK_DATA_ROOT / GNNBenchmark_local_config.m.']);
     end
-    figures_output_dir = fullfile(path_cfg.data_root, '_figures', ...
-        'revision_2026', 'Flip_two');
+    path_layout = GNNBenchmark_data_package_paths(path_cfg.data_root);
+    figures_output_dir = fullfile(path_layout.revision_figures_root, 'Flip_two');
 end
 fig_files = dir(fullfile(figures_output_dir, '*.fig'));
 expected_colors = [

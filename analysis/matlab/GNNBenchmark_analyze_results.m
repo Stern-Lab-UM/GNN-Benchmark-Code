@@ -205,7 +205,14 @@ if isempty(data_root)
         'using GNNBenchmark_CONFIG.data_root, GNN_BENCHMARK_DATA_ROOT, or GNNBenchmark_local_config.m.']);
 end
 
-if ~isequal(data_sets, {'test'})
+
+path_layout = [];
+try
+    path_layout = GNNBenchmark_data_package_paths(data_root);
+    data_root = path_layout.data_root;
+catch
+    path_layout = [];
+endif ~isequal(data_sets, {'test'})
     error('GNNBenchmark:testOnlyRequired', ...
         'Manuscript analyses must be generated from the test split only. data_sets must be {''test''}.');
 end
@@ -214,7 +221,11 @@ if isempty(inds_root)
     inds_root = fullfile(data_root, 'inds');
 end
 if isempty(cache_dir)
-    cache_dir = fullfile(data_root, '_analyzer_cache');
+    if isstruct(path_layout) && isfield(path_layout, 'is_public_package') && path_layout.is_public_package
+        cache_dir = path_layout.revision_cache_root;
+    else
+        cache_dir = fullfile(data_root, '_analyzer_cache');
+    end
 end
 if isempty(output_filename)
     output_filename = fullfile(cache_dir, [dataset, ' - analyses data.mat']);

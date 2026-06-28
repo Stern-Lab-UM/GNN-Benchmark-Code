@@ -8,11 +8,20 @@ Before running:
 
 ```matlab
 addpath(genpath('/path/to/GNN-Benchmark-Code/analysis/matlab'))
-setenv('GNN_BENCHMARK_DATA_ROOT', '/path/to/gnn_benchmark_consolidated_20260530')
+setenv('GNN_BENCHMARK_DATA_ROOT', '/path/to/gnn_benchmark_public_data_20260627')
 ```
 
 or create an untracked `GNNBenchmark_local_config.m` from
 `GNNBenchmark_local_config_template.m`.
+
+For a downloaded public data package, the safest one-command entry point is:
+
+```matlab
+report = GNNBenchmark_run_from_data_package('/path/to/gnn_benchmark_public_data_20260627');
+```
+
+Standalone analysis scripts also accept either the package root or the
+`predictions/consolidated` folder as `GNN_BENCHMARK_DATA_ROOT`.
 
 Typical full workflow:
 
