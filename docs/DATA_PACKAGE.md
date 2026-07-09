@@ -27,12 +27,27 @@ gnn_benchmark_public_data_<date>/
     07_counterfactual_copying/
   final_models/consolidated/
   manuscript_analyses/feature_head_ablation_20260619/
+  manuscript_analyses/counterfactual_copying_edgehop14_delta005/
   manifests/
     public_data_manifest.csv
     public_data_summary_by_category.csv
-    source_vs_package_counts.csv
-    compute_sha256_manifest.ps1
+    verification_problems.csv  # written by -Mode Verify when needed
 ```
+
+The package can be dry-run or assembled with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/prepare_deep_blue_data_package.ps1 `
+  -ConsolidatedRoot "Z:\Tomer\gnn_benchmark_consolidated_20260530" `
+  -OutputRoot "Z:\Tomer\gnn_benchmark_public_data_<date>" `
+  -CounterfactualRoot "Z:\Tomer\fallback_fingerprint_v1_2_16_W_edgehop14_delta005" `
+  -CounterfactualPpgnSympairRoot "Z:\Tomer\fallback_fingerprint_v1_2_16_W_edgehop14_delta005_ppgn_sympair" `
+  -CounterfactualSummaryRoot "C:\Users\tomers\Documents\DCG revision\fallback_fingerprint_edgehop14_copy_diagnostic_20260620" `
+  -Mode DryRun
+```
+
+Switch to `-Mode Copy` only after checking the dry-run manifest. Use
+`-ComputeSha256` in copy or verify mode when preparing the final archive; checksums are written into the `sha256` column of `public_data_manifest.csv`.
 
 For analysis-only reproduction, use the MATLAB data-package runner. It treats
 the downloaded package as input and writes rebuilt summaries, regenerated
@@ -59,6 +74,10 @@ also analyzes `embeddings/per_graph/` when that folder is present. Embedding exa
 off by default because they require vt2d geometry and a spring executable; the
 saved per-graph embedding outputs are sufficient for the manuscript
 embedding-error bound analysis.
+
+The corrected counterfactual-copying analysis should use the edge-hop h >= 14,
+delta = 0.05 materials and the symmetric-pair PPGN rerun. Obsolete raw-directed
+PPGN counterfactual outputs should not be used for manuscript conclusions.
 
 The `final_models/consolidated/` folder is included for provenance and optional
 reuse. It is a flat checkpoint archive and does not match the training-stage

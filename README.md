@@ -165,7 +165,7 @@ manuscript data or trained checkpoints.
 
 ## External Data Package
 
-Manuscript data are deposited outside this Git repository. See [docs/DATA_PACKAGE.md](docs/DATA_PACKAGE.md) for the recommended archive layout. After extracting the data, run `GNNBenchmark_run_from_data_package(package_root)` in MATLAB to rebuild summaries, regenerate analysis figures, and analyze saved embedding outputs without retraining models.
+Manuscript data are deposited outside this Git repository. See [docs/DATA_PACKAGE.md](docs/DATA_PACKAGE.md) for the recommended archive layout. Deep Blue preparation notes and final source paths are in [docs/DEEP_BLUE_DEPOSIT.md](docs/DEEP_BLUE_DEPOSIT.md) and [docs/FINAL_DATA_SOURCES.md](docs/FINAL_DATA_SOURCES.md); the package manifest/copy helper is `scripts/prepare_deep_blue_data_package.ps1`. After extracting the data, run `GNNBenchmark_run_from_data_package(package_root)` in MATLAB to rebuild summaries, regenerate analysis figures, and analyze saved embedding outputs without retraining models.
 
 ## Contact
 
