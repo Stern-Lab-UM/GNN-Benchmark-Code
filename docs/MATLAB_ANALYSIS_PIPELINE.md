@@ -30,14 +30,14 @@ The folder should contain prediction text files and split files in this layout:
 Set the data root in one of three ways:
 
 ```matlab
-data_root = '/path/to/gnn_benchmark_public_data_20260627';
+data_root = '/path/to/gnn_benchmark_public_data';
 GNNBenchmark_plot_everything
 ```
 
 or:
 
 ```matlab
-setenv('GNN_BENCHMARK_DATA_ROOT', '/path/to/gnn_benchmark_public_data_20260627')
+setenv('GNN_BENCHMARK_DATA_ROOT', '/path/to/gnn_benchmark_public_data')
 GNNBenchmark_plot_everything
 ```
 

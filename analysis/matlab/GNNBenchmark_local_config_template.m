@@ -11,8 +11,8 @@ function cfg = GNNBenchmark_local_config_template(cfg)
 
 % Public data package root, or the consolidated prediction snapshot itself.
 % Both of these are valid:
-%   cfg.data_root = '/path/to/gnn_benchmark_public_data_20260627';
-%   cfg.data_root = '/path/to/gnn_benchmark_public_data_20260627/predictions/consolidated';
+%   cfg.data_root = '/path/to/gnn_benchmark_public_data';
+%   cfg.data_root = '/path/to/gnn_benchmark_public_data/predictions/consolidated';
 
 % Optional spring-embedding executable and geometry inputs. These are needed
 % only for the embedded-tissue example panels.

@@ -66,7 +66,7 @@ function report = GNNBenchmark_run_from_data_package(package_root, varargin)
 %
 %   Example
 %   -------
-%     package_root = '/path/to/gnn_benchmark_public_data_20260627';
+%     package_root = '/path/to/gnn_benchmark_public_data';
 %     report = GNNBenchmark_run_from_data_package(package_root);
 
 p = inputParser;

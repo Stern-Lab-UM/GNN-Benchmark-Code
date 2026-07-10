@@ -36,3 +36,7 @@ preferred-citation:
     - family-names: Stern
       given-names: Tomer
   year: 2026
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21286579
+    description: Zenodo data archive for manuscript data

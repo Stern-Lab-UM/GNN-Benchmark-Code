@@ -1,16 +1,41 @@
-# Public Data Package Layout
+# Public Data Archive
 
-The manuscript data should be deposited outside the Git repository. The
-recommended archive layout is a curated, analysis-facing package derived from
-the durable outputs of `GNNBenchmark_run_publication_pipeline`, not a complete
-copy of a pipeline run directory. Transient run folders such as `bo_runs/`,
-`best_hps/`, `logs/`, `generated_data/`, and `staged_inputs/` are intentionally
-omitted unless they are needed for a specific deposited diagnostic.
+The manuscript data are archived on Zenodo:
 
-A prepared data package should look like this:
+[doi:10.5281/zenodo.21286579](https://doi.org/10.5281/zenodo.21286579)
+
+
+## Archive Contents
+
+The Zenodo record contains seven logical ZIP archives plus three small metadata
+and verification files:
 
 ```text
-gnn_benchmark_public_data_<date>/
+01_readme_manifests.zip
+02_predictions_consolidated.zip
+03_embeddings_per_graph.zip
+04_analysis_tables.zip
+05_figures.zip
+06_final_models.zip
+07_manuscript_analyses.zip
+README_ARCHIVES.md
+archive_checksums_sha256.csv
+archive_listing_test.csv
+```
+
+The ZIP archives collectively represent the public data package used for the
+manuscript analyses. They include model prediction files, train/validation/test
+splits, saved spring-embedding outputs, analysis tables, generated figures,
+final trained checkpoints, feature/head ablation outputs, and the corrected
+counterfactual-copying analysis.
+
+## Extracting The Data
+
+Download all Zenodo files into one directory, then extract the seven ZIP files
+into the same package root. After extraction, the package root should contain:
+
+```text
+gnn_benchmark_public_data/
   README_DATA_PACKAGE.md
   predictions/consolidated/
     *.pred.txt
@@ -18,45 +43,26 @@ gnn_benchmark_public_data_<date>/
   embeddings/per_graph/
   analysis_tables/analyzer_cache/revision_2026/
   figures/
-    01_standard_v1/
-    02_hexagonality/
-    03_condition_comparisons/
-    04_two_T1_events/
-    05_summary_panels/
-    06_embedding_error_bounds/
-    07_counterfactual_copying/
   final_models/consolidated/
   manuscript_analyses/feature_head_ablation_20260619/
   manuscript_analyses/counterfactual_copying_edgehop14_delta005/
   manifests/
     public_data_manifest.csv
     public_data_summary_by_category.csv
-    verification_problems.csv  # written by -Mode Verify when needed
+    verification_problems.csv
 ```
 
-The package can be dry-run or assembled with:
+The file-level manifest inside `01_readme_manifests.zip` uses package-relative
+paths only and includes SHA-256 checksums for the packaged files. Archive-level
+checksums are provided in `archive_checksums_sha256.csv`.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/prepare_deep_blue_data_package.ps1 `
-  -ConsolidatedRoot "Z:\Tomer\gnn_benchmark_consolidated_20260530" `
-  -OutputRoot "Z:\Tomer\gnn_benchmark_public_data_<date>" `
-  -CounterfactualRoot "Z:\Tomer\fallback_fingerprint_v1_2_16_W_edgehop14_delta005" `
-  -CounterfactualPpgnSympairRoot "Z:\Tomer\fallback_fingerprint_v1_2_16_W_edgehop14_delta005_ppgn_sympair" `
-  -CounterfactualSummaryRoot "C:\Users\tomers\Documents\DCG revision\fallback_fingerprint_edgehop14_copy_diagnostic_20260620" `
-  -Mode DryRun
-```
+## Reproducing Analyses From The Package
 
-Switch to `-Mode Copy` only after checking the dry-run manifest. Use
-`-ComputeSha256` in copy or verify mode when preparing the final archive; checksums are written into the `sha256` column of `public_data_manifest.csv`.
-
-For analysis-only reproduction, use the MATLAB data-package runner. It treats
-the downloaded package as input and writes rebuilt summaries, regenerated
-figures, embedding-bound diagnostics, and a JSON/MAT report under a separate output
-folder:
+In MATLAB:
 
 ```matlab
 addpath(genpath('/path/to/GNN-Benchmark-Code'))
-package_root = '/path/to/gnn_benchmark_public_data_20260627';
+package_root = '/path/to/gnn_benchmark_public_data';
 report = GNNBenchmark_run_from_data_package(package_root);
 ```
 
@@ -67,21 +73,22 @@ report = GNNBenchmark_run_from_data_package(package_root, ...
     'output_root', '/path/to/reanalysis_outputs');
 ```
 
-By default the runner reparses the consolidated prediction files instead of
-trusting cached summaries. If called with `rebuild_summaries=false`, it will use
-existing summaries from `analysis_tables/analyzer_cache/revision_2026/`, with silent compatibility for older cache-folder names when needed. It
-also analyzes `embeddings/per_graph/` when that folder is present. Embedding example panels inside the main plotting script are
-off by default because they require vt2d geometry and a spring executable; the
-saved per-graph embedding outputs are sufficient for the manuscript
-embedding-error bound analysis.
+By default the runner reparses the consolidated prediction files rather than
+trusting cached summaries. If called with `rebuild_summaries=false`, it uses
+existing summaries from `analysis_tables/analyzer_cache/revision_2026/`, with
+silent compatibility for older cache-folder names when needed. It also analyzes
+`embeddings/per_graph/` when that folder is present.
 
-The corrected counterfactual-copying analysis should use the edge-hop h >= 14,
-delta = 0.05 materials and the symmetric-pair PPGN rerun. Obsolete raw-directed
-PPGN counterfactual outputs should not be used for manuscript conclusions.
+Embedding example panels inside the main plotting script are off by default
+because they require vt2d geometry and a spring executable. The saved per-graph
+embedding outputs are sufficient for the manuscript embedding-error bound
+analysis.
+
+The corrected counterfactual-copying analysis uses the edge-hop h >= 14,
+delta = 0.05 materials and the symmetric-pair PPGN rerun included under
+`manuscript_analyses/counterfactual_copying_edgehop14_delta005/`.
 
 The `final_models/consolidated/` folder is included for provenance and optional
-reuse. It is a flat checkpoint archive and does not match the training-stage
-folder layout (`final_models/<job_id>/seed_<n>/`) produced during a live pipeline
-run. Manuscript figure reproduction should not require retraining if
+reuse. Manuscript figure reproduction should not require retraining if
 `predictions/consolidated/`, `splits/`, and the saved embedding outputs are
 present.
